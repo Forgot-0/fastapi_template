@@ -16,7 +16,7 @@ class AppConfig(BaseConfig):
 
     API_V1_STR: str = '/api/v1'
     SECRET_KEY: str = ''
-    BACKEND_CORS_ORIGINS: list[str] = []
+    BACKEND_CORS_ORIGINS: Annotated[list[str] | str, BeforeValidator(BaseConfig.parse_list)] = []
     RATE_LIMITER_ENABLED: bool = True
 
     POSTGRES_SERVER: str = ''

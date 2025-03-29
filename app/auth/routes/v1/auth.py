@@ -1,6 +1,6 @@
 # app/auth/routes/v1/auth.py
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.auth.commands.auth.login import LoginCommand
 from app.auth.commands.auth.logout import LogoutCommand
@@ -26,7 +26,7 @@ from app.auth.schemas.auth.responses import (
 from app.auth.schemas.token import TokenGroup
 from app.core.api.rate_limeter import ConfigurableRateLimiter
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter()
 
 @router.post(
     "/login",

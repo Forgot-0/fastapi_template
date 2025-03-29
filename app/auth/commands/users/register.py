@@ -36,4 +36,4 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         user = await self.user_repository.create(self.session, data=data)
         await self.session.commit()
         await self.session.refresh(user)
-        return UserDTO.model_validate(**user.to_dict())
+        return UserDTO.model_validate(user.to_dict())

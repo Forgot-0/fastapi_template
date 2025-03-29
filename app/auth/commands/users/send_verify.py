@@ -29,7 +29,7 @@ class SendVerifyCommandHandler(BaseCommandHandler[SendVerifyCommand, None]):
             return
 
         token = generate_verify_token(email=command.email)
-        email_data = EmailData(subject="Код для сброса пароля", recipient=user.email)
+        email_data = EmailData(subject="Код для верификации почты", recipient=user.email)
         template = VerifyTokenTemplate(
             username=user.username,
             link=f'{app_config.app_url}/verify_email?token={token}',

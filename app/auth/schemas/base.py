@@ -9,8 +9,9 @@ class PasswordMixinSchema(BaseModel):
         min_length=8,
         max_length=128,
         description="Password must be at least 8 characters long.",
+        kw_only=True
     )
-    password_repeat: str
+    password_repeat: str = Field(..., kw_only=True)
 
     @field_validator("password")
     @classmethod

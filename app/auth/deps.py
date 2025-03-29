@@ -1,7 +1,14 @@
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
+from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
+from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
+from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
+from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
+from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCommandHandler
+from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
 from app.auth.models.user import User
 
 from app.auth.queries.auth.get_by_token import GetByAcccessTokenQuery, GetByAcccessTokenQueryHandler
@@ -32,15 +39,54 @@ async def get_auth_mediator(
     mediator = MediatorCls()
 
     # AUTH
+    mediator.register_command(
+        LoginCommand,
+        LoginCommandHandler(
+            session=session, user_repository=user_repository, token_repository=token_repository
+        )
+    )
+
+    mediator.register_command(
+        LogoutCommand,
+        LogoutCommandHandler(session=session, token_repository=token_repository)
+    )
+
+    mediator.register_command(
+        RefreshTokenCommand,
+        RefreshTokenCommandHandler(session=session, token_repository=token_repository)
+    )
+
     mediator.register_query(
         GetByAcccessTokenQuery,
         GetByAcccessTokenQueryHandler(session=session, user_repository=user_repository)
     )
+    
 
     # USER
     mediator.register_command(
         RegisterCommand,
         RegisterCommandHandler(session=session, event_bus=event_bus, user_repository=user_repository)
+    )
+    mediator.register_command(
+        ResetPasswordCommand,
+        ResetPasswordCommandHandler(session=session, user_repository=user_repository)
+    )
+
+    mediator.register_command(
+        SendResetPasswordCommand,
+        SendResetPasswordCommandHandler(
+            session=session, user_repository=user_repository, mail_service=mail_service
+        )
+    )
+
+    mediator.register_command(
+        SendVerifyCommand,
+        SendVerifyCommandHandler(session=session, user_repository=user_repository, mail_service=mail_service)
+    )
+
+    mediator.register_command(
+        VerifyCommand,
+        VerifyCommandHandler(session=session, user_repository=user_repository)
     )
 
     return mediator

@@ -23,8 +23,6 @@ class UserCreate(BaseUser):
 
 class UserDTO(BaseUser):
     id: int
-    is_active: bool
-    is_verified: bool
 
 
 class UserSortParam(SortParam):
