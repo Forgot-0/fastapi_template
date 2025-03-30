@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, status
 from app.auth.commands.users.register import RegisterCommand
-from app.auth.deps import Mediator
+from app.auth.deps import ActiveUserModel, Mediator
 from app.auth.schemas.user import UserDTO
 from app.auth.schemas.users.requests import UserCreateRequest
 from app.auth.schemas.users.responses import UserResponse
@@ -29,6 +29,19 @@ async def register_user(
             password_repeat=user_request.password_repeat
         )
     )
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email
+    )
+
+@router.get(
+    "/me",
+    summary="",
+    description="",
+    status_code=status.HTTP_200_OK
+)
+async def me(user: ActiveUserModel) -> UserResponse:
     return UserResponse(
         id=user.id,
         username=user.username,

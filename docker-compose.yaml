@@ -54,7 +54,7 @@ services:
     command:
       - >
         alembic upgrade head &&
-        echo "✅ Миграции успешно применены!"
+        echo "✅  Миграции успешно применены!"
     volumes:
       - .:/app
     depends_on:

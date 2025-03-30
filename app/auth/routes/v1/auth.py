@@ -1,6 +1,8 @@
 # app/auth/routes/v1/auth.py
 
+from typing import Annotated
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.commands.auth.login import LoginCommand
 from app.auth.commands.auth.logout import LogoutCommand
@@ -11,7 +13,6 @@ from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
 from app.auth.deps import Mediator
 from app.auth.schemas.auth.requests import (
-    LoginRequest,
     LogoutRequest,
     ResetPasswordRequest,
     SendResetPasswordCodeRequest,
@@ -37,7 +38,7 @@ router = APIRouter()
 )
 async def login(
     mediator: Mediator,
-    login_request: LoginRequest
+    login_request: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> TokenResponse:
     response: TokenGroup = await mediator.handle_command(
         LoginCommand(
@@ -61,7 +62,9 @@ async def refresh(
     mediator: Mediator,
     refresh_request: RefreshTokenRequest,
 ) -> AccessTokenResponse:
-    access_token: str = await mediator.handle_command(RefreshTokenCommand(refresh_token=refresh_request.refresh_token))
+    access_token: str = await mediator.handle_command(
+        RefreshTokenCommand(refresh_token=refresh_request.refresh_token)
+    )
     return AccessTokenResponse(access_token=access_token)
 
 @router.post(
