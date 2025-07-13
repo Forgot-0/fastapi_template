@@ -16,7 +16,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
 
-        logger.info(
+        await logger.a_info(
             'request',
             method=request.method,
             url=str(request.url),

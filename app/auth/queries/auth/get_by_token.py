@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.security import verify_token
-from app.core.query import BaseQuery, BaseQueryHandler
+from app.core.queries import BaseQuery, BaseQueryHandler
 
 
 @dataclass(frozen=True)

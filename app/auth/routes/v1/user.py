@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, status
 from app.auth.commands.users.register import RegisterCommand
-from app.auth.deps import ActiveUserModel, Mediator
+from app.auth.deps import ActiveUserModel, MediatorAuth
 from app.auth.schemas.user import UserDTO
 from app.auth.schemas.users.requests import UserCreateRequest
 from app.auth.schemas.users.responses import UserResponse
@@ -18,7 +18,7 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED
 )
 async def register_user(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     user_request: UserCreateRequest
 ) -> UserResponse:
     user: UserDTO = await mediator.handle_command(

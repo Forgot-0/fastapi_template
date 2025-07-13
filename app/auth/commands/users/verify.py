@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.user import UserRepository
 from app.auth.security import decode_verify_token
-from app.core.command import BaseCommand, BaseCommandHandler
+from app.core.commands import BaseCommand, BaseCommandHandler
 
 
 @dataclass(frozen=True)

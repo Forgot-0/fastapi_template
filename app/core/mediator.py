@@ -1,10 +1,8 @@
-from collections import defaultdict
-from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Type
 
-from app.core.command import CR, CT, BaseCommand, BaseCommandHandler
-from app.core.query import QR, QT, BaseQuery, BaseQueryHandler
+from app.core.commands import CR, CT, BaseCommand, BaseCommandHandler
+from app.core.queries import QR, QT, BaseQuery, BaseQueryHandler
 
 
 

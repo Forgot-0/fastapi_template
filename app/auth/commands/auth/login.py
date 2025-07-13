@@ -9,7 +9,7 @@ from app.auth.repositories.token import TokenRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.token import RefreshTokenCreate, TokenGroup
 from app.auth.security import create_access_token, create_refresh_token, verify_password
-from app.core.command import BaseCommand, BaseCommandHandler
+from app.core.commands import BaseCommand, BaseCommandHandler
 
 
 @dataclass(frozen=True)

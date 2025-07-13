@@ -10,6 +10,12 @@ class BaseEvent(ABC):
     event_id: UUID = field(default_factory=uuid4, kw_only=True)
     created_at: datetime = field(default_factory=datetime.now, kw_only=True)
 
+    @classmethod
+    def get_name(cls) -> str:
+        name = getattr(cls, '__event_name__', None)
+        if name is None:
+            raise 
+        return name
 
 ET = TypeVar('ET', bound=BaseEvent)
 ER = TypeVar('ER', bound=Any)
@@ -26,7 +32,7 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
 # @dataclass(frozen=True)
 # class PublisherEventHandler(BaseEventHandler[BaseEvent, None]):
 #     message_broker: BaseMessageBroker
-#     broker_topic: str | None = 'game'
+#     broker_topic: str | None = 'example'
 
 #     async def handle(self, event: BaseEvent) -> None:
 #         await self.message_broker.send_message(

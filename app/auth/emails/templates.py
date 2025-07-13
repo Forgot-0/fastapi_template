@@ -2,7 +2,7 @@ from abc import abstractmethod
 from pathlib import Path
 
 from app.core.services.mail.template import BaseTemplate
-
+from app.core.configs.app import app_config
 
 
 class AuthTemplate(BaseTemplate):
@@ -35,11 +35,10 @@ class ResetTokenTemplate(AuthTemplate):
     
 
 class VerifyTokenTemplate(AuthTemplate):
-    def __init__(self, username: str, link: str, token: str, valid_minutes: int):
-        self.username = username
-        self.link = link
+    def __init__(self, email: str, token: str):
+        self.email = email
         self.token = token
-        self.valid_minutes = valid_minutes
+        self.link = f"{app_config.app_url}/verify_email?token={token}"
 
     def _get_name(self) -> str:
         return 'verify.html'

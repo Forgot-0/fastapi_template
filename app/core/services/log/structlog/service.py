@@ -1,10 +1,10 @@
 from typing import Any
+
 from app.core.services.log.base import LogServiceInterface
-from loguru import logger
 
 
-class LoguruLogService(LogServiceInterface):
-    def __init__(self) -> None:
+class StructLogService(LogServiceInterface):
+    def __init__(self, logger: Any) -> None:
         self._logger = logger
 
     def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> Any:
@@ -27,3 +27,21 @@ class LoguruLogService(LogServiceInterface):
 
     def exception(self, msg: str, *args: Any, **kwargs: Any) -> Any:
         return self._logger.exception(msg, *args, **kwargs)
+
+    async def a_debug(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.adebug(msg, *args, **kwargs)
+
+    async def a_info(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.ainfo(msg, *args, **kwargs)
+
+    async def a_warning(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.awarning(msg, *args, **kwargs)
+
+    async def a_error(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.aerror(msg, *args, **kwargs)
+
+    async def a_critical(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.acritical(msg, *args, **kwargs)
+
+    async def a_exception(self, msg: str, *args: Any, **kwargs: Any) -> Any:
+        return await self._logger.aexception(msg, *args, **kwargs)

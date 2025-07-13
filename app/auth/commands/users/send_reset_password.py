@@ -7,9 +7,8 @@ from app.auth.config import auth_config
 from app.auth.emails.templates import ResetTokenTemplate
 from app.auth.repositories.user import UserRepository
 from app.auth.security import generate_reset_token
-from app.core.command import BaseCommand, BaseCommandHandler
-from app.core.depends import MailService
-from app.core.services.mail.service import EmailData
+from app.core.commands import BaseCommand, BaseCommandHandler
+from app.core.services.mail.service import EmailData, MailServiceInterface
 
 
 @dataclass(frozen=True)
@@ -21,7 +20,7 @@ class SendResetPasswordCommand(BaseCommand):
 class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordCommand, None]):
     session: AsyncSession
     user_repository: UserRepository
-    mail_service: MailService
+    mail_service: MailServiceInterface
 
     async def handle(self, command: SendResetPasswordCommand) -> None:
         user = await self.user_repository.get_by_email(self.session, email=command.email)

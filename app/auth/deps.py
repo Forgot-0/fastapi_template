@@ -9,16 +9,17 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPa
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
 from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCommandHandler
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
+from app.auth.events.users.created import CreatedUserEvent, SendVerifyEventHandler
 from app.auth.models.user import User
 
 from app.auth.queries.auth.get_by_token import GetByAcccessTokenQuery, GetByAcccessTokenQueryHandler
 from app.auth.repositories.token import TokenRepository
 from app.auth.repositories.user import UserRepository
 
-from app.core.event_bus import EventBus as EventBusCls
-from app.core.mediator import Mediator as MediatorCls
+from app.core.events.service import BaseEventBus
+from app.core.mediator import Mediator
 from app.core.configs.app import app_config
-from app.core.depends import Asession, MailService
+from app.core.depends import Asession, EventBus, MailService
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f'{app_config.API_V1_STR}/auth/login')
 
@@ -26,17 +27,18 @@ user_repository = UserRepository()
 token_repository = TokenRepository()
 
 
-async def get_auth_event_bus(session: Asession, mail_service: MailService) -> EventBusCls:
-    event_bus = EventBusCls()
+def get_auth_event_bus(event_bus: BaseEventBus, mail_service: MailService):
+    event_bus.subscribe(
+        CreatedUserEvent, [SendVerifyEventHandler(mail_service=mail_service)]
+    )
 
-    return event_bus
 
 async def get_auth_mediator(
-        event_bus: Annotated[EventBusCls, Depends(get_auth_event_bus)],
-        session: Asession, 
+        event_bus: EventBus,
+        session: Asession,
         mail_service: MailService,
-    ) -> MediatorCls:
-    mediator = MediatorCls()
+    ) -> Mediator:
+    mediator = Mediator()
 
     # AUTH
     mediator.register_command(
@@ -60,7 +62,7 @@ async def get_auth_mediator(
         GetByAcccessTokenQuery,
         GetByAcccessTokenQueryHandler(session=session, user_repository=user_repository)
     )
-    
+
 
     # USER
     mediator.register_command(
@@ -95,7 +97,7 @@ async def get_auth_mediator(
 class CurrentUserGetter:
     async def __call__(
         self,
-        mediator: Annotated[MediatorCls, Depends(get_auth_mediator)],
+        mediator: Annotated[Mediator, Depends(get_auth_mediator)],
         token: Annotated[str, Depends(reusable_oauth2)],
     ) -> User:
         try:
@@ -120,7 +122,7 @@ class ActiveUserGetter:
         return user
 
 
-Mediator = Annotated[MediatorCls, Depends(get_auth_mediator)]
+MediatorAuth = Annotated[Mediator, Depends(get_auth_mediator)]
 
 CurrentUserModel = Annotated[User, Depends(CurrentUserGetter())]
 ActiveUserModel = Annotated[User, Depends(ActiveUserGetter())]

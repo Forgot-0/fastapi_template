@@ -11,7 +11,7 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
-from app.auth.deps import Mediator
+from app.auth.deps import MediatorAuth
 from app.auth.schemas.auth.requests import (
     LogoutRequest,
     ResetPasswordRequest,
@@ -25,7 +25,7 @@ from app.auth.schemas.auth.responses import (
     TokenResponse,
 )
 from app.auth.schemas.token import TokenGroup
-from app.core.api.rate_limeter import ConfigurableRateLimiter
+from app.core.api.rate_limiter import ConfigurableRateLimiter
 
 router = APIRouter()
 
@@ -37,7 +37,7 @@ router = APIRouter()
     status_code=status.HTTP_200_OK
 )
 async def login(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> TokenResponse:
     response: TokenGroup = await mediator.handle_command(
@@ -59,7 +59,7 @@ async def login(
     status_code=status.HTTP_200_OK
 )
 async def refresh(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     refresh_request: RefreshTokenRequest,
 ) -> AccessTokenResponse:
     access_token: str = await mediator.handle_command(
@@ -74,7 +74,7 @@ async def refresh(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def logout(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     logout_request: LogoutRequest
 ) -> None:
     await mediator.handle_command(LogoutCommand(refresh_token=logout_request.refresh_token))
@@ -84,17 +84,11 @@ async def logout(
     summary="Отправка кода верификации",
     description="Отправляет код для верификации email. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[
-        Depends(
-            ConfigurableRateLimiter(
-                times=3, seconds=60*60, identifier=ConfigurableRateLimiter.get_identifier_by_body
-            )
-        )
-    ],
+    dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))],
 )
 async def send_verify_code(
-    mediator: Mediator,
-    send_verify_request: SendVerifyCodeRequest
+    mediator: MediatorAuth,
+    send_verify_request: SendVerifyCodeRequest,
 ) -> None:
     await mediator.handle_command(
         SendVerifyCommand(email=send_verify_request.email)
@@ -105,16 +99,10 @@ async def send_verify_code(
     summary="Отправка кода сброса пароля",
     description="Отправляет код для сброса пароля. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[
-        Depends(
-            ConfigurableRateLimiter(
-                times=3, seconds=60*60, identifier=ConfigurableRateLimiter.get_identifier_by_body
-            )
-        )
-    ],
+    dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def send_reset_password_code(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     send_reset_password_request: SendResetPasswordCodeRequest
 ) -> None:
     await mediator.handle_command(
@@ -129,7 +117,7 @@ async def send_reset_password_code(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def verify_email(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     verify_email_request: VerifyEmailRequest
 ) -> None:
     await mediator.handle_command(VerifyCommand(token=verify_email_request.token))
@@ -142,7 +130,7 @@ async def verify_email(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def reset_password(
-    mediator: Mediator,
+    mediator: MediatorAuth,
     reset_password_request: ResetPasswordRequest
 ) -> None:
     await mediator.handle_command(
