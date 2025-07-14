@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from dishka import Provider, Scope, make_async_container, provide
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,8 +18,6 @@ from app.core.services.queue.service import QueueServiceInterface
 
 logger = get_log_service()
 
-
-
 Asession = Annotated[AsyncSession, Depends(get_session)]
 QueueService = Annotated[QueueServiceInterface, Depends(get_queue_service)]
 MailService = Annotated[MailServiceInterface, Depends(get_mail_service)]
@@ -27,3 +26,5 @@ EventBus = Annotated[BaseEventBus, Depends(get_event_bus)]
 
 queued = get_queued_decorator()
 cached = get_cached_decorator()
+
+container = make_async_container()

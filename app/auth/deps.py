@@ -27,13 +27,13 @@ user_repository = UserRepository()
 token_repository = TokenRepository()
 
 
-def get_auth_event_bus(event_bus: BaseEventBus, mail_service: MailService):
+def factory_auth_event_bus(event_bus: BaseEventBus, mail_service: MailService):
     event_bus.subscribe(
         CreatedUserEvent, [SendVerifyEventHandler(mail_service=mail_service)]
     )
 
 
-async def get_auth_mediator(
+async def factory_auth_mediator(
         event_bus: EventBus,
         session: Asession,
         mail_service: MailService,
@@ -97,7 +97,7 @@ async def get_auth_mediator(
 class CurrentUserGetter:
     async def __call__(
         self,
-        mediator: Annotated[Mediator, Depends(get_auth_mediator)],
+        mediator: Annotated[Mediator, Depends(factory_auth_mediator)],
         token: Annotated[str, Depends(reusable_oauth2)],
     ) -> User:
         try:
@@ -122,7 +122,7 @@ class ActiveUserGetter:
         return user
 
 
-MediatorAuth = Annotated[Mediator, Depends(get_auth_mediator)]
+MediatorAuth = Annotated[Mediator, Depends(factory_auth_mediator)]
 
 CurrentUserModel = Annotated[User, Depends(CurrentUserGetter())]
 ActiveUserModel = Annotated[User, Depends(ActiveUserGetter())]

@@ -50,3 +50,6 @@ tzdata==2025.1
 uvicorn==0.34.0
 win32_setctime==1.2.0
 zipp==3.21.0
+
+# Dependency injection
+Dishka>=1.0.0
