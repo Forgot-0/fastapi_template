@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, Type, TypeVar
 from uuid import UUID, uuid4
+
+
 
 
 @dataclass(frozen=True)
@@ -27,6 +31,28 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
     @abstractmethod
     async def handle(self, event: ET) -> ER:
         ...
+
+@dataclass
+class EventHandleRegistry:
+    handler_type: Type[BaseEventHandler]
+    instance: Optional[BaseEventHandler] = None
+
+
+@dataclass
+class EventRegisty:
+    events_map: dict[Type[BaseEvent], list[EventHandleRegistry]] = field(
+        default_factory=lambda: defaultdict(list),
+        kw_only=True,
+    )
+
+    def subscribe(self, event: Type[BaseEvent], type_handlers: Iterable[EventHandleRegistry]) -> None:
+        self.events_map[event].extend(type_handlers)
+
+    def get_handler_types(self, events: Iterable[BaseEvent]) -> Iterable[EventHandleRegistry]:
+        handler_types = []
+        for event in events:
+            handler_types.extend(self.events_map.get(event.__class__, []))
+        return handler_types
 
 
 # @dataclass(frozen=True)

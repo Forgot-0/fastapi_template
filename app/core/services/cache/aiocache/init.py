@@ -1,6 +1,7 @@
-from aiocache import caches
+from aiocache import caches, BaseCache
 
 from app.core.configs.app import app_config
+
 
 caches.set_config(
     {
@@ -13,4 +14,4 @@ caches.set_config(
         }
     }
 )
-cache_provider = caches.get('default')
+cache_provider: BaseCache = caches.get('default') # type: ignore
