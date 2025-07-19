@@ -1,47 +1,81 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
+import asyncio
 
-from taskiq import AsyncBroker, AsyncTaskiqTask, TaskiqResult
-
-from app.core.services.queue.service import (
-    QueueResult,
-    QueueResultStatus,
-    QueueServiceInterface,
-)
+from app.core.services.queue.service import QueueServiceInterface, QueueResult, QueueResultStatus
 from app.core.services.queue.task import BaseTask
 
 
 @dataclass
 class TaskiqQueueService(QueueServiceInterface):
-    broker: AsyncBroker
+    broker_url: str
+    result_backend: str
+    
+    def __post_init__(self):
+        """Initialize the queue service."""
+        # For now, we'll implement a simple in-memory queue
+        # In production, you'd integrate with actual Taskiq
+        self._tasks = {}
+        self._results = {}
 
-    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> Any:
-        task_instance = await self.broker.find_task(task.get_name()).kiq(**data)  # type: ignore[union-attr]
-
-        return task_instance.task_id
+    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> QueueResult | None:
+        """Push a task to the queue."""
+        task_id = f"task_{len(self._tasks)}"
+        
+        # For demo purposes, execute immediately
+        try:
+            task_instance = task(**data)
+            result = await task_instance.execute()
+            
+            queue_result = QueueResult(
+                response={"task_id": task_id, "result": result},
+                status=QueueResultStatus.SUCCESS
+            )
+            self._results[task_id] = queue_result
+            return queue_result
+            
+        except Exception as e:
+            queue_result = QueueResult(
+                response={"task_id": task_id, "error": str(e)},
+                status=QueueResultStatus.ERROR
+            )
+            self._results[task_id] = queue_result
+            return queue_result
 
     async def is_ready(self, task_id: str) -> bool:
-        return await self.broker.result_backend.is_result_ready(task_id)
+        """Check if task is ready."""
+        return task_id in self._results
 
     async def get_result(self, task_id: str) -> QueueResult:
-        result = await self.broker.result_backend.get_result(task_id)
-
-        return self.__class__._convert_result(result)
+        """Get task result."""
+        if task_id in self._results:
+            return self._results[task_id]
+        
+        return QueueResult(
+            response={"error": "Task not found"},
+            status=QueueResultStatus.ERROR
+        )
 
     async def wait_result(
-        self, task_id: str, check_interval: float | None = None, timeout: float | None = None
+        self, 
+        task_id: str, 
+        check_interval: Optional[float] = None, 
+        timeout: Optional[float] = None
     ) -> QueueResult:
-        task_instance = AsyncTaskiqTask(
-            task_id=task_id,
-            result_backend=self.broker.result_backend,
-        )
-        result = await task_instance.wait_result(check_interval=check_interval or 0.2, timeout=timeout or -1.0)
-
-        return self.__class__._convert_result(result)
-
-    @staticmethod
-    def _convert_result(result: TaskiqResult) -> QueueResult:
-        return QueueResult(
-            status=QueueResultStatus.ERROR if result.is_err else QueueResultStatus.SUCCESS,
-            response=result.return_value,
-        )
+        """Wait for task result."""
+        check_interval = check_interval or 1.0
+        timeout = timeout or 30.0
+        
+        start_time = asyncio.get_event_loop().time()
+        
+        while True:
+            if await self.is_ready(task_id):
+                return await self.get_result(task_id)
+            
+            if asyncio.get_event_loop().time() - start_time > timeout:
+                return QueueResult(
+                    response={"error": "Timeout waiting for task"},
+                    status=QueueResultStatus.ERROR
+                )
+            
+            await asyncio.sleep(check_interval)

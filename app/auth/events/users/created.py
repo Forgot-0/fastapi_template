@@ -4,6 +4,7 @@ from app.auth.emails.templates import VerifyTokenTemplate
 from app.auth.security import generate_verify_token
 from app.core.events.event import BaseEvent, BaseEventHandler
 from app.core.services.mail.service import EmailData, MailServiceInterface
+from app.core.services.queue.service import QueueServiceInterface
 
 
 @dataclass(frozen=True)
@@ -15,8 +16,9 @@ class CreatedUserEvent(BaseEvent):
 
 
 @dataclass(frozen=True)
-class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
+class CreatedUserEventHandler(BaseEventHandler[CreatedUserEvent, None]):
     mail_service: MailServiceInterface
+    queue_service: QueueServiceInterface
 
     async def handle(self, event: CreatedUserEvent) -> None:
         email_data = EmailData(subject='Successful registration', recipient=event.email)

@@ -52,4 +52,9 @@ win32_setctime==1.2.0
 zipp==3.21.0
 
 # Dependency injection
-Dishka>=1.0.0
+dishka>=1.3.0
+
+# Additional development dependencies (optional)
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# pytest-mock>=3.10.0

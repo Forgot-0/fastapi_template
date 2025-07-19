@@ -7,8 +7,6 @@ from typing import Any, Generic, Optional, Type, TypeVar
 from uuid import UUID, uuid4
 
 
-
-
 @dataclass(frozen=True)
 class BaseEvent(ABC):
     event_id: UUID = field(default_factory=uuid4, kw_only=True)
@@ -18,8 +16,9 @@ class BaseEvent(ABC):
     def get_name(cls) -> str:
         name = getattr(cls, '__event_name__', None)
         if name is None:
-            raise 
+            return cls.__name__
         return name
+
 
 ET = TypeVar('ET', bound=BaseEvent)
 ER = TypeVar('ER', bound=Any)
@@ -32,23 +31,24 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
     async def handle(self, event: ET) -> ER:
         ...
 
+
 @dataclass
-class EventHandleRegistry:
+class EventHandlerInfo:
     handler_type: Type[BaseEventHandler]
     instance: Optional[BaseEventHandler] = None
 
 
 @dataclass
-class EventRegisty:
-    events_map: dict[Type[BaseEvent], list[EventHandleRegistry]] = field(
+class EventHandlerRegistry:
+    events_map: dict[Type[BaseEvent], list[EventHandlerInfo]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,
     )
 
-    def subscribe(self, event: Type[BaseEvent], type_handlers: Iterable[EventHandleRegistry]) -> None:
+    def subscribe(self, event: Type[BaseEvent], type_handlers: Iterable[EventHandlerInfo]) -> None:
         self.events_map[event].extend(type_handlers)
 
-    def get_handler_types(self, events: Iterable[BaseEvent]) -> Iterable[EventHandleRegistry]:
+    def get_handler_types(self, events: Iterable[BaseEvent]) -> Iterable[EventHandlerInfo]:
         handler_types = []
         for event in events:
             handler_types.extend(self.events_map.get(event.__class__, []))
