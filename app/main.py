@@ -4,10 +4,13 @@ from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
 from starlette.middleware.cors import CORSMiddleware
+from dishka import make_container
+from dishka.integrations.fastapi import setup_dishka
 
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
 from app.core.middlewares import LoggingMiddleware
+from app.core.di import get_core_providers
 
 
 @asynccontextmanager
@@ -35,6 +38,12 @@ def setup_router(app: FastAPI) -> None:
     app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
 
 
+def setup_di(app: FastAPI) -> None:
+    """Setup dependency injection with Dishka"""
+    container = make_container(*get_core_providers())
+    setup_dishka(container, app)
+
+
 def init_app() -> FastAPI:
 
     app = FastAPI(
@@ -43,6 +52,7 @@ def init_app() -> FastAPI:
     )
 
     setup_middleware(app)
+    setup_di(app)
     setup_router(app)
 
     return app
