@@ -11,6 +11,7 @@ from app.core.di.container import get_container
 from app.core.commands import CommandHandlerRegistry
 from app.core.queries import QueryHandlerRegistry
 from app.core.events.event import EventHandlerRegistry, EventHandlerInfo
+from app.core.events.registration import DIEventRegistration, create_full_event_registration
 
 # Import all command types and handlers
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
@@ -28,7 +29,7 @@ from app.auth.queries.users.get_by_email import GetUserByEmailQuery, GetUserByEm
 from app.auth.queries.users.get_list import GetUserListQuery, GetUserListQueryHandler
 from app.auth.queries.auth.get_current_user import GetCurrentUserQuery, GetCurrentUserQueryHandler
 
-# Import all event types and handlers
+# Import all event types and handlers (for backward compatibility)
 from app.auth.events.users.created import CreatedUserEvent, CreatedUserEventHandler
 from app.auth.events.users.verified import VerifiedUserEvent, VerifiedUserEventHandler
 from app.auth.events.users.password_reset import PasswordResetEvent, PasswordResetEventHandler
@@ -62,10 +63,10 @@ def register_query_handlers(query_registry: QueryHandlerRegistry) -> None:
     query_registry.register(GetCurrentUserQuery, GetCurrentUserQueryHandler)
 
 
-def register_event_handlers(event_registry: EventHandlerRegistry) -> None:
-    """Register all event handlers with the event registry."""
+def register_event_handlers_legacy(event_registry: EventHandlerRegistry) -> None:
+    """Register all event handlers with the event registry (legacy approach)."""
     
-    # User events
+    # User events - using legacy registration for backward compatibility
     event_registry.subscribe(CreatedUserEvent, [
         EventHandlerInfo(handler_type=CreatedUserEventHandler)
     ])
@@ -77,6 +78,17 @@ def register_event_handlers(event_registry: EventHandlerRegistry) -> None:
     event_registry.subscribe(PasswordResetEvent, [
         EventHandlerInfo(handler_type=PasswordResetEventHandler)
     ])
+
+
+def register_event_handlers_with_di(container) -> DIEventRegistration:
+    """Register all event handlers with DI integration (recommended approach)."""
+    with container() as app_scope:
+        event_registry = app_scope.get(EventHandlerRegistry)
+        
+        # Create full event registration with DI
+        registration = create_full_event_registration(event_registry, container)
+        
+        return registration
 
 
 def register_tasks_with_di(container) -> None:
@@ -116,14 +128,47 @@ def initialize_di_system() -> None:
             # Register all handlers
             register_command_handlers(command_registry)
             register_query_handlers(query_registry)
-            register_event_handlers(event_registry)
             
             print("✅ DI System initialized successfully")
             print(f"   - Registered {len(command_registry._handlers)} command types")
             print(f"   - Registered {len(query_registry._handlers)} query types")
-            print(f"   - Registered {len(event_registry.events_map)} event types")
             
+        # Register events with DI (recommended)
+        event_registration = register_event_handlers_with_di(container)
+        print(f"   - Registered {len(event_registration.get_handler_configs())} event handlers with DI")
+        
         # Register tasks with DI (needs to be done separately)
+        register_tasks_with_di(container)
+            
+    except Exception as e:
+        print(f"❌ Failed to initialize DI system: {e}")
+        raise
+
+
+def initialize_di_system_legacy() -> None:
+    """
+    Initialize DI system using legacy event registration (backward compatibility).
+    """
+    container = get_container()
+    
+    try:
+        with container() as app_scope:
+            # Get registries from DI container
+            command_registry = app_scope.get(CommandHandlerRegistry)
+            query_registry = app_scope.get(QueryHandlerRegistry)  
+            event_registry = app_scope.get(EventHandlerRegistry)
+            
+            # Register all handlers
+            register_command_handlers(command_registry)
+            register_query_handlers(query_registry)
+            register_event_handlers_legacy(event_registry)
+            
+            print("✅ DI System initialized successfully (legacy mode)")
+            print(f"   - Registered {len(command_registry._handlers)} command types")
+            print(f"   - Registered {len(query_registry._handlers)} query types")
+            print(f"   - Registered {len(event_registry.events_map)} event types (legacy)")
+            
+        # Register tasks with DI
         register_tasks_with_di(container)
             
     except Exception as e:
