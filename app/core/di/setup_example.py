@@ -9,9 +9,12 @@ This file demonstrates:
 """
 
 from dishka import Container
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, HTTPException
 from app.core.di import setup_di, inject, get_container
 from app.core.mediators.base import BaseMediator
+from app.core.commands import CommandHandlerRegistry, HandlerInfo
+from app.core.queries import QueryHandlerRegistry
+from app.core.events.event import EventHandlerRegistry, EventHandlerInfo
 
 # Import all command handlers
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
@@ -35,9 +38,9 @@ def setup_handlers_registration():
     
     with container() as app_scope:
         # Get registries
-        command_registry = app_scope.get(type[CommandHandlerRegistry])  # type: ignore
-        query_registry = app_scope.get(type[QueryHandlerRegistry])  # type: ignore
-        event_registry = app_scope.get(type[EventHandlerRegistry])  # type: ignore
+        command_registry = app_scope.get(CommandHandlerRegistry)
+        query_registry = app_scope.get(QueryHandlerRegistry)
+        event_registry = app_scope.get(EventHandlerRegistry)
         
         # Register command handlers
         command_registry.register(RegisterCommand, RegisterCommandHandler)
@@ -120,7 +123,7 @@ async def get_user_direct(
     return {"user": None}
 
 
-# Example of service injection
+# Example of service injection with original service names
 from app.core.services.mail.service import MailServiceInterface
 from app.core.services.cache.base import CacheServiceInterface
 
@@ -131,7 +134,7 @@ async def send_email(
     mail_service: MailServiceInterface = inject(MailServiceInterface),
     cache_service: CacheServiceInterface = inject(CacheServiceInterface),
 ):
-    """Example of service injection."""
+    """Example of service injection using AioSmtpLibMailService."""
     # Use cache to check if email was recently sent
     cache_key = f"email_sent:{request_data['email']}"
     recently_sent = await cache_service.get(cache_key)
@@ -139,7 +142,7 @@ async def send_email(
     if recently_sent:
         return {"message": "Email was recently sent"}
     
-    # Send email
+    # Send email using the original service
     await mail_service.send_plain(
         subject=request_data["subject"],
         recipient=request_data["email"], 

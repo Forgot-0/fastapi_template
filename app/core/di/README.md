@@ -57,17 +57,20 @@ async def cache_service(self, cache_provider: BaseCache) -> CacheServiceInterfac
 ```
 
 ### 4. ServiceProvider (`services.py`)
-Provides core services like mail, queue, and logging.
+Provides core services using your existing implementations.
 
 ```python
 @provide
-def mail_service(self, config: AppConfig) -> MailServiceInterface: ...
+def taskiq_broker(self) -> AsyncBroker:
+    return broker  # Your existing Taskiq broker
+
+@provide  
+def queue_service(self, taskiq_broker: AsyncBroker) -> QueueServiceInterface:
+    return TaskiqQueueService(broker=taskiq_broker)  # Your existing service
 
 @provide
-def queue_service(self, config: AppConfig) -> QueueServiceInterface: ...
-
-@provide
-def log_service(self, config: AppConfig) -> LogService: ...
+def mail_service(self, queue_service: QueueServiceInterface) -> MailServiceInterface:
+    return AioSmtpLibMailService(queue_service=queue_service)  # Your existing service
 ```
 
 ### 5. MediatorProvider (`mediator.py`)
@@ -86,42 +89,31 @@ Provides event bus for event-driven architecture.
 def event_bus(self, event_registry: EventHandlerRegistry) -> BaseEventBus: ...
 ```
 
-## Module Providers (Auth Example)
+## Key Features
 
-### AuthRepositoryProvider (`auth/di/repositories.py`)
-Provides auth-specific repositories.
+### ✅ **Works with Your Existing Services**
+- Uses your original `AioSmtpLibMailService` with `queue_service` dependency
+- Uses your original `TaskiqQueueService` with `AsyncBroker` dependency
+- Preserves all existing functionality and dependencies
 
-```python
-@provide
-def user_repository(self) -> UserRepository: ...
+### ✅ **Complete Modularity**
+- Each module has its own DI providers
+- Easy to add new modules without affecting existing ones
+- Clear separation of concerns
 
-@provide
-def token_repository(self) -> TokenRepository: ...
-```
+### ✅ **Multiple Architectural Patterns**
+- **Repository Pattern**: Data access abstraction
+- **CQRS (Command Query Responsibility Segregation)**: Separate read/write operations
+- **Mediator Pattern**: Decoupled request handling
+- **Event-Driven Architecture**: Asynchronous event handling
 
-### AuthCommandProvider (`auth/di/commands.py`)
-Provides command handlers for auth operations.
-
-```python
-@provide
-def register_command_handler(self, session: AsyncSession, event_bus: BaseEventBus, user_repository: UserRepository) -> RegisterCommandHandler: ...
-```
-
-### AuthQueryProvider (`auth/di/queries.py`)
-Provides query handlers for auth operations.
-
-```python
-@provide
-def get_user_by_id_query_handler(self, session: AsyncSession, user_repository: UserRepository) -> GetUserByIdQueryHandler: ...
-```
-
-### AuthEventProvider (`auth/di/events.py`)
-Provides event handlers for auth events.
-
-```python
-@provide
-def created_user_event_handler(self, mail_service: MailServiceInterface, queue_service: QueueServiceInterface) -> CreatedUserEventHandler: ...
-```
+### ✅ **Comprehensive Service Coverage**
+- **Database**: PostgreSQL with SQLAlchemy async sessions
+- **Caching**: Redis-based caching with aiocache
+- **Email**: Your existing `AioSmtpLibMailService` with SMTP and templating
+- **Queuing**: Your existing `TaskiqQueueService` with background task processing
+- **Logging**: Structured logging with multiple handlers
+- **Configuration**: Type-safe configuration management
 
 ## Usage Examples
 
@@ -152,7 +144,27 @@ async def get_user(
     return {"user": user.to_dict() if user else None}
 ```
 
-### 3. Using the Mediator Pattern
+### 3. Using Your Existing Services
+
+```python
+from app.core.services.mail.service import MailServiceInterface
+from app.core.services.queue.service import QueueServiceInterface
+
+@app.post("/send-notification")
+async def send_notification(
+    # This will inject your AioSmtpLibMailService
+    mail_service: MailServiceInterface = inject(MailServiceInterface),
+    # This will inject your TaskiqQueueService  
+    queue_service: QueueServiceInterface = inject(QueueServiceInterface),
+):
+    # Your services work exactly as before
+    await mail_service.send_plain("Subject", "user@example.com", "Body")
+    
+    # Queue tasks using your existing TaskiqQueueService
+    task_id = await queue_service.push(SomeTask, {"data": "value"})
+```
+
+### 4. Using the Mediator Pattern
 
 ```python
 from app.core.di import inject
@@ -169,20 +181,6 @@ async def get_user(
     return {"user": result}
 ```
 
-### 4. Service Injection
-
-```python
-from app.core.services.mail.service import MailServiceInterface
-from app.core.services.cache.base import CacheServiceInterface
-
-@app.post("/send-notification")
-async def send_notification(
-    mail_service: MailServiceInterface = inject(MailServiceInterface),
-    cache_service: CacheServiceInterface = inject(CacheServiceInterface),
-):
-    # Use services...
-```
-
 ## Scopes
 
 The DI system uses different scopes for different types of dependencies:
@@ -192,24 +190,43 @@ The DI system uses different scopes for different types of dependencies:
 
 ## Benefits of This Approach
 
-### 1. **Modularity**
+### 1. **Preserves Your Existing Code**
+- No changes to your `AioSmtpLibMailService` or `TaskiqQueueService`
+- All existing functionality maintained
+- Existing dependencies respected
+
+### 2. **Modularity**
 Each module (auth, core, etc.) has its own DI providers, making the system highly modular and maintainable.
 
-### 2. **Testability**
+### 3. **Testability**
 Easy to mock dependencies for testing by providing test-specific providers.
 
-### 3. **Type Safety**
+### 4. **Type Safety**
 Full type safety with proper type hints and IDE support.
 
-### 4. **Performance**
+### 5. **Performance**
 Dishka provides excellent performance with minimal overhead.
 
-### 5. **Flexibility**
+### 6. **Flexibility**
 Supports multiple patterns:
 - Direct injection
 - Mediator pattern (CQRS)
 - Event-driven architecture
 - Repository pattern
+
+## Service Dependencies
+
+Your existing services are properly wired:
+
+```python
+# TaskiqQueueService gets the broker from your existing init.py
+TaskiqQueueService(broker=broker)
+
+# AioSmtpLibMailService gets the queue service it needs
+AioSmtpLibMailService(queue_service=queue_service)
+```
+
+This preserves all functionality while adding comprehensive DI capabilities.
 
 ## Adding New Dependencies
 
@@ -254,33 +271,4 @@ async def endpoint(new_service: NewService = inject(NewService)):
     return await new_service.do_something()
 ```
 
-## Best Practices
-
-1. **Keep providers focused**: Each provider should handle a specific domain
-2. **Use interfaces**: Depend on abstractions, not concrete implementations
-3. **Proper scoping**: Use REQUEST scope for per-request dependencies, APP scope for singletons
-4. **Type hints**: Always provide proper type hints for better IDE support
-5. **Documentation**: Document complex provider setups
-
-## Testing with DI
-
-```python
-import pytest
-from dishka import make_container
-from app.core.di import get_core_providers
-
-@pytest.fixture
-def test_container():
-    # Create container with test-specific providers
-    providers = get_core_providers()
-    # Add test providers or override existing ones
-    return make_container(*providers)
-
-def test_service(test_container):
-    with test_container() as request_scope:
-        service = request_scope.get(SomeService)
-        result = service.do_something()
-        assert result == expected_result
-```
-
-This DI system provides a robust, scalable, and maintainable foundation for the application while supporting multiple architectural patterns and ensuring type safety throughout the codebase.
+This DI system provides a robust, scalable foundation while preserving all your existing service implementations and their dependencies.

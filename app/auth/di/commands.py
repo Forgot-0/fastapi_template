@@ -12,6 +12,7 @@ from app.auth.commands.auth.refresh_token import RefreshTokenCommandHandler
 from app.auth.repositories.user import UserRepository
 from app.auth.repositories.token import TokenRepository
 from app.core.events.service import BaseEventBus
+from app.core.services.mail.service import MailServiceInterface
 
 
 class AuthCommandProvider(Provider):
@@ -34,15 +35,11 @@ class AuthCommandProvider(Provider):
     def verify_command_handler(
         self,
         session: AsyncSession,
-        event_bus: BaseEventBus,
         user_repository: UserRepository,
-        token_repository: TokenRepository,
     ) -> VerifyCommandHandler:
         return VerifyCommandHandler(
             session=session,
-            event_bus=event_bus,
             user_repository=user_repository,
-            token_repository=token_repository,
         )
 
     @provide
@@ -50,27 +47,23 @@ class AuthCommandProvider(Provider):
         self,
         session: AsyncSession,
         user_repository: UserRepository,
-        token_repository: TokenRepository,
+        mail_service: MailServiceInterface,
     ) -> SendVerifyCommandHandler:
         return SendVerifyCommandHandler(
             session=session,
             user_repository=user_repository,
-            token_repository=token_repository,
+            mail_service=mail_service,
         )
 
     @provide
     def reset_password_command_handler(
         self,
         session: AsyncSession,
-        event_bus: BaseEventBus,
         user_repository: UserRepository,
-        token_repository: TokenRepository,
     ) -> ResetPasswordCommandHandler:
         return ResetPasswordCommandHandler(
             session=session,
-            event_bus=event_bus,
             user_repository=user_repository,
-            token_repository=token_repository,
         )
 
     @provide
@@ -78,12 +71,12 @@ class AuthCommandProvider(Provider):
         self,
         session: AsyncSession,
         user_repository: UserRepository,
-        token_repository: TokenRepository,
+        mail_service: MailServiceInterface,
     ) -> SendResetPasswordCommandHandler:
         return SendResetPasswordCommandHandler(
             session=session,
             user_repository=user_repository,
-            token_repository=token_repository,
+            mail_service=mail_service,
         )
 
     @provide
