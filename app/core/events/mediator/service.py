@@ -1,11 +1,10 @@
-from collections import defaultdict
 from collections.abc import Iterable
-from dataclasses import dataclass, field
-from typing import Callable, Type
+from dataclasses import dataclass
 
-from dishka import Container
+from dishka import AsyncContainer
 
-from app.core.events.event import ER, ET, BaseEvent, BaseEventHandler
+
+from app.core.events.event import ER, BaseEvent
 from app.core.events.service import BaseEventBus
 
 
@@ -13,7 +12,7 @@ from app.core.events.service import BaseEventBus
 
 @dataclass(eq=False)
 class MediatorEventBus(BaseEventBus):
-    container: Container
+    container: AsyncContainer
 
     async def publish(self, events: Iterable[BaseEvent]) -> Iterable[ER]:
         result = []
@@ -27,8 +26,8 @@ class MediatorEventBus(BaseEventBus):
                 if type_handler.instance:
                     result.append(await type_handler.instance.handle(event))
                 else:
-                    with self.container() as request:
-                        handler = request.get(type_handler.handler_type)
+                    async with self.container() as request:
+                        handler = await request.get(type_handler.handler_type)
                         result.append(await handler.handle(event))
 
         return result

@@ -6,7 +6,7 @@ from app.core.queries import QR, BaseQuery, BaseQueryHandler
 
 
 @dataclass
-class QueryHandleRegistry:
+class QueryHandlerInfo:
     handler_type: Type[BaseQueryHandler]
     instance: Optional[BaseQueryHandler] = None
 
@@ -14,15 +14,15 @@ class QueryHandleRegistry:
 
 @dataclass
 class QueryRegisty:
-    quries_map: dict[Type[BaseQuery], QueryHandleRegistry] = field(
+    quries_map: dict[Type[BaseQuery], QueryHandlerInfo] = field(
         default_factory=dict,
         kw_only=True,
     )
 
-    def register_query(self, query: Type[BaseQuery], type_handlers: QueryHandleRegistry) -> None:
-        self.quries_map[query] = type_handlers
+    def register_query(self, query: Type[BaseQuery], type_handler: QueryHandlerInfo) -> None:
+        self.quries_map[query] = type_handler
 
-    def get_handler_types(self, query: BaseQuery) -> QueryHandleRegistry:
+    def get_handler_types(self, query: BaseQuery) -> QueryHandlerInfo:
         if query.__class__ not in self.quries_map:
             raise
 

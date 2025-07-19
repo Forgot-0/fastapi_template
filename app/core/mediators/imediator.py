@@ -2,7 +2,8 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from dishka import Container
+from dishka import AsyncContainer
+
 
 from app.core.commands import CR, BaseCommand
 from app.core.mediators.base import BaseMediator
@@ -11,7 +12,7 @@ from app.core.queries import QR, BaseQuery
 
 @dataclass(eq=False)
 class DishkaMediator(BaseMediator):
-    container: Container
+    container: AsyncContainer
 
     async def handle_command(self, command: BaseCommand) -> Iterable[CR]:
         result = []
@@ -24,8 +25,8 @@ class DishkaMediator(BaseMediator):
             if handler.instance:
                 result.append(await handler.instance.handle(command))
             else:
-                with self.container() as request:
-                    handler = request.get(handler.handler_type)
+                async with self.container() as request:
+                    handler = await request.get(handler.handler_type)
                     result.append(await handler.handle(command))
 
         return result
@@ -35,6 +36,6 @@ class DishkaMediator(BaseMediator):
         if handler_registy.instance:
             return await handler_registy.instance.handle(query)
 
-        with self.container() as request:
-            handler = request.get(handler_registy.handler_type)
+        async with self.container() as request:
+            handler = await request.get(handler_registy.handler_type)
             return await handler.handle(query)

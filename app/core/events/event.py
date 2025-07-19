@@ -33,22 +33,22 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
         ...
 
 @dataclass
-class EventHandleRegistry:
+class EventHandlerInfo:
     handler_type: Type[BaseEventHandler]
     instance: Optional[BaseEventHandler] = None
 
 
 @dataclass
 class EventRegisty:
-    events_map: dict[Type[BaseEvent], list[EventHandleRegistry]] = field(
+    events_map: dict[Type[BaseEvent], list[EventHandlerInfo]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,
     )
 
-    def subscribe(self, event: Type[BaseEvent], type_handlers: Iterable[EventHandleRegistry]) -> None:
+    def subscribe(self, event: Type[BaseEvent], type_handlers: Iterable[EventHandlerInfo]) -> None:
         self.events_map[event].extend(type_handlers)
 
-    def get_handler_types(self, events: Iterable[BaseEvent]) -> Iterable[EventHandleRegistry]:
+    def get_handler_types(self, events: Iterable[BaseEvent]) -> Iterable[EventHandlerInfo]:
         handler_types = []
         for event in events:
             handler_types.extend(self.events_map.get(event.__class__, []))

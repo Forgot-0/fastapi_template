@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Type
 
-from app.core.events.event import ER, ET, BaseEvent, BaseEventHandler, EventRegisty
+from app.core.events.event import ER, BaseEvent, EventRegisty
 
 
 
