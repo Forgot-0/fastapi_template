@@ -2,7 +2,7 @@
 DI System Initialization
 
 This module provides functions to initialize the complete DI system,
-including registering all command handlers, query handlers, and event handlers.
+including registering all command handlers, query handlers, event handlers, and tasks.
 """
 
 from typing import Any
@@ -79,6 +79,24 @@ def register_event_handlers(event_registry: EventHandlerRegistry) -> None:
     ])
 
 
+def register_tasks_with_di(container) -> None:
+    """Register all background tasks with DI integration."""
+    from app.core.di.tasks import DIAwareTaskiqDecorator
+    from app.core.services.mail.aiosmtplib.task_di import SendEmailTask
+    from taskiq import AsyncBroker
+    
+    with container() as app_scope:
+        broker = app_scope.get(AsyncBroker)
+        
+        # Create DI-aware decorator
+        di_decorator = DIAwareTaskiqDecorator(broker, container)
+        
+        # Register tasks with DI
+        di_decorator(SendEmailTask)
+        
+        print(f"   - Registered DI-aware tasks with broker")
+
+
 def initialize_di_system() -> None:
     """
     Initialize the complete DI system.
@@ -104,6 +122,9 @@ def initialize_di_system() -> None:
             print(f"   - Registered {len(command_registry._handlers)} command types")
             print(f"   - Registered {len(query_registry._handlers)} query types")
             print(f"   - Registered {len(event_registry.events_map)} event types")
+            
+        # Register tasks with DI (needs to be done separately)
+        register_tasks_with_di(container)
             
     except Exception as e:
         print(f"❌ Failed to initialize DI system: {e}")

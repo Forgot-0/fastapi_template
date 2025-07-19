@@ -8,6 +8,7 @@ from app.core.services.queue.service import QueueServiceInterface
 from app.core.services.queue.taskiq.service import TaskiqQueueService
 from app.core.services.queue.taskiq.init import broker
 from app.core.services.log.service import LogService
+from app.core.di.tasks import DIAwareTaskiqDecorator
 
 
 class ServiceProvider(Provider):
@@ -35,3 +36,9 @@ class ServiceProvider(Provider):
             level=config.LOG_LEVEL,
             handlers=config.LOG_HANDLERS,
         )
+
+    @provide
+    def di_queued_decorator(self, taskiq_broker: AsyncBroker, container) -> DIAwareTaskiqDecorator:
+        """Provide DI-aware task decorator."""
+        from dishka import Container
+        return DIAwareTaskiqDecorator(taskiq_broker, container)

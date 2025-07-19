@@ -6,6 +6,7 @@ from app.core.di.cache import CacheProvider
 from app.core.di.services import ServiceProvider
 from app.core.di.mediator import MediatorProvider
 from app.core.di.events import EventProvider
+from app.core.di.tasks import TaskProvider
 from app.auth.di import get_auth_providers
 
 
@@ -19,6 +20,7 @@ def create_container() -> Container:
         ServiceProvider(),
         MediatorProvider(),
         EventProvider(),
+        TaskProvider(),
         
         # Module providers
         *get_auth_providers(),
