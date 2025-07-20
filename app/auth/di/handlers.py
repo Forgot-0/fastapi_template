@@ -13,7 +13,7 @@ from app.core.mediators.command import HandlerInfo, CommandRegisty
 from app.core.mediators.query import QueryHandlerInfo, QueryRegisty
 
 
-def register_command_handlers(command_registry: CommandRegisty) -> None:
+def register_auth_command_handlers(command_registry: CommandRegisty) -> None:
     """Register all command handlers with the command registry."""
 
     # User commands
@@ -28,14 +28,14 @@ def register_command_handlers(command_registry: CommandRegisty) -> None:
     command_registry.register_command(LogoutCommand, [HandlerInfo(LogoutCommandHandler)])
     command_registry.register_command(RefreshTokenCommand, [HandlerInfo(RefreshTokenCommandHandler)])
 
-def register_query_handlers(query_registry: QueryRegisty) -> None:
+def register_auth_query_handlers(query_registry: QueryRegisty) -> None:
     """Register all query handlers with the query registry."""
 
     # Auth queries
     query_registry.register_query(GetByAcccessTokenQuery, QueryHandlerInfo(GetByAcccessTokenQueryHandler))
 
 
-def register_event_handlers(event_registry: EventRegisty) -> None:
+def register_auth_event_handlers(event_registry: EventRegisty) -> None:
     """Register all event handlers with the event registry."""
 
     # User events
