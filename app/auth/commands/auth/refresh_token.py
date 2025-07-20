@@ -21,7 +21,6 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, str]):
         payload = verify_token(command.refresh_token, token_type='refresh')
 
         token_obj = await self.token_repository.get_with_user(self.session, jti=payload.jti)
-
         if token_obj is None:
             raise
 

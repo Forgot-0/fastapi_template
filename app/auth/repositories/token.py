@@ -36,8 +36,8 @@ class TokenRepository:
         stmt = update(Token).where(Token.jti == jti).values(is_revoked=True)
         await session.execute(stmt)
 
-    async def revoke_user_device(self, session: AsyncSession, user_id: int, device_id: str) -> None:
-        stmt = update(Token).where(Token.user_id == user_id).where(Token.device_id == device_id).values(is_revoked=True)
+    async def revoke_user_device(self, session: AsyncSession, user_id: int, jti: str) -> None:
+        stmt = update(Token).where(Token.user_id == user_id).where(Token.jti == jti).values(is_revoked=True)
         await session.execute(stmt)
 
     async def create(self, session: AsyncSession, token_data: RefreshTokenCreate) -> None:

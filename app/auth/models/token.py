@@ -20,5 +20,5 @@ class Token(BaseModel):
     user: Mapped['User'] = relationship("User", back_populates="tokens") # type: ignore
 
     def is_valid(self) -> bool:
-        return datetime.now() > self.expires_at and self.is_revoked
+        return datetime.now() < self.expires_at or not self.is_revoked
 

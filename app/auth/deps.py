@@ -1,5 +1,5 @@
 from typing import Annotated
-from dishka import FromDishka
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
@@ -12,6 +12,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 class CurrentUserGetter:
+    @inject
     async def __call__(
         self,
         mediator: FromDishka[BaseMediator],

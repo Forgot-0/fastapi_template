@@ -2,7 +2,7 @@
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel
 from app.auth.schemas.user import UserDTO
@@ -43,9 +43,10 @@ async def register_user(
     "/me",
     summary="",
     description="",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponse,
 )
-async def me(user: ActiveUserModel) -> UserResponse:
+async def me(mediator: FromDishka[BaseMediator], user: ActiveUserModel) -> UserResponse:
     return UserResponse(
         id=user.id,
         username=user.username,

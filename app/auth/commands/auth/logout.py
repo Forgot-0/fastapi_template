@@ -20,5 +20,6 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     async def handle(self, command: LogoutCommand) -> None:
         payload = verify_token(command.refresh_token, token_type='refresh')
         await self.token_repository.revoke_user_device(
-            self.session, user_id=int(payload.sub), device_id=payload.device_id
+            self.session, user_id=int(payload.sub), jti=payload.jti
         )
+        await self.session.commit()
