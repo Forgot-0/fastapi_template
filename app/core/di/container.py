@@ -1,4 +1,5 @@
 from dishka import AsyncContainer, make_async_container
+from dishka.integrations.fastapi import FastapiProvider
 
 from app.auth.di import get_auth_providers
 from app.core.di.cache import CacheProvider
@@ -24,4 +25,4 @@ def create_container() -> AsyncContainer:
         *get_auth_providers(),
     ]
 
-    return make_async_container(*providers)
+    return make_async_container(*providers, FastapiProvider())

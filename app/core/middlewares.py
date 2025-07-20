@@ -4,7 +4,7 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-# from app.core.depends import logger
+from app.core.services.log.depends import logger
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -16,7 +16,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
 
-        await logger.a_info(
+        await logger.ainfo(
             'request',
             method=request.method,
             url=str(request.url),

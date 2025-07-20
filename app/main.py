@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 
+from dishka import AsyncContainer
+from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
@@ -7,6 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
+from app.core.di.container import create_container
 from app.core.middlewares import LoggingMiddleware
 
 
@@ -16,9 +19,10 @@ async def lifespan(app: FastAPI):
     await FastAPILimiter.init(redis_client)
     yield
     await redis_client.aclose()
+    await app.state.dishka_container.close()
 
 
-def setup_middleware(app: FastAPI) -> None:
+def setup_middleware(app: FastAPI, container: AsyncContainer) -> None:
     app.add_middleware(LoggingMiddleware)
 
     if app_config.BACKEND_CORS_ORIGINS:
@@ -42,7 +46,10 @@ def init_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    setup_middleware(app)
+    container = create_container()
+    setup_dishka(container=container, app=app)
+
+    setup_middleware(app, container)
     setup_router(app)
 
     return app

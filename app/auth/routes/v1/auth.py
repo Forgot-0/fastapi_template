@@ -1,6 +1,8 @@
 # app/auth/routes/v1/auth.py
 
 from typing import Annotated
+from dishka import FromDishka
+from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -11,7 +13,6 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
-from app.auth.deps import MediatorAuth
 from app.auth.schemas.auth.requests import (
     LogoutRequest,
     ResetPasswordRequest,
@@ -26,8 +27,9 @@ from app.auth.schemas.auth.responses import (
 )
 from app.auth.schemas.token import TokenGroup
 from app.core.api.rate_limiter import ConfigurableRateLimiter
+from app.core.mediators.base import BaseMediator
 
-router = APIRouter()
+router = APIRouter(route_class=DishkaRoute)
 
 @router.post(
     "/login",
@@ -37,10 +39,11 @@ router = APIRouter()
     status_code=status.HTTP_200_OK
 )
 async def login(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> TokenResponse:
-    response: TokenGroup = await mediator.handle_command(
+    response: TokenGroup
+    response, *_ = await mediator.handle_command(
         LoginCommand(
             username=login_request.username,
             password=login_request.password
@@ -59,10 +62,10 @@ async def login(
     status_code=status.HTTP_200_OK
 )
 async def refresh(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     refresh_request: RefreshTokenRequest,
 ) -> AccessTokenResponse:
-    access_token: str = await mediator.handle_command(
+    access_token, *_ = await mediator.handle_command(
         RefreshTokenCommand(refresh_token=refresh_request.refresh_token)
     )
     return AccessTokenResponse(access_token=access_token)
@@ -74,7 +77,7 @@ async def refresh(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def logout(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     logout_request: LogoutRequest
 ) -> None:
     await mediator.handle_command(LogoutCommand(refresh_token=logout_request.refresh_token))
@@ -87,7 +90,7 @@ async def logout(
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))],
 )
 async def send_verify_code(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     send_verify_request: SendVerifyCodeRequest,
 ) -> None:
     await mediator.handle_command(
@@ -102,7 +105,7 @@ async def send_verify_code(
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def send_reset_password_code(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     send_reset_password_request: SendResetPasswordCodeRequest
 ) -> None:
     await mediator.handle_command(
@@ -117,7 +120,7 @@ async def send_reset_password_code(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def verify_email(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     verify_email_request: VerifyEmailRequest
 ) -> None:
     await mediator.handle_command(VerifyCommand(token=verify_email_request.token))
@@ -130,7 +133,7 @@ async def verify_email(
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def reset_password(
-    mediator: MediatorAuth,
+    mediator: FromDishka[BaseMediator],
     reset_password_request: ResetPasswordRequest
 ) -> None:
     await mediator.handle_command(
