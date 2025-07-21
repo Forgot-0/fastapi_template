@@ -14,8 +14,7 @@ from app.core.events.service import BaseEventBus
 class MediatorEventBus(BaseEventBus):
     container: AsyncContainer
 
-    async def publish(self, events: Iterable[BaseEvent]) -> Iterable[ER]:
-        result = []
+    async def publish(self, events: Iterable[BaseEvent]) -> None:
 
         for event in events:
             type_handlers = self.event_registy.get_handler_types([event])
@@ -24,11 +23,10 @@ class MediatorEventBus(BaseEventBus):
 
             for type_handler in type_handlers:
                 if type_handler.instance:
-                    result.append(await type_handler.instance.handle(event))
+                    await type_handler.instance(event)
                 else:
                     async with self.container() as request:
                         handler = await request.get(type_handler.handler_type)
-                        result.append(await handler.handle(event))
+                        await handler(event)
 
-        return result
 

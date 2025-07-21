@@ -18,7 +18,7 @@ class CreatedUserEvent(BaseEvent):
 class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
     mail_service: MailServiceInterface
 
-    async def handle(self, event: CreatedUserEvent) -> None:
+    async def __call__(self, event: CreatedUserEvent) -> None:
         email_data = EmailData(subject='Successful registration', recipient=event.email)
         verify_token = generate_verify_token(email=event.email)
         template = VerifyTokenTemplate(

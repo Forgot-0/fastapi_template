@@ -10,6 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
+from app.core.log.init import configure_logging
 from app.core.middlewares import LoggingMiddleware
 
 
@@ -46,6 +47,7 @@ def init_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    configure_logging()
     container = create_container()
     setup_dishka(container=container, app=app)
 

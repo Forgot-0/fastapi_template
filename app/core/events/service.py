@@ -11,5 +11,5 @@ class BaseEventBus(ABC):
     event_registy: EventRegisty
 
     @abstractmethod
-    async def publish(self, events: Iterable[BaseEvent]) -> Iterable[ER]:
+    async def publish(self, events: Iterable[BaseEvent]) -> None:
         ...

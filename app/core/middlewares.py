@@ -1,11 +1,11 @@
+import logging
 import time
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.services.log.depends import logger
-
+logger = logging.getLogger(__name__)
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp):
@@ -16,12 +16,13 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
 
-        await logger.ainfo(
-            'request',
-            method=request.method,
-            url=str(request.url),
-            status_code=response.status_code,
-            processing_time=time.time() - start_time,
+        logger.info('request',
+            extra={
+                "method":request.method,
+                "url": str(request.url),
+                "status_code": response.status_code,
+                "processing_time": time.time() - start_time
+            }
         )
 
-        return response 
+        return response

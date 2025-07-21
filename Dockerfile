@@ -10,7 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY alembic.ini /app/
 COPY migrations/ /app/migrations/
-COPY logs/ app/logs/
 COPY app/ /app/app/
 
 CMD ["sh", "-c", "uvicorn app.main:init_app --reload --host 0.0.0.0 --port 8000"]

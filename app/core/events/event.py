@@ -29,10 +29,11 @@ ER = TypeVar('ER', bound=Any)
 class BaseEventHandler(ABC, Generic[ET, ER]):
 
     @abstractmethod
-    async def handle(self, event: ET) -> ER:
+    async def __call__(self, event: ET) -> ER:
         ...
 
-@dataclass
+
+@dataclass(frozen=True)
 class EventHandlerInfo:
     handler_type: Type[BaseEventHandler]
     instance: Optional[BaseEventHandler] = None

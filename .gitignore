@@ -82,3 +82,4 @@ cython_debug/
 
 # Logs
 logs/
+.logs/

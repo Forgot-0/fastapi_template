@@ -67,6 +67,8 @@ class AppConfig(BaseConfig):
     QUEUE_REDIS_RESULT_BACKEND: str = ''
 
     LOG_LEVEL: str = 'ERROR'
+    JSON_LOG: bool = True
+    PATH_LOG: str | None = ".logs/logs.log"
     LOG_HANDLERS: Annotated[list[Literal['stream', 'file']] | str, BeforeValidator(BaseConfig.parse_list)] = ['stream']
 
 
