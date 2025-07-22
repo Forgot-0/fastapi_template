@@ -12,6 +12,6 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     tokens: Mapped[list['Token']] = relationship(back_populates='user') # type: ignore

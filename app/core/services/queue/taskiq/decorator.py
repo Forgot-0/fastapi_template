@@ -9,6 +9,13 @@ class TaskiqQueuedDecorator:
     broker: AsyncBroker
 
     def __call__(self, cls: type[BaseTask]) -> type[BaseTask]:
-        self.broker.register_task(func=cls().run, task_name=cls.get_name())
+
+        async def task_wrapper(*args, **kwargs):
+            task_instance = cls()
+            return await task_instance.run(*args, **kwargs) # type: ignore
+
+        task_wrapper.name = cls.get_name()
+
+        self.broker.register_task(func=task_wrapper, task_name=cls.get_name())
 
         return cls

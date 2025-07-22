@@ -37,7 +37,7 @@ class AppConfig(BaseConfig):
     @property
     def postgres_url(self) -> PostgresDsn:
         return MultiHostUrl.build(
-            scheme='postgresql+psycopg',
+            scheme='postgresql+asyncpg',
             username=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_SERVER,
