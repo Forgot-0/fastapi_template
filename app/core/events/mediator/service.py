@@ -22,11 +22,8 @@ class MediatorEventBus(BaseEventBus):
                 raise 
 
             for type_handler in type_handlers:
-                if type_handler.instance:
-                    await type_handler.instance(event)
-                else:
-                    async with self.container() as request:
-                        handler = await request.get(type_handler.handler_type)
-                        await handler(event)
+                async with self.container() as request:
+                    handler = await request.get(type_handler)
+                    await handler(event)
 
 

@@ -8,37 +8,36 @@ from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCom
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
 from app.auth.events.users.created import CreatedUserEvent, SendVerifyEventHandler
 from app.auth.queries.auth.get_by_token import GetByAcccessTokenQuery, GetByAcccessTokenQueryHandler
-from app.core.events.event import EventHandlerInfo, EventRegisty
-from app.core.mediators.command import HandlerInfo, CommandRegisty
-from app.core.mediators.query import QueryHandlerInfo, QueryRegisty
+from app.core.events.event import EventRegisty
+from app.core.mediators.command import CommandRegisty
+from app.core.mediators.query import QueryRegisty
 
 
 def register_auth_command_handlers(command_registry: CommandRegisty) -> None:
     """Register all command handlers with the command registry."""
 
     # User commands
-    command_registry.register_command(RegisterCommand, [HandlerInfo(RegisterCommandHandler)])
-    command_registry.register_command(VerifyCommand, [HandlerInfo(VerifyCommandHandler)])
-    command_registry.register_command(SendVerifyCommand, [HandlerInfo(SendVerifyCommandHandler)])
-    command_registry.register_command(ResetPasswordCommand, [HandlerInfo(ResetPasswordCommandHandler)])
-    command_registry.register_command(SendResetPasswordCommand, [HandlerInfo(SendResetPasswordCommandHandler)])
+    command_registry.register_command(RegisterCommand, [RegisterCommandHandler])
+    command_registry.register_command(VerifyCommand, [VerifyCommandHandler])
+    command_registry.register_command(SendVerifyCommand, [SendVerifyCommandHandler])
+    command_registry.register_command(ResetPasswordCommand, [ResetPasswordCommandHandler])
+    command_registry.register_command(SendResetPasswordCommand, [SendResetPasswordCommandHandler])
 
     # Auth commands
-    command_registry.register_command(LoginCommand, [HandlerInfo(LoginCommandHandler)])
-    command_registry.register_command(LogoutCommand, [HandlerInfo(LogoutCommandHandler)])
-    command_registry.register_command(RefreshTokenCommand, [HandlerInfo(RefreshTokenCommandHandler)])
+    command_registry.register_command(LoginCommand, [LoginCommandHandler])
+    command_registry.register_command(LogoutCommand, [LogoutCommandHandler])
+    command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
 
 def register_auth_query_handlers(query_registry: QueryRegisty) -> None:
     """Register all query handlers with the query registry."""
 
     # Auth queries
-    query_registry.register_query(GetByAcccessTokenQuery, QueryHandlerInfo(GetByAcccessTokenQueryHandler))
-
+    query_registry.register_query(GetByAcccessTokenQuery, GetByAcccessTokenQueryHandler)
 
 def register_auth_event_handlers(event_registry: EventRegisty) -> None:
     """Register all event handlers with the event registry."""
 
     # User events
     event_registry.subscribe(CreatedUserEvent, [
-        EventHandlerInfo(SendVerifyEventHandler)
+        SendVerifyEventHandler
     ])

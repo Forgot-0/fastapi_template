@@ -21,21 +21,16 @@ class DishkaMediator(BaseMediator):
         if not handler_registy:
             raise 
 
-        for handler in handler_registy:
-            if handler.instance:
-                result.append(await handler.instance.handle(command))
-            else:
-                async with self.container() as request:
-                    handler = await request.get(handler.handler_type)
-                    result.append(await handler.handle(command))
+        for handler_type in handler_registy:
+            async with self.container() as request:
+                handler = await request.get(handler_type)
+                result.append(await handler.handle(command))
 
         return result
 
     async def handle_query(self, query: BaseQuery) -> QR:
         handler_registy = self.query_registy.get_handler_types(query)
-        if handler_registy.instance:
-            return await handler_registy.instance.handle(query)
 
         async with self.container() as request:
-            handler = await request.get(handler_registy.handler_type)
+            handler = await request.get(handler_registy)
             return await handler.handle(query)

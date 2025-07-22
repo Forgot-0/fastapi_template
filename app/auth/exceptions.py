@@ -1,6 +1,6 @@
-# app/auth/exceptions.py
-
 # from app.core.api.exceptions import ProjectBaseException
+
+
 
 # class AuthException(ProjectBaseException):
 #     """
