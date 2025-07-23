@@ -11,7 +11,8 @@ from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
 from app.core.log.init import configure_logging
-from app.core.middlewares import LoggingMiddleware
+from app.core.middlewares.context import ContextMiddleware
+from app.core.middlewares.logging import LoggingMiddleware
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ def setup_middleware(app: FastAPI, container: AsyncContainer) -> None:
             allow_methods=['*'],
             allow_headers=['*'],
         )
+    app.add_middleware(ContextMiddleware)
 
 
 def setup_router(app: FastAPI) -> None:
