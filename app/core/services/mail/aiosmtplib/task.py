@@ -1,20 +1,23 @@
+from dataclasses import dataclass
 from email.message import EmailMessage
 
 import aiosmtplib
+from dishka import FromDishka
+from dishka.integrations.taskiq import inject
 
 from app.core.configs.app import app_config
-from app.core.services.queue.depends import get_queued_decorator
+from app.core.configs.smtp import SMTPConfig
 from app.core.services.queue.task import BaseTask
-from app.core.services.mail.aiosmtplib.init import smtp_config
-
-queued = get_queued_decorator()
 
 
-@queued
+
+@dataclass
 class SendEmail(BaseTask):
     __task_name__ = 'mail.send'
 
-    async def run(self, content: str, email_data: dict) -> None:
+    @staticmethod
+    @inject
+    async def run(content: str, email_data: dict, smtp_config: FromDishka[SMTPConfig]) -> None:
         sender_name = email_data['sender_name'] or app_config.EMAIL_SENDER_NAME
         sender_address = email_data['sender_address'] or app_config.EMAIL_SENDER_ADDRESS
 

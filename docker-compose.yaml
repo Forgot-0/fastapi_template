@@ -42,7 +42,7 @@ services:
       - .:/app
     env_file:
       - .env
-    command: taskiq worker app.core.services.queue.taskiq.init:broker app.core.tasks
+    command: taskiq worker app.core.tasks:broker
     networks:
       - app-network
 

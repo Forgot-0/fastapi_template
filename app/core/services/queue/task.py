@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 
+
+@dataclass
 class BaseTask(ABC):
     @classmethod
     def get_name(cls) -> str:
@@ -10,6 +13,7 @@ class BaseTask(ABC):
 
         return name
 
+    @staticmethod
     @abstractmethod
-    def run(self, *args, **kwargs):
+    async def run(*args, **kwargs):
         ...
