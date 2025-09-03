@@ -4,12 +4,30 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - migrations
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     env_file:
       - .env
     volumes:
       - .:/app
+    command:  ["sh", "-c", "uvicorn app.main:init_app --reload --host ${HOST} --port ${PORT}"]
+    networks:
+      - app-network
+
+  consumers:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: ["sh", "-c", "faststream run --factory app.consumers:init_consumers --workers 2"]
     networks:
       - app-network
 
@@ -23,6 +41,12 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
     networks:
       - app-network
 
@@ -46,6 +70,48 @@ services:
     networks:
       - app-network
 
+  scheduler:
+    build: .
+    volumes:
+      - .:/app
+    command: taskiq scheduler app.core.tasks:scheduler_taksiq
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+  kafka:
+    image: apache/kafka:4.0.0
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_NODE_ID: "1"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092 2>/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   migrations:
     build: .
     entrypoint: ["/bin/sh", "-c"]
@@ -57,14 +123,21 @@ services:
       - .:/app
     depends_on:
       - db
-    env_file:
-      - .env
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_SERVER=${POSTGRES_SERVER}
+      - POSTGRES_PORT=${POSTGRES_PORT}
     networks:
       - app-network
 
 volumes:
   postgres_data:
   redis-data:
+  kafka-data:
+
 
 networks:
   app-network:

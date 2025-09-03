@@ -2,8 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.repositories.user import UserRepository
-from app.auth.security import decode_verify_token
+from app.auth.services.users import UserService
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -15,14 +14,8 @@ class VerifyCommand(BaseCommand):
 @dataclass(frozen=True)
 class VerifyCommandHandler(BaseCommandHandler[VerifyCommand, None]):
     session: AsyncSession
-    user_repository: UserRepository
+    user_service: UserService
 
     async def handle(self, command: VerifyCommand) -> None:
-        verify_token = decode_verify_token(token=command.token)
-        user = await self.user_repository.get_by_email(self.session, email=verify_token.sub)
-
-        if not user:
-            raise
-
-        user.is_verified = True
+        await self.user_service.verify(command.token)
         await self.session.commit()

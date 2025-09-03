@@ -1,27 +1,53 @@
-# from app.core.api.exceptions import ProjectBaseException
+from dataclasses import dataclass
+
+from app.core.exceptions import ApplicationException
 
 
+@dataclass(eq=False)
+class AlreadyUserEmail(ApplicationException):
+    field: str
 
-# class AuthException(ProjectBaseException):
-#     """
-#     Ошибка аутентификации/авторизации в модуле auth.
-#     По умолчанию статус-код 401, если не указано другое.
-#     """
-#     def __init__(self, message: str, http_status: int = 401):
-#         super().__init__(message, http_status)
+    @property
+    def message(self):
+        return f'Пользователь с таким email уже существую'
+
+    @property
+    def status(self) -> int:
+        return 400
+
+@dataclass(eq=False)
+class AlreadyUserUsername(ApplicationException):
+    field: str
+
+    @property
+    def message(self):
+        return f'Пользователь с таким username уже существую'
+
+    @property
+    def status(self) -> int:
+        return 400
+
+@dataclass(eq=False)
+class InvalidJWTToken(ApplicationException):
+    @property
+    def message(self):
+        return 'Неправильный токен'
+
+    @property
+    def status(self) -> int:
+        return 400
 
 
-# class InvalidTokenException(ProjectBaseException):
-#     """
-#     Ошибка недействительного токена; по умолчанию - 401.
-#     """
-#     def __init__(self, message: str = "Token is invalid or expired"):
-#         super().__init__(message, http_status=401)
+@dataclass(eq=False)
+class NotFoundUserBy(ApplicationException):
+    text: str
+
+    @property
+    def message(self):
+        return f"Пользователь с таким {self.text} не найдем"
+
+    @property
+    def status(self) -> int:
+        return 404
 
 
-# class UserNotFoundException(ProjectBaseException):
-#     """
-#     Ошибка "пользователь не найден".
-#     """
-#     def __init__(self, message: str = "User not found"):
-#         super().__init__(message, http_status=404)

@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.auth.schemas.base import PasswordMixinSchema
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
@@ -16,13 +17,15 @@ class BaseUser(BaseModel):
     email: EmailStr
 
 
-class UserCreate(BaseUser):
+class UserCreate(BaseUser, PasswordMixinSchema):
     """Schema for user creation request."""
-    password_hash: str | None = None
+    ...
 
 
 class UserDTO(BaseUser):
     id: int
+    is_active: bool
+    is_verified: bool
 
 
 class UserSortParam(SortParam):

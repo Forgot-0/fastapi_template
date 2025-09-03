@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Depends, status
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel
-from app.auth.schemas.user import UserDTO
+from app.auth.schemas.user import UserCreate, UserDTO
 from app.auth.schemas.users.requests import UserCreateRequest
 from app.auth.schemas.users.responses import UserResponse
 from app.core.mediators.base import BaseMediator
@@ -27,10 +27,12 @@ async def register_user(
     user: UserDTO
     user, *_ = await mediator.handle_command(
         RegisterCommand(
-            username=user_request.username,
-            email=user_request.email,
-            password=user_request.password,
-            password_repeat=user_request.password_repeat
+            UserCreate(
+                username=user_request.username,
+                email=user_request.email,
+                password=user_request.password,
+                password_repeat=user_request.password_repeat
+            )
         )
     )
     return UserResponse(

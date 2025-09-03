@@ -6,6 +6,7 @@ from dishka import AsyncContainer
 
 
 from app.core.commands import CR, BaseCommand
+from app.core.exceptions import NotHandlerRegistry
 from app.core.mediators.base import BaseMediator
 from app.core.queries import QR, BaseQuery
 
@@ -19,11 +20,11 @@ class DishkaMediator(BaseMediator):
 
         handler_registy = self.command_registy.get_handler_types(command)
         if not handler_registy:
-            raise 
+            raise NotHandlerRegistry()
 
         for handler_type in handler_registy:
-            async with self.container() as request:
-                handler = await request.get(handler_type)
+            async with self.container() as requests_container:
+                handler = await requests_container.get(handler_type)
                 result.append(await handler.handle(command))
 
         return result
@@ -31,6 +32,6 @@ class DishkaMediator(BaseMediator):
     async def handle_query(self, query: BaseQuery) -> QR:
         handler_registy = self.query_registy.get_handler_types(query)
 
-        async with self.container() as request:
-            handler = await request.get(handler_registy)
+        async with self.container() as requests_container:
+            handler = await requests_container.get(handler_registy)
             return await handler.handle(query)

@@ -14,6 +14,8 @@ class AppConfig(BaseConfig):
     HOST: str = '0.0.0.0'
     PORT: int = 80
 
+    BOT_TOKEN: str = ""
+
     API_V1_STR: str = '/api/v1'
     SECRET_KEY: str = ''
     BACKEND_CORS_ORIGINS: Annotated[list[str] | str, BeforeValidator(BaseConfig.parse_list)] = []
@@ -52,6 +54,9 @@ class AppConfig(BaseConfig):
     @property
     def redis_url(self) -> str:
         return f'redis://{self.REDIS_HOST}:{self.REDIS_PORT}'
+
+    BROKER_URL: str = ""
+    GROUP_ID: str = ""
 
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False

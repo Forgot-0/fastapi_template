@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.repositories.token import TokenRepository
-from app.auth.security import create_access_token, verify_token
+from app.auth.schemas.token import TokenGroup
+from app.auth.services.tokens import AuthService
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -13,21 +13,11 @@ class RefreshTokenCommand(BaseCommand):
 
 
 @dataclass(frozen=True)
-class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, str]):
+class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGroup]):
     session: AsyncSession
-    token_repository: TokenRepository
+    token_service: AuthService
 
-    async def handle(self, command: RefreshTokenCommand) -> str:
-        payload = verify_token(command.refresh_token, token_type='refresh')
-
-        token_obj = await self.token_repository.get_with_user(self.session, jti=payload.jti)
-        if token_obj is None:
-            raise
-
-        if not token_obj.is_valid():
-            raise
-
-        new_access_token = create_access_token(
-            data={"sub": str(token_obj.user_id), 'device_id': payload.device_id},
-        )
-        return new_access_token
+    async def handle(self, command: RefreshTokenCommand) -> TokenGroup:
+        token_group = await self.token_service.refresh_token(command.refresh_token)
+        await self.session.commit()
+        return token_group

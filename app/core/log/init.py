@@ -79,7 +79,6 @@ def configure_logging() -> None:
 
     for logger_name in (
         "aiohttp",
-        "aiogram",
         "taskiq"
     ):
         logging.getLogger(logger_name).setLevel(logging.WARN)

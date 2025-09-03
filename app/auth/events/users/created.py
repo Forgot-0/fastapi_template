@@ -1,28 +1,14 @@
 from dataclasses import dataclass
 
-from app.auth.emails.templates import VerifyTokenTemplate
-from app.auth.security import generate_verify_token
-from app.core.events.event import BaseEvent, BaseEventHandler
-from app.core.services.mail.service import EmailData, MailServiceInterface
+from app.auth.models.user import CreatedUserEvent
+from app.auth.services.users import UserService
+from app.core.events.event import BaseEventHandler
 
-
-@dataclass(frozen=True)
-class CreatedUserEvent(BaseEvent):
-    user_id: int
-    email: str
-
-    __event_name__: str = "user_created"
 
 
 @dataclass(frozen=True)
 class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
-    mail_service: MailServiceInterface
+    user_service: UserService
 
     async def __call__(self, event: CreatedUserEvent) -> None:
-        email_data = EmailData(subject='Successful registration', recipient=event.email)
-        verify_token = generate_verify_token(email=event.email)
-        template = VerifyTokenTemplate(
-            email=event.email,
-            token=verify_token,
-        )
-        await self.mail_service.queue(template=template, email_data=email_data)
+        await self.user_service.send_verify(email=event.email)

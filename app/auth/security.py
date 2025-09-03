@@ -10,6 +10,7 @@ from app.auth.schemas.token import ResetToken, TokenPayload, VerifyToken
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def hash_password(password: str) -> str:
     """
     Hash the user's password using bcrypt.
@@ -71,7 +72,6 @@ def verify_token(token: str, token_type: str) -> TokenPayload:
         raise JWTError("Not a valid JWT token")
     return TokenPayload(**payload)
 
-
 def generate_reset_token(email: str) -> str:
     now = datetime.now()
     expires = now + timedelta(minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES)
@@ -91,8 +91,6 @@ def decode_reset_token(token: str) -> ResetToken:
     )
 
     return ResetToken(**payload)
-
-
 
 def generate_verify_token(email: str) -> str:
     now = datetime.now()

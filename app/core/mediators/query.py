@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, Type
 
+from app.core.exceptions import NotHandlerRegistry
 from app.core.queries import QR, BaseQuery, BaseQueryHandler
 
 
@@ -17,7 +18,7 @@ class QueryRegisty:
 
     def get_handler_types(self, query: BaseQuery) -> Type[BaseQueryHandler]:
         if query.__class__ not in self.quries_map:
-            raise
+            raise NotHandlerRegistry()
 
         return self.quries_map[query.__class__]
 

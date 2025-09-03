@@ -5,12 +5,7 @@ from app.auth.repositories.token import TokenRepository
 
 
 class AuthRepositoryProvider(Provider):
-    scope = Scope.APP
+    scope = Scope.REQUEST
 
-    @provide
-    def user_repository(self) -> UserRepository:
-        return UserRepository()
-
-    @provide
-    def token_repository(self) -> TokenRepository:
-        return TokenRepository()
+    user_repository = provide(UserRepository)
+    token_repository = provide(TokenRepository)

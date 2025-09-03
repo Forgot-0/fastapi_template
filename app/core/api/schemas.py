@@ -23,8 +23,11 @@ class ListParams(BaseModel):
     sort: list[SortParam] | None = Field(None)
     filters: list[FilterParam] | None = Field(None)
     page: int = Field(1, ge=1)
-    page_size: int = Field(10, ge=1, le=100)
+    page_size: int = Field(10, ge=1)
 
+class ListParamsWithoutPagination(BaseModel):
+    sort: list[SortParam] | None = Field(None)
+    filters: list[FilterParam] | None = Field(None)
 
 class Pagination(BaseModel):
     total: int

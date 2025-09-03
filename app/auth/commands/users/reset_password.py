@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.user import UserRepository
 from app.auth.security import decode_reset_token, hash_password
+from app.auth.services.users import UserService
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -17,16 +18,12 @@ class ResetPasswordCommand(BaseCommand):
 @dataclass(frozen=True)
 class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]):
     session: AsyncSession
-    user_repository: UserRepository
+    user_service: UserService
 
     async def handle(self, command: ResetPasswordCommand) -> None:
-        reset_token = decode_reset_token(token=command.token)
-        user = await self.user_repository.get_by_email(self.session, email=reset_token.sub)
-
-        if not user: return
-
-        if command.password != command.repeat_password:
-            raise
-
-        user.password_hash = hash_password(command.password)
+        await self.user_service.reset_password(
+            token=command.token,
+            password=command.password,
+            repeat_password=command.repeat_password
+        )
         await self.session.commit()

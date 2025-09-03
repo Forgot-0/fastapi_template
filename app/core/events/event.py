@@ -3,8 +3,10 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 from uuid import UUID, uuid4
+
+from app.core.utils import now_utc
 
 
 
@@ -12,7 +14,7 @@ from uuid import UUID, uuid4
 @dataclass(frozen=True)
 class BaseEvent(ABC):
     event_id: UUID = field(default_factory=uuid4, kw_only=True)
-    created_at: datetime = field(default_factory=datetime.now, kw_only=True)
+    created_at: datetime = field(default_factory=now_utc, kw_only=True)
 
     @classmethod
     def get_name(cls) -> str:

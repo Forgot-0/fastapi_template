@@ -1,12 +1,10 @@
 from dishka import AsyncContainer, make_async_container
-from dishka.integrations.fastapi import FastapiProvider
-from dishka.integrations.taskiq import TaskiqProvider
 
 from app.auth.di import get_auth_providers
 from app.core.di import get_core_providers
 
 
-def create_container() -> AsyncContainer:
+def create_container(*app_providers) -> AsyncContainer:
     """Create and configure the main DI container with all providers."""
     providers = [
         # Core providers
@@ -16,4 +14,4 @@ def create_container() -> AsyncContainer:
         *get_auth_providers(),
     ]
 
-    return make_async_container(*providers, FastapiProvider(), TaskiqProvider())
+    return make_async_container(*providers, *app_providers)
