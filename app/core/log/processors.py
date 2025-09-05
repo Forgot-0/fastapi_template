@@ -9,6 +9,7 @@ import structlog
 
 logger = logging.getLogger(__name__)
 
+
 ProcessorType = Callable[
     [
         structlog.types.WrappedLogger,

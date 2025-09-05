@@ -19,7 +19,6 @@ class MediatorEventBus(BaseEventBus):
         for event in events:
             type_handlers = self.event_registy.get_handler_types([event])
             if not type_handlers:
-                print("Not type", event)
                 continue
 
             for type_handler in type_handlers:

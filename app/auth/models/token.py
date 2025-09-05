@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db.base_model import BaseModel
+from app.core.utils import now_utc
 
 
 class Token(BaseModel):
@@ -20,5 +21,5 @@ class Token(BaseModel):
     user: Mapped['User'] = relationship("User", back_populates="tokens") # type: ignore
 
     def is_valid(self) -> bool:
-        return datetime.now() < self.expires_at or not self.is_revoked
+        return now_utc() < self.expires_at or not self.is_revoked
 

@@ -28,7 +28,7 @@ class BaseMessageBroker(ABC):
         ...
 
     @abstractmethod
-    async def send_event(self, topic: str, key: str, event: BaseEvent) -> None:
+    async def send_event(self, key: str, event: BaseEvent) -> None:
         ...
 
     @abstractmethod

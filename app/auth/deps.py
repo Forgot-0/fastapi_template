@@ -39,27 +39,6 @@ class ActiveUserGetter:
             )
         return user
 
-class ActiveUserGetterWebsoket:
-    async def __call__(
-        self,
-        token_service: AuthService,
-        websocket: WebSocket
-    ) -> UserDTO:
-        try:
-            token = websocket.headers.get("sec-websocket-protocol")
-            if not token: raise
-            token = token[13:]
-            user: User = await token_service.get_user_by_token(token=token)
-            if not user.is_active:
-                raise
-        except:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid token',
-                headers={'WWW-Authenticate': 'Bearer'},
-            )
-        return UserDTO.model_validate(user.to_dict())
-
 
 CurrentUserModel = Annotated[UserDTO, Depends(CurrentUserGetter())]
 ActiveUserModel = Annotated[UserDTO, Depends(ActiveUserGetter())]

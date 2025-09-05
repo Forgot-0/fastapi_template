@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(context: ContextRepo):
-    logger.info("Lifespan")
+    logger.info("Starting FastStream")
     yield
+    logger.info("Shutting down FastStream")
 
 
 def setup_router(broker: KafkaBroker) -> None:

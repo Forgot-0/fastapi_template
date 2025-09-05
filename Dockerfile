@@ -37,5 +37,3 @@ WORKDIR /app
 COPY ./app /app
 COPY alembic.ini /app/
 COPY migrations/ /app/migrations/
-
-CMD ["sh", "-c", "uvicorn app.main:init_app --reload --host 0.0.0.0 --port 8000"]

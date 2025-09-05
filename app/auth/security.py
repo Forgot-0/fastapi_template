@@ -6,6 +6,7 @@ from jose import jwt, JWTError
 
 from app.auth.config import auth_config
 from app.auth.schemas.token import ResetToken, TokenPayload, VerifyToken
+from app.core.utils import now_utc
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -39,7 +40,7 @@ def create_access_token(*, data: dict[str, str], jti: str=str(uuid4()), expires_
     :return: The encoded JWT access token.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = now_utc() + (expires_delta or timedelta(minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"jti": jti, "exp": expire, "type": "access"}) # type: ignore
     encoded_jwt = jwt.encode(to_encode, auth_config.JWT_SECRET_KEY, algorithm=auth_config.JWT_ALGORITHM)
     return encoded_jwt
@@ -53,7 +54,7 @@ def create_refresh_token(*, data: dict[str, str], jti: str, expires_delta: timed
     :return: The encoded JWT refresh token.
     """
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS))
+    expire = now_utc() + (expires_delta or timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS))
     to_encode.update({"jti": jti, "exp": expire, "type": "refresh"}) # type: ignore
     encoded_jwt = jwt.encode(to_encode, auth_config.JWT_SECRET_KEY, algorithm=auth_config.JWT_ALGORITHM)
     return encoded_jwt
@@ -73,7 +74,7 @@ def verify_token(token: str, token_type: str) -> TokenPayload:
     return TokenPayload(**payload)
 
 def generate_reset_token(email: str) -> str:
-    now = datetime.now()
+    now = now_utc()
     expires = now + timedelta(minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES)
 
     return jwt.encode(
@@ -93,7 +94,7 @@ def decode_reset_token(token: str) -> ResetToken:
     return ResetToken(**payload)
 
 def generate_verify_token(email: str) -> str:
-    now = datetime.now()
+    now = now_utc()
     expires = now + timedelta(minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES)
 
     return jwt.encode(
