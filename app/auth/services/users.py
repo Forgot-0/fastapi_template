@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from app.core.configs.app import app_config
 from app.auth.config import auth_config
 from app.auth.emails.templates import ResetTokenTemplate, VerifyTokenTemplate
-from app.auth.exceptions import AlreadyUserEmail, AlreadyUserUsername, NotFoundUserBy
+from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameException, NotFoundUserByException, WrongDataException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserCreate
@@ -44,7 +44,7 @@ class UserService:
         if not user: return
 
         if password != repeat_password:
-            raise
+            raise WrongDataException()
 
         user.password_hash = hash_password(password)
 
@@ -52,7 +52,7 @@ class UserService:
         user = await self.user_repository.get_by_email(email=email)
 
         if not user:
-            raise
+            raise WrongDataException()
 
         token = generate_verify_token(email=email)
         email_data = EmailData(subject="Код для верификации почты", recipient=user.email)
@@ -67,14 +67,14 @@ class UserService:
         user = await self.user_repository.get_by_email(email=verify_token.sub)
 
         if not user:
-            raise
+            raise WrongDataException()
 
         user.is_verified = True
 
     async def get_by_id(self, user_id: int) -> User:
         user = await self.user_repository.get_by_id(user_id=user_id)
         if not user:
-            raise NotFoundUserBy("id")
+            raise NotFoundUserByException("id")
 
         return user
 
@@ -82,12 +82,12 @@ class UserService:
         user = await self.user_repository.get_by_username(user_data.username)
 
         if user:
-            raise AlreadyUserUsername(user_data.username)
+            raise AlreadyUserUsernameException(user_data.username)
 
 
         user = await self.user_repository.get_by_email(user_data.email)
         if user:
-            raise AlreadyUserEmail(user_data.username)
+            raise AlreadyUserEmailException(user_data.username)
 
         if user_data.password != user_data.password_repeat:
             raise

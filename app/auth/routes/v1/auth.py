@@ -58,17 +58,20 @@ async def login(
     "/refresh",
     summary="Обновление access токена",
     description="Обновляет access токен, используя refresh токен.",
-    response_model=AccessTokenResponse,
+    response_model=TokenResponse,
     status_code=status.HTTP_200_OK
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
     refresh_request: RefreshTokenRequest,
-) -> AccessTokenResponse:
-    access_token, *_ = await mediator.handle_command(
+) -> TokenResponse:
+    token_group, *_ = await mediator.handle_command(
         RefreshTokenCommand(refresh_token=refresh_request.refresh_token)
     )
-    return AccessTokenResponse(access_token=access_token)
+    return TokenResponse(
+        access_token=token_group.access_token,
+        refresh_token=token_group.refresh_token
+    )
 
 @router.post(
     "/logout",

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from uuid import uuid4
 
+from app.auth.exceptions import InvalidJWTTokenException, WrongDataException
 from app.auth.models.token import Token
 from app.auth.models.user import User
 from app.auth.repositories.token import TokenRepository
@@ -48,7 +49,7 @@ class AuthService:
         await self.user_repository.get_by_email(username)
 
         if not user or not verify_password(password, user.password_hash):
-            raise
+            raise WrongDataException()
 
         return await self.create_by_user(user)
         
@@ -57,11 +58,11 @@ class AuthService:
         token_data = verify_token(token=token, token_type="access")
         user_id = token_data.sub
         if not user_id:
-            raise 
+            raise InvalidJWTTokenException()
 
         user = await self.user_repository.get_by_id(int(user_id))
         if not user:
-            raise
+            raise InvalidJWTTokenException()
 
         return user
 
@@ -69,8 +70,8 @@ class AuthService:
         refresh_data = verify_token(token=refresh_token, token_type="refresh")
         token = await self.token_repository.get_by_jti(refresh_data.jti)
 
-        if not token or not token.is_valid():
-            raise
+        if not token or token.is_valid():
+            raise InvalidJWTTokenException()
 
         new_access_token = create_access_token(
             data={"sub": str(token.user_id), 'device_id': token.device_id},

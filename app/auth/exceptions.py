@@ -4,7 +4,7 @@ from app.core.exceptions import ApplicationException
 
 
 @dataclass(eq=False)
-class AlreadyUserEmail(ApplicationException):
+class AlreadyUserEmailException(ApplicationException):
     field: str
 
     @property
@@ -16,7 +16,7 @@ class AlreadyUserEmail(ApplicationException):
         return 400
 
 @dataclass(eq=False)
-class AlreadyUserUsername(ApplicationException):
+class AlreadyUserUsernameException(ApplicationException):
     field: str
 
     @property
@@ -28,7 +28,7 @@ class AlreadyUserUsername(ApplicationException):
         return 400
 
 @dataclass(eq=False)
-class InvalidJWTToken(ApplicationException):
+class InvalidJWTTokenException(ApplicationException):
     @property
     def message(self):
         return 'Неправильный токен'
@@ -39,7 +39,7 @@ class InvalidJWTToken(ApplicationException):
 
 
 @dataclass(eq=False)
-class NotFoundUserBy(ApplicationException):
+class NotFoundUserByException(ApplicationException):
     text: str
 
     @property
@@ -51,3 +51,12 @@ class NotFoundUserBy(ApplicationException):
         return 404
 
 
+@dataclass(eq=False)
+class WrongDataException(ApplicationException):
+    @property
+    def message(self):
+        return f"Неверные данные"
+
+    @property
+    def status(self) -> int:
+        return 400

@@ -12,6 +12,7 @@ from app.core.log.init import configure_logging
 
 logger = logging.getLogger(__name__)
 
+
 @asynccontextmanager
 async def lifespan(context: ContextRepo):
     logger.info("Starting FastStream")
