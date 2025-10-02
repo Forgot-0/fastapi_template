@@ -4,7 +4,7 @@ from dishka import Provider, Scope, provide
 from app.core.configs.app import app_config
 from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.service import AioSmtpLibMailService
-from app.core.services.mail.service import MailServiceInterface
+from app.core.services.mail.service import BaseMailService
 from app.core.services.queue.service import QueueServiceInterface
 
 
@@ -26,5 +26,5 @@ class MailProvider(Provider):
         self,
         queue_service: QueueServiceInterface,
         smtp_config: SMTPConfig
-    ) -> MailServiceInterface:
+    ) -> BaseMailService:
         return AioSmtpLibMailService(queue_service, smtp_config=smtp_config)

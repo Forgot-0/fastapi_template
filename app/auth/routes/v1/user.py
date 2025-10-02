@@ -27,12 +27,10 @@ async def register_user(
     user: UserDTO
     user, *_ = await mediator.handle_command(
         RegisterCommand(
-            UserCreate(
-                username=user_request.username,
-                email=user_request.email,
-                password=user_request.password,
-                password_repeat=user_request.password_repeat
-            )
+            username=user_request.username,
+            email=user_request.email,
+            password=user_request.password,
+            password_repeat=user_request.password_repeat
         )
     )
     return UserResponse(

@@ -13,7 +13,7 @@ class EmailData:
     sender_name: str | None = None
 
 
-class MailServiceInterface(ABC):
+class BaseMailService(ABC):
     @abstractmethod
     async def send(self, template: BaseTemplate, email_data: EmailData) -> None:
         ...

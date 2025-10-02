@@ -48,7 +48,6 @@ fastapi_template/
 │       ├── models/     # Database models
 │       ├── queries/    # Query handlers
 │       ├── routes/     # API routes
-│       └── services/   # Module services
 ├── migrations/          # Alembic migrations
 └── tests/              # Test suite
 ```
@@ -173,8 +172,7 @@ def init_consumers() -> FastStream:
 ├── events.py
 ├── handlers.py
 ├── queries.py
-├── repositories.py
-└── services.
+└── repositories.py
 ```
 
 ### Policies
@@ -626,9 +624,6 @@ new_module/
 ├── repositories/        # Репозитории
 │   ├── __init__.py
 │   └── entity.py
-├── services/           # Бизнес-логика
-│   ├── __init__.py
-│   └── entity.py
 ├── routes/                # API endpoints
 │   ├── __init__.py
 │   └── v1/
@@ -655,7 +650,6 @@ new_module/
 ├── di/                # DI configuration
 │   ├── __init__.py
 │   ├── repositories.py
-│   ├── services.py
 │   ├── commands.py
 │   ├── queries.py
 │   └── events.py
@@ -686,32 +680,15 @@ new_module/
             self.add(entity)
     ```
 
-3. **Создание сервиса:**
-    ```python
-    @dataclass
-    class EntityService:
-        repository: EntityRepository
-
-        async def create(self, data: EntityCreate) -> Entity:
-            entity = Entity(**data.model_dump())
-            await self.repository.create(entity)
-            return entity
-    ```
-
-4. **Настройка DI:**
+3. **Настройка DI:**
     ```python
     # di/repositories.py
     class ModuleRepositoryProvider(Provider):
         scope = Scope.REQUEST
         entity_repository = provide(EntityRepository)
-
-    # di/services.py
-    class ModuleServiceProvider(Provider):
-        scope = Scope.REQUEST
-        entity_service = provide(EntityService)
     ```
 
-5. **Создание API endpoints:**
+4. **Создание API endpoints:**
     ```python
     router = APIRouter(prefix="/api/v1/entities")
 
@@ -724,7 +701,7 @@ new_module/
         return EntityResponse.model_validate(entity)
     ```
 
-6. **Регистрация модуля:**
+5. **Регистрация модуля:**
     ```python
     # В core/di/container.py
     def create_container(*app_providers) -> AsyncContainer:

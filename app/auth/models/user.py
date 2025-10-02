@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.auth.security import hash_password
 from app.core.db.base_model import BaseModel, DateMixin, SoftDeleteMixin
 from app.core.events.event import BaseEvent
 
@@ -42,3 +43,9 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
             )
         )
         return user
+
+    def password_reset(self, password: str) -> None:
+        self.password_hash = hash_password(password)
+
+    def verify(self) -> None:
+        self.is_verified = True

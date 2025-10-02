@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    container_name: "app"
     ports:
       - "8000:8000"
     depends_on:
@@ -18,6 +19,7 @@ services:
 
   consumers:
     build: .
+    container_name: "consumers"
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +35,7 @@ services:
 
   db:
     image: postgres:16.3-alpine
+    container_name: "db"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -52,6 +55,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
+    container_name: "redis"
     ports:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
@@ -62,19 +66,21 @@ services:
 
   queue_worker:
     build: .
+    container_name: "queue_worker"
     volumes:
       - .:/app
     env_file:
       - .env
-    command: taskiq worker app.core.tasks:broker
+    command: taskiq worker app.tasks:broker
     networks:
       - app-network
 
   scheduler:
     build: .
+    container_name: "scheduler"
     volumes:
       - .:/app
-    command: taskiq scheduler app.core.tasks:scheduler_taksiq
+    command: taskiq scheduler app.tasks:scheduler_taksiq
     env_file:
       - .env
     networks:
@@ -82,6 +88,7 @@ services:
 
   kafka:
     image: apache/kafka:4.0.0
+    container_name: "kafka"
     restart: unless-stopped
     ports:
       - "9092:9092"
@@ -141,4 +148,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge
+    external: true

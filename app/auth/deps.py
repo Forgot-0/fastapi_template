@@ -1,25 +1,27 @@
-from typing import Annotated, Any
+from typing import Annotated
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, HTTPException, WebSocket, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.auth.models.user import User
+from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.auth.schemas.user import UserDTO
-from app.auth.services.tokens import AuthService
+from app.core.mediators.base import BaseMediator
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", refreshUrl="/api/v1/auth/refresh")
-
 
 class CurrentUserGetter:
     @inject
     async def __call__(
         self,
-        token_service: FromDishka[AuthService],
+        mediator: FromDishka[BaseMediator],
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> UserDTO:
         try:
-            user: User = await token_service.get_user_by_token(token=token)
+            user: User = await mediator.handle_query(
+                GetByAccessTokenQuery(token=token)
+            )
         except:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

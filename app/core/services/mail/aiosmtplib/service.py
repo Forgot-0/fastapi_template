@@ -6,14 +6,14 @@ import aiosmtplib
 from app.core.configs.app import app_config
 from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.task import SendEmail
-from app.core.services.mail.service import EmailData, MailServiceInterface
+from app.core.services.mail.service import EmailData, BaseMailService
 from app.core.services.mail.template import BaseTemplate
 
 from app.core.services.queue.service import QueueResult, QueueServiceInterface
 
 
 @dataclass
-class AioSmtpLibMailService(MailServiceInterface):
+class AioSmtpLibMailService(BaseMailService):
     queue_service: QueueServiceInterface
     smtp_config: SMTPConfig
 
