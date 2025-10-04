@@ -17,22 +17,6 @@ services:
     networks:
       - app-network
 
-  consumers:
-    build: .
-    container_name: "consumers"
-    depends_on:
-      db:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    env_file:
-      - .env
-    volumes:
-      - .:/app
-    command: ["sh", "-c", "faststream run --factory app.consumers:init_consumers --workers 2"]
-    networks:
-      - app-network
-
   db:
     image: postgres:16.3-alpine
     container_name: "db"

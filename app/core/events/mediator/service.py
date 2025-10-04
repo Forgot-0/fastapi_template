@@ -3,11 +3,8 @@ from dataclasses import dataclass
 
 from dishka import AsyncContainer
 
-
-from app.core.events.event import ER, BaseEvent
+from app.core.events.event import BaseEvent
 from app.core.events.service import BaseEventBus
-from app.core.exceptions import NotHandlerRegistry
-
 
 
 
@@ -25,4 +22,3 @@ class MediatorEventBus(BaseEventBus):
                 async with self.container() as requests_container:
                     handler = await requests_container.get(type_handler)
                     await handler(event)
-

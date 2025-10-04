@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import hashlib
 import json
 from collections.abc import Callable
@@ -5,9 +6,10 @@ from functools import wraps
 
 from aiocache import BaseCache
 
+
+@dataclass
 class AioCachedDecorator:
-    def __init__(self, cache: BaseCache) -> None:
-        self._cache = cache
+    cache: BaseCache
 
     def __call__(self, ttl: int, key_builder: Callable | None = None) -> Callable:
         def decorator(func: Callable):
@@ -17,12 +19,12 @@ class AioCachedDecorator:
                     key_builder(func, *args, **kwargs) if key_builder else self._build_key(func, *args, **kwargs)
                 )
 
-                cached_value = await self._cache.get(cache_key)
+                cached_value = await self.cache.get(cache_key)
                 if cached_value is not None:
                     return cached_value
 
                 result = await func(*args, **kwargs)
-                await self._cache.set(key=cache_key, value=result, ttl=ttl)
+                await self.cache.set(key=cache_key, value=result, ttl=ttl)
                 return result
 
             return wrapper

@@ -35,7 +35,6 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
         ...
 
 
-
 @dataclass
 class EventRegisty:
     events_map: dict[Type[BaseEvent], list[Type[BaseEventHandler]]] = field(
