@@ -31,8 +31,7 @@ ER = TypeVar('ER', bound=Any)
 class BaseEventHandler(ABC, Generic[ET, ER]):
 
     @abstractmethod
-    async def __call__(self, event: ET) -> ER:
-        ...
+    async def __call__(self, event: ET) -> ER: ...
 
 
 @dataclass

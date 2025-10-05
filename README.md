@@ -43,11 +43,10 @@ fastapi_template/
 │   │   └── services/   # Core services
 │   └── auth/           # Auth module (example module structure)
 │       ├── commands/   # Command handlers
-│       ├── di/         # Module DI setup
 │       ├── events/     # Module specific events
 │       ├── models/     # Database models
 │       ├── queries/    # Query handlers
-│       ├── routes/     # API routes
+│       └── routes/     # API routes
 ├── migrations/          # Alembic migrations
 └── tests/              # Test suite
 ```
@@ -150,7 +149,7 @@ fastapi_template/
 - Поддержка как синхронных, так и асинхронных зависимостей
 
 **Key Features**
-- **Scoped Lifetime Management**: Поддержка времен жизни `singleton`, `scoped` и `session`
+- **Scoped Lifetime Management**: Поддержка времен жизни `APP`, `REQUEST` и `SESSION`
 - **Integration with FastAPI and FastStream**:
 ```python
 # FastStream integration example
@@ -162,17 +161,6 @@ async def lifespan(context: ContextRepo):
 def init_consumers() -> FastStream:
     container = create_container(FastStreamProvider())
     setup_dishka(container=container, app=app, auto_inject=True)
-```
-
-**Module folder di**
-
-```
-├── __init__.py
-├── commands.py
-├── events.py
-├── handlers.py
-├── queries.py
-└── repositories.py
 ```
 
 ### Policies
@@ -647,14 +635,8 @@ new_module/
 │   └── entity/
 │       ├── __init__.py
 │       └── created.py
-├── di/                # DI configuration
-│   ├── __init__.py
-│   ├── repositories.py
-│   ├── commands.py
-│   ├── queries.py
-│   └── events.py
-|
-└── routers.py # Main router module
+├── providers.py    # DI configuration
+└── routers.py      # Main router module
 ```
 
 ### 2. Шаги создания нового модуля
@@ -683,7 +665,7 @@ new_module/
 3. **Настройка DI:**
     ```python
     # di/repositories.py
-    class ModuleRepositoryProvider(Provider):
+    class ModuleProvider(Provider):
         scope = Scope.REQUEST
         entity_repository = provide(EntityRepository)
     ```
@@ -707,39 +689,13 @@ new_module/
     def create_container(*app_providers) -> AsyncContainer:
         providers = [
             *get_core_providers(),
-            *get_new_module_providers(),  # Добавляем providers нового модуля
+            ModuleProvider(),  # Добавляем providers нового модуля
         ]
         return make_async_container(*providers, *app_providers)
 
     # В main.py или routers.py
     app.include_router(new_module_router, prefix="/api/v1")
 
-    #В core/di/mediator.py
-    class MediatorProvider(Provider):
-        scope = Scope.APP
-
-        @provide
-        def command_registry(self) -> CommandRegisty:
-            registry = CommandRegisty()
-            register_MODULE_command_handlers(registry)
-            return registry
-
-        @provide
-        def query_registry(self) -> QueryRegisty:
-            registry = QueryRegisty()
-            register_MODULE_query_handlers(registry)
-            return registry
-    
-    #В core/di/events.py
-    class EventProvider(Provider):
-        scope = Scope.APP
-
-        @provide
-        def event_handler_registry(self) -> EventRegisty:
-            registry = EventRegisty()
-            register_MODULE_event_handlers(registry)
-            return registry
-    ```
 
 ### 3. Лучшие практики
 

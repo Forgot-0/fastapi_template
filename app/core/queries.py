@@ -17,5 +17,4 @@ QR = TypeVar('QR', bound=Any)
 class BaseQueryHandler(ABC, Generic[QT, QR]):
 
     @abstractmethod
-    async def handle(self, query: QT) -> QR:
-        ...
+    async def handle(self, query: QT) -> QR: ...

@@ -29,4 +29,5 @@ class GetByAccessTokenQueryHandler(BaseQueryHandler[GetByAccessTokenQuery, User]
         if not user:
             raise InvalidJWTTokenException()
 
+        logger.debug("Get user by access token", extra={"user_id": user.id})
         return user

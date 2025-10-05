@@ -32,7 +32,7 @@ class ResetTokenTemplate(AuthTemplate):
 
     def _get_name(self) -> str:
         return 'reset_token.html'
-    
+
 
 class VerifyTokenTemplate(AuthTemplate):
     def __init__(self, email: str, token: str):

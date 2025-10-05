@@ -8,7 +8,7 @@ from app.core.configs.base import BaseConfig
 
 class AppConfig(BaseConfig):
 
-    ENVIRONMENT: Literal['local', 'production', 'testing'] = 'production'
+    ENVIRONMENT: Literal['local', 'production', 'testing'] = 'local'
     PROJECT_NAME: str = 'Tactical Hub'
     DOMAIN: str = 'localhost'
     HOST: str = '0.0.0.0'

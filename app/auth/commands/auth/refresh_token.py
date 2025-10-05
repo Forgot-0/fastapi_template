@@ -26,7 +26,7 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
         refresh_data = verify_token(token=command.refresh_token, token_type="refresh")
         token = await self.token_repository.get_by_jti(refresh_data.jti)
 
-        if not token or token.is_valid():
+        if not token or not token.is_valid():
             raise InvalidJWTTokenException()
 
         new_access_token = create_access_token(
@@ -35,7 +35,7 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
 
         await self.session.commit()
 
-        logger.info("Rfresh token", extra={"sub": str(token.user_id), 'device_id': token.device_id})
+        logger.info("Refresh token", extra={"sub": str(token.user_id), 'device_id': token.device_id})
         return TokenGroup(
             access_token=new_access_token,
             refresh_token=command.refresh_token,

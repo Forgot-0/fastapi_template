@@ -3,7 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameException
+from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameException, WrongDataException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO
@@ -36,10 +36,10 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
 
         user = await self.user_repository.get_by_email(command.email)
         if user:
-            raise AlreadyUserEmailException(command.username)
+            raise AlreadyUserEmailException(command.email)
 
         if command.password != command.password_repeat:
-            raise
+            raise WrongDataException()
 
         user = User.create(
             email=command.email,

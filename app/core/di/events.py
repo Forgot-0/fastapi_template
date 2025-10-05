@@ -1,6 +1,5 @@
 from dishka import AsyncContainer, Provider, Scope, provide
 
-from app.auth.di.handlers import register_auth_event_handlers
 from app.core.events.event import EventRegisty
 from app.core.events.mediator.service import MediatorEventBus
 from app.core.events.service import BaseEventBus
@@ -12,7 +11,6 @@ class EventProvider(Provider):
     @provide
     def event_handler_registry(self) -> EventRegisty:
         registry = EventRegisty()
-        register_auth_event_handlers(registry)
         return registry
 
     @provide

@@ -7,7 +7,7 @@ from app.core.queries import QR, BaseQuery, BaseQueryHandler
 
 
 @dataclass
-class QueryRegisty:
+class QueryRegistry:
     quries_map: dict[Type[BaseQuery], Type[BaseQueryHandler]] = field(
         default_factory=dict,
         kw_only=True,
@@ -25,7 +25,7 @@ class QueryRegisty:
 
 @dataclass(eq=False)
 class QueryMediator(ABC):
-    query_registy: QueryRegisty
+    query_registy: QueryRegistry
 
     @abstractmethod
     async def handle_query(self, query: BaseQuery) -> QR:

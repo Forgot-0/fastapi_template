@@ -1,10 +1,9 @@
 from dishka import AsyncContainer, Provider, Scope, provide
 
-from app.auth.di.handlers import register_auth_command_handlers, register_auth_query_handlers
 from app.core.mediators.command import CommandRegisty
 from app.core.mediators.imediator import DishkaMediator
 from app.core.mediators.base import BaseMediator
-from app.core.mediators.query import QueryRegisty
+from app.core.mediators.query import QueryRegistry
 
 
 
@@ -14,13 +13,11 @@ class MediatorProvider(Provider):
     @provide
     def command_registry(self) -> CommandRegisty:
         registry = CommandRegisty()
-        register_auth_command_handlers(registry)
         return registry
 
     @provide
-    def query_registry(self) -> QueryRegisty:
-        registry = QueryRegisty()
-        register_auth_query_handlers(registry)
+    def query_registry(self) -> QueryRegistry:
+        registry = QueryRegistry()
         return registry
 
     @provide
@@ -28,7 +25,7 @@ class MediatorProvider(Provider):
         self,
         container: AsyncContainer,
         command_registry: CommandRegisty,
-        query_registry: QueryRegisty,
+        query_registry: QueryRegistry,
     ) -> BaseMediator:
         mediator = DishkaMediator(
             container=container,

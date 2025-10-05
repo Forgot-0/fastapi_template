@@ -1,6 +1,6 @@
 from dishka import AsyncContainer, make_async_container
 
-from app.auth.di import get_auth_providers
+from app.auth.providers import AuthModuleProvider
 from app.core.di import get_core_providers
 
 
@@ -11,7 +11,7 @@ def create_container(*app_providers) -> AsyncContainer:
         *get_core_providers(),
 
         # Module providers
-        *get_auth_providers(),
+        AuthModuleProvider(),
     ]
 
     return make_async_container(*providers, *app_providers)
