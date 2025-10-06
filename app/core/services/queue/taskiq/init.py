@@ -1,7 +1,7 @@
 from taskiq import AsyncBroker, InMemoryBroker
 from taskiq_redis import ListQueueBroker, RedisAsyncResultBackend
 from app.core.configs.app import app_config
-from app.core.di.tasks import register_tasks
+from app.core.tasks import register_tasks
 
 
 broker: AsyncBroker

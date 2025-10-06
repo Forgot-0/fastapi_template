@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Type
+from typing import Type
 
 from app.core.exceptions import NotHandlerRegistry
 from app.core.queries import QR, BaseQuery, BaseQueryHandler

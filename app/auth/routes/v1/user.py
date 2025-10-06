@@ -2,10 +2,10 @@
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel
-from app.auth.schemas.user import UserCreate, UserDTO
+from app.auth.schemas.user import UserDTO
 from app.auth.schemas.users.requests import UserCreateRequest
 from app.auth.schemas.users.responses import UserResponse
 from app.core.mediators.base import BaseMediator

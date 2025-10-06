@@ -26,10 +26,10 @@ async def shutdown(state: TaskiqState) -> None:
 
 
 redis_schedule_source = RedisScheduleSource(
-        url=app_config.QUEUE_REDIS_BROKER_URL,
-    )
+    url=app_config.QUEUE_REDIS_BROKER_URL,
+)
 
-scheduler_taksiq = TaskiqScheduler(
+scheduler = TaskiqScheduler(
     broker=broker,
     sources=[redis_schedule_source, LabelScheduleSource(broker=broker)],
 )

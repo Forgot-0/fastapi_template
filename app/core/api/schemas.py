@@ -3,6 +3,9 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.exceptions import ApplicationException
+
+
 
 class SortOrder(str, Enum):
     asc = 'asc'
@@ -43,3 +46,10 @@ class PaginatedResult(BaseModel, Generic[T]):
 
     items: list[T]
     pagination: Pagination
+
+
+ET = TypeVar("ET", bound=ApplicationException)
+
+class ExceptionResponse(BaseModel, Generic[ET]):
+    status_code: int
+    data: ET

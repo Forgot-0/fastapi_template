@@ -18,14 +18,4 @@ class ConfigurableRateLimiter(RateLimiter):
     #         ip = forwarded.split(",")[0]
     #     else:
     #         ip = request.client.host # type: ignore
-    #     return ":".join((ip, request.scope["path"], f"{request.query_params.values()}", f"{await request.json()}"))
-
-    # @classmethod
-    # async def get_identifier_by_body(cls, request: Request):
-    #     forwarded = request.headers.get("X-Forwarded-For")
-    #     if forwarded:
-    #         ip = forwarded.split(",")[0]
-    #     else:
-    #         ip = request.client.host # type: ignore
-    #     body = await request.json()
-    #     return ":".join((ip, request.scope["path"], f"{body}"))
+    #     return ":".join((ip, request.scope["path"], f"{request.query_params.values()}""))

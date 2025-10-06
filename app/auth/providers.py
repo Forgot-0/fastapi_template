@@ -65,6 +65,7 @@ class AuthModuleProvider(Provider):
     # query
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
 
+    @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
         # Auth queries
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)

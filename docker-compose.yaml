@@ -64,7 +64,7 @@ services:
     container_name: "scheduler"
     volumes:
       - .:/app
-    command: taskiq scheduler app.tasks:scheduler_taksiq
+    command: taskiq scheduler app.tasks:scheduler
     env_file:
       - .env
     networks:
