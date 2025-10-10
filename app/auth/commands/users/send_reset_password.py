@@ -7,7 +7,6 @@ from app.core.configs.app import app_config
 from app.auth.config import auth_config
 from app.auth.emails.templates import ResetTokenTemplate
 from app.auth.repositories.user import UserRepository
-from app.auth.security import generate_reset_token
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.mail.service import BaseMailService, EmailData
 
@@ -26,17 +25,18 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
     mail_service: BaseMailService
 
     async def handle(self, command: SendResetPasswordCommand) -> None:
-        user = await self.user_repository.get_by_email(email=command.email)
-        if not user:
-            return
+        # user = await self.user_repository.get_by_email(email=command.email)
+        # if not user:
+        #     return
 
-        token = generate_reset_token(email=command.email)
-        email_data = EmailData(subject="Код для сброса пароля", recipient=user.email)
-        template = ResetTokenTemplate(
-            username=user.username,
-            link=f'{app_config.app_url}/reset_password?token={token}',
-            token=token,
-            valid_minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES,
-        )
-        await self.mail_service.queue(template=template, email_data=email_data)
-        logger.info("Send password reset email", extra={"email": user.email})
+        # token = generate_reset_token(email=command.email)
+        # email_data = EmailData(subject="Код для сброса пароля", recipient=user.email)
+        # template = ResetTokenTemplate(
+        #     username=user.username,
+        #     link=f'{app_config.app_url}/reset_password?token={token}',
+        #     token=token,
+        #     valid_minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES,
+        # )
+        # await self.mail_service.queue(template=template, email_data=email_data)
+        # logger.info("Send password reset email", extra={"email": user.email})
+        ...

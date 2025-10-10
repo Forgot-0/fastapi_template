@@ -16,40 +16,24 @@ from app.core.utils import now_utc
 class SessionRepository:
     session: AsyncSession
 
-    async def get_by_jti(self, jti: str) -> Session | None:
-        stmt = select(Session).where(Session.jti == jti)
-        result = await self.session.execute(stmt)
-        return result.scalar()
-
     async def get_by_device(self, user_id: int, device_id: str) -> Session | None:
-        ...
-
-    async def get_with_user(self, jti: str) -> Session | None:
-        stmt = (
-            select(Session)
-            .options(selectinload(Session.user))
-            .where(Session.jti == jti)
-            .where(Session.is_revoked == False)
+        stmt = select(Session).where(
+            Session.user_id == user_id,
+            Session.device_id == device_id,
+            Session.is_active
         )
         result = await self.session.execute(stmt)
         return result.scalar()
 
-    async def revoke_by_user_id(self, user_id: int) -> None:
-        stmt = update(Session).where(Session.user_id == user_id).values(is_revoked=True)
+    async def deactivate_user_session(self, user_id: int, device_id: str | None) -> None:
+        stmt = update(Session).where(Session.user_id == user_id, Session.device_id == device_id).values(is_active=False)
         await self.session.execute(stmt)
 
-    async def revoke_by_jti(self, jti: str) -> None:
-        stmt = update(Session).where(Session.jti == jti).values(is_revoked=True)
-        await self.session.execute(stmt)
-
-    async def revoke_user_device(self, user_id: int, jti: str) -> None:
-        stmt = update(Session).where(Session.jti == jti).where(Session.user_id==user_id).values(is_revoked=True)
-        await self.session.execute(stmt)
-
-    async def create(self, token: Session) -> None:
-        self.session.add(token)
+    async def create(self, session: Session) -> None:
+        self.session.add(session)
 
 
+@dataclass
 class TokenBlacklistRepository:
     client: Redis
 

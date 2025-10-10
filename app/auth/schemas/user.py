@@ -25,16 +25,16 @@ class UserJWTData(BaseModel):
     device_id: str | None = Field(default=None)
 
     @classmethod
-    def create_from_user(cls, user: User) -> 'UserJWTData':
+    def create_from_user(cls, user: User, device_id: str | None=None) -> 'UserJWTData':
         if user.jwt_data is None:
             raise
 
         jwt_data: dict[str, Any] = orjson.loads(user.jwt_data)
 
         return cls(
-            id=jwt_data["sub"],
-            security_level=jwt_data.get("roles"),
-            device_id=jwt_data["permissions"],
+            id=str(jwt_data["sub"]),
+            security_level=jwt_data['lvl'],
+            device_id=device_id,
         )
 
     @classmethod

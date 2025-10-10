@@ -4,7 +4,7 @@ import logging
 from app.auth.exceptions import InvalidJWTTokenException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
-from app.auth.security import verify_token
+from app.auth.services.jwt import JWTManager
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 
@@ -18,9 +18,10 @@ class GetByAccessTokenQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetByAccessTokenQueryHandler(BaseQueryHandler[GetByAccessTokenQuery, User]):
     user_repository: UserRepository
+    jwt_manager: JWTManager
 
     async def handle(self, query: GetByAccessTokenQuery) -> User:
-        token_data = verify_token(token=query.token, token_type="access")
+        token_data = await self.jwt_manager.validate_token(token=query.token)
         user_id = token_data.sub
         if not user_id:
             raise InvalidJWTTokenException()

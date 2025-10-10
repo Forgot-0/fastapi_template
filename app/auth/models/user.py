@@ -28,7 +28,7 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    sessions: Mapped[list['Session']] = relationship(back_populates='user') # type: ignore
+    sessions: Mapped[list['Session']] = relationship(back_populates='user', cascade="all, delete-orphan") # type: ignore
 
     @classmethod
     def create(cls, email: str, username: str, password_hash: str) -> "User":
@@ -58,7 +58,6 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
             data['sda'] = device_id
 
         self.jwt_data = orjson.dumps(data)
-
 
     def password_reset(self, password_hash: str) -> None:
         self.password_hash = password_hash

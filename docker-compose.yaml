@@ -105,6 +105,7 @@ services:
 
   migrations:
     build: .
+    container_name: "migrations"
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >

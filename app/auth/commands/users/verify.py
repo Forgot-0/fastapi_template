@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import WrongDataException
 from app.auth.repositories.user import UserRepository
-from app.auth.security import decode_verify_token
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
 
@@ -24,13 +23,14 @@ class VerifyCommandHandler(BaseCommandHandler[VerifyCommand, None]):
     user_repository: UserRepository
 
     async def handle(self, command: VerifyCommand) -> None:
-        verify_token = decode_verify_token(token=command.token)
-        user = await self.user_repository.get_by_email(email=verify_token.sub)
+        # verify_token = decode_verify_token(token=command.token)
+        # user = await self.user_repository.get_by_email(email=verify_token.sub)
 
-        if not user:
-            raise WrongDataException()
+        # if not user:
+        #     raise WrongDataException()
 
-        user.verify()
-        await self.session.commit()
-        await self.event_bus.publish(user.pull_events())
-        logger.info("Verify", extra={"email": user.email, "user_id": user.id})
+        # user.verify()
+        # await self.session.commit()
+        # await self.event_bus.publish(user.pull_events())
+        # logger.info("Verify", extra={"email": user.email, "user_id": user.id})
+        ...

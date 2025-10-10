@@ -60,9 +60,8 @@ class DeviceInformation(BaseModel):
     device_id: str
     device_info: bytes
 
+
 class DeviceInfo(BaseModel):
     browser_family: str
     os_family: str
     device: str
-    accept_lang: str
-    accept_encoding: str

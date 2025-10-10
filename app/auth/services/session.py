@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from fastapi import Request
 import orjson
 
 from app.auth.models.session import Session
@@ -14,8 +13,8 @@ from app.core.utils import now_utc
 class SessionManager:
     session_repository: SessionRepository
 
-    async def get_or_create_session(self, user_id: int, request: Request) -> Session | None:
-        device_data = generate_device_info(request)
+    async def get_or_create_session(self, user_id: int, user_agent: str) -> Session:
+        device_data = generate_device_info(user_agent)
 
         if existing_session := await self.get_user_session(
             user_id=user_id, device_id=device_data.device_id
@@ -25,11 +24,11 @@ class SessionManager:
         session = Session(
             user_id=user_id,
             device_id=device_data.device_id,
-            device_info=DeviceInfo(**orjson.loads(device_data.device_info)),
+            device_info=device_data.device_info,
             user_agent=device_data.user_agent,
         )
 
-        await self.session_repository.create(token=session)
+        await self.session_repository.create(session=session)
 
         return session
 

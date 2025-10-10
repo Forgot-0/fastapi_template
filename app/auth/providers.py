@@ -1,4 +1,6 @@
 from dishka import Provider, Scope, decorate, provide
+from passlib.context import CryptContext
+from redis.asyncio import Redis
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
@@ -8,11 +10,16 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPa
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
 from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCommandHandler
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
+from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
-from app.auth.repositories.session import SessionRepository
+from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.services.hash import HashService
+from app.auth.services.jwt import JWTManager
+from app.auth.services.session import SessionManager
+from app.core.configs.app import app_config
 from app.core.events.event import EventRegisty
 from app.core.mediators.command import CommandRegisty
 from app.core.mediators.query import QueryRegistry
@@ -24,6 +31,31 @@ class AuthModuleProvider(Provider):
     # repository
     user_repository = provide(UserRepository)
     token_repository = provide(SessionRepository)
+
+    @provide(scope=Scope.APP)
+    def token_blacklist(self) -> TokenBlacklistRepository:
+        return TokenBlacklistRepository(
+            Redis.from_url(app_config.redis_url)
+        )
+
+    #services
+    @provide(scope=Scope.APP)
+    def hash_service(self) -> HashService:
+        return HashService(
+            CryptContext(schemes=["bcrypt"], deprecated="auto")
+        )
+
+    @provide(scope=Scope.APP)
+    def jwt_manager(self, token_blacklist: TokenBlacklistRepository) -> JWTManager:
+        return JWTManager(
+            jwt_secret=auth_config.JWT_SECRET_KEY,
+            jwt_algorithm=auth_config.JWT_ALGORITHM,
+            access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
+            refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
+            token_blacklist=token_blacklist
+        )
+
+    session_manager = provide(SessionManager)
 
     #handelr command
     register_handler = provide(RegisterCommandHandler)

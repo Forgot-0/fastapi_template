@@ -4,7 +4,9 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.session import SessionRepository
-from app.auth.security import verify_token
+from app.auth.schemas.user import UserJWTData
+from app.auth.services.jwt import JWTManager
+from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -12,18 +14,29 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class LogoutCommand(BaseCommand):
-    refresh_token: str
+    refresh_token: str | None
 
 
 @dataclass(frozen=True)
 class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     session: AsyncSession
-    token_repository: SessionRepository
+    session_manager: SessionManager
+    jwt_manager: JWTManager
+    session_repository: SessionRepository
+
 
     async def handle(self, command: LogoutCommand) -> None:
-        payload = verify_token(command.refresh_token, token_type='refresh')
-        await self.token_repository.revoke_user_device(
-            user_id=int(payload.sub), jti=payload.jti
+        if command.refresh_token is None:
+            raise
+
+        refresh_data = await self.jwt_manager.validate_token(command.refresh_token)
+        await self.jwt_manager.revoke_token(command.refresh_token)
+        user = UserJWTData.create_from_token(refresh_data)
+
+        await self.session_repository.deactivate_user_session(
+            user_id=int(user.id),
+            device_id=user.device_id,
         )
+
         await self.session.commit()
-        logger.info("Logout user", extra={"sub": payload.sub, "device_id": payload.device_id})
+        logger.info("Logout user", extra={"sub": user.id, "device_id": user.device_id})

@@ -3,7 +3,7 @@
 from typing import Annotated
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.commands.auth.login import LoginCommand
@@ -39,18 +39,27 @@ router = APIRouter(route_class=DishkaRoute)
 )
 async def login(
     mediator: FromDishka[BaseMediator],
-    login_request: Annotated[OAuth2PasswordRequestForm, Depends()]
+    login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
+    request: Request,
+    response: Response
 ) -> TokenResponse:
-    response: TokenGroup
-    response, *_ = await mediator.handle_command(
+    token_group: TokenGroup
+    token_group, *_ = await mediator.handle_command(
         LoginCommand(
             username=login_request.username,
-            password=login_request.password
+            password=login_request.password,
+            user_agent=request.headers.get("user-agent", "")
         )
     )
+    response.set_cookie(
+        "refresh_token",
+        token_group.refresh_token,
+        httponly=True, secure=True, samesite="lax", path="/token/refresh"
+    )
+
     return TokenResponse(
-        access_token=response.access_token,
-        refresh_token=response.refresh_token
+        access_token=token_group.access_token,
+        refresh_token=token_group.refresh_token
     )
 
 @router.post(
@@ -62,11 +71,19 @@ async def login(
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
-    refresh_request: RefreshTokenRequest,
+    response: Response,
+    refresh_token: str | None = Cookie(default=None),
 ) -> TokenResponse:
+    token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
-        RefreshTokenCommand(refresh_token=refresh_request.refresh_token)
+        RefreshTokenCommand(refresh_token=refresh_token)
     )
+    response.set_cookie(
+        "refresh_token",
+        token_group.refresh_token,
+        httponly=True, secure=True, samesite="lax", path="/token/refresh"
+    )
+
     return TokenResponse(
         access_token=token_group.access_token,
         refresh_token=token_group.refresh_token
@@ -80,9 +97,11 @@ async def refresh(
 )
 async def logout(
     mediator: FromDishka[BaseMediator],
-    logout_request: LogoutRequest
+    response: Response,
+    refresh_token: str | None = Cookie(default=None)
 ) -> None:
-    await mediator.handle_command(LogoutCommand(refresh_token=logout_request.refresh_token))
+    await mediator.handle_command(LogoutCommand(refresh_token=refresh_token))
+    response.delete_cookie("refresh_token", path="/token/refresh")
 
 @router.post(
     "/send_verify_code",

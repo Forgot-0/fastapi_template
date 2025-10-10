@@ -7,7 +7,7 @@ from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameEx
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO
-from app.auth.security import hash_password
+from app.auth.services.hash import HashService
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
 
@@ -27,6 +27,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
     session: AsyncSession
     event_bus: BaseEventBus
     user_repository: UserRepository
+    hash_service: HashService
 
     async def handle(self, command: RegisterCommand) -> UserDTO:
         user = await self.user_repository.get_by_username(command.username)
@@ -44,9 +45,11 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         user = User.create(
             email=command.email,
             username=command.username,
-            password_hash=hash_password(command.password)
+            password_hash=self.hash_service.hash_password(command.password)
         )
         await self.user_repository.create(user)
+        await self.session.flush([user])
+        user.set_jwt_data()
 
         await self.session.commit()
         await self.session.refresh(user)

@@ -4,7 +4,6 @@ from app.auth.emails.templates import VerifyTokenTemplate
 from app.auth.exceptions import WrongDataException
 from app.auth.models.user import CreatedUserEvent
 from app.auth.repositories.user import UserRepository
-from app.auth.security import generate_verify_token
 from app.core.events.event import BaseEventHandler
 from app.core.services.mail.service import BaseMailService, EmailData
 
@@ -20,11 +19,13 @@ class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
 
         if not user:
             raise WrongDataException()
+        user.set_jwt_data()
 
-        token = generate_verify_token(email=event.email)
-        email_data = EmailData(subject="Код для верификации почты", recipient=user.email)
-        template = VerifyTokenTemplate(
-            email=user.email,
-            token=token,
-        )
-        await self.mail_service.queue(template=template, email_data=email_data)
+        # token = generate_verify_token(email=event.email)
+        # email_data = EmailData(subject="Код для верификации почты", recipient=user.email)
+        # template = VerifyTokenTemplate(
+        #     email=user.email,
+        #     token=token,
+        # )
+        # await self.mail_service.queue(template=template, email_data=email_data)
+        ...
