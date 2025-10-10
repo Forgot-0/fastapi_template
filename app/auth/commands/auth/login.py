@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.config import auth_config
 from app.auth.exceptions import WrongDataException
-from app.auth.models.token import Token
-from app.auth.repositories.token import TokenRepository
+from app.auth.models.session import Session
+from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.token import TokenGroup
 from app.auth.security import create_access_token, create_refresh_token, verify_password
@@ -28,7 +28,7 @@ class LoginCommand(BaseCommand):
 class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
     session: AsyncSession
     user_repository: UserRepository
-    token_repository: TokenRepository
+    token_repository: SessionRepository
 
     async def handle(self, command: LoginCommand) -> TokenGroup:
         user = await self.user_repository.get_by_username(command.username) or \
@@ -48,7 +48,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
 
         refresh_token = create_refresh_token(data=data, jti=jti_refresh)
 
-        refresh_token_create = Token(
+        refresh_token_create = Session(
             user_id=user.id,
             jti=jti_refresh,
             expires_at=now_utc()

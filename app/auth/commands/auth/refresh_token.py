@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import InvalidJWTTokenException
-from app.auth.repositories.token import TokenRepository
+from app.auth.repositories.session import SessionRepository
 from app.auth.schemas.token import TokenGroup
 from app.auth.security import create_access_token, verify_token
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -20,7 +20,7 @@ class RefreshTokenCommand(BaseCommand):
 @dataclass(frozen=True)
 class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGroup]):
     session: AsyncSession
-    token_repository: TokenRepository
+    token_repository: SessionRepository
 
     async def handle(self, command: RefreshTokenCommand) -> TokenGroup:
         refresh_data = verify_token(token=command.refresh_token, token_type="refresh")

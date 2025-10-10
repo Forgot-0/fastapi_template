@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import WrongDataException
 from app.auth.repositories.user import UserRepository
-from app.auth.security import decode_reset_token
+from app.auth.security import decode_reset_token, hash_password
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
 
@@ -34,7 +34,7 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
         if command.password != command.repeat_password:
             raise WrongDataException()
 
-        user.password_reset(command.password)
+        user.password_reset(hash_password(command.password))
         await self.session.commit()
         await self.event_bus.publish(user.pull_events())
         logger.info("Password reset", extra={"user_id": user.id, "username": user.username})

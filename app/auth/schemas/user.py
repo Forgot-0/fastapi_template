@@ -1,8 +1,11 @@
-from typing import Literal
+from typing import Any, Literal
 
+import orjson
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.auth.models.user import User
 from app.auth.schemas.base import PasswordMixinSchema
+from app.auth.schemas.token import AccessToken
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
@@ -15,6 +18,32 @@ class BaseUser(BaseModel):
         description="Позывной может содержать буквы, цифры, пробелы, а также '-' и '_'.",
     )
     email: EmailStr
+
+class UserJWTData(BaseModel):
+    id: str
+    security_level: int | None = Field(default=None)
+    device_id: str | None = Field(default=None)
+
+    @classmethod
+    def create_from_user(cls, user: User) -> 'UserJWTData':
+        if user.jwt_data is None:
+            raise
+
+        jwt_data: dict[str, Any] = orjson.loads(user.jwt_data)
+
+        return cls(
+            id=jwt_data["sub"],
+            security_level=jwt_data.get("roles"),
+            device_id=jwt_data["permissions"],
+        )
+
+    @classmethod
+    def create_from_token(cls, token_dto: AccessToken) -> 'UserJWTData':
+        return cls(
+            id=token_dto.sub,
+            device_id=token_dto.did,
+            security_level=token_dto.lvl,
+        )
 
 
 class UserCreate(BaseUser, PasswordMixinSchema):

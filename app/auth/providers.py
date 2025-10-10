@@ -11,7 +11,7 @@ from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
-from app.auth.repositories.token import TokenRepository
+from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.core.events.event import EventRegisty
 from app.core.mediators.command import CommandRegisty
@@ -23,7 +23,7 @@ class AuthModuleProvider(Provider):
 
     # repository
     user_repository = provide(UserRepository)
-    token_repository = provide(TokenRepository)
+    token_repository = provide(SessionRepository)
 
     #handelr command
     register_handler = provide(RegisterCommandHandler)

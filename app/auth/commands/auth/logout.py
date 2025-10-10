@@ -3,7 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.repositories.token import TokenRepository
+from app.auth.repositories.session import SessionRepository
 from app.auth.security import verify_token
 from app.core.commands import BaseCommand, BaseCommandHandler
 
@@ -18,7 +18,7 @@ class LogoutCommand(BaseCommand):
 @dataclass(frozen=True)
 class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     session: AsyncSession
-    token_repository: TokenRepository
+    token_repository: SessionRepository
 
     async def handle(self, command: LogoutCommand) -> None:
         payload = verify_token(command.refresh_token, token_type='refresh')
