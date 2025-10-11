@@ -21,6 +21,8 @@ class BaseUser(BaseModel):
 
 class UserJWTData(BaseModel):
     id: str
+    roles: list[str]
+    permissions: list[str]
     security_level: int | None = Field(default=None)
     device_id: str | None = Field(default=None)
 
@@ -35,12 +37,16 @@ class UserJWTData(BaseModel):
             id=str(jwt_data["sub"]),
             security_level=jwt_data['lvl'],
             device_id=device_id,
+            roles=jwt_data["roles"],
+            permissions=jwt_data["permissions"],
         )
 
     @classmethod
     def create_from_token(cls, token_dto: AccessToken) -> 'UserJWTData':
         return cls(
             id=token_dto.sub,
+            roles=token_dto.roles,
+            permissions=token_dto.permissions,
             device_id=token_dto.did,
             security_level=token_dto.lvl,
         )

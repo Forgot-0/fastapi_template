@@ -35,7 +35,7 @@ class SessionManager:
     async def get_user_session(
         self, user_id: int, device_id: str
     ) -> Session | None:
-        active_session = await self.session_repository.get_by_device(
+        active_session = await self.session_repository.get_active_by_device(
             user_id=user_id,
             device_id=device_id,
         )

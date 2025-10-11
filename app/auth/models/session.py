@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from app.auth.models.user import User
 
 
 class Session(BaseModel):
@@ -20,5 +24,5 @@ class Session(BaseModel):
     last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    user: Mapped['User'] = relationship("User", back_populates="sessions") # type: ignore
+    user: Mapped['User'] = relationship("User", back_populates="sessions")
 

@@ -1,11 +1,8 @@
-# app/auth/repositories/token.py
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from redis.asyncio import Redis
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.auth.models.session import Session
 from app.core.utils import now_utc
@@ -16,7 +13,7 @@ from app.core.utils import now_utc
 class SessionRepository:
     session: AsyncSession
 
-    async def get_by_device(self, user_id: int, device_id: str) -> Session | None:
+    async def get_active_by_device(self, user_id: int, device_id: str) -> Session | None:
         stmt = select(Session).where(
             Session.user_id == user_id,
             Session.device_id == device_id,

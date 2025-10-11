@@ -51,8 +51,8 @@ class AccessToken(BaseModel):
     did: str
     exp: float
     iat: float
-    # roles: list[str]
-    # permissions: list[str]
+    roles: list[str]
+    permissions: list[str]
 
 
 class DeviceInformation(BaseModel):
