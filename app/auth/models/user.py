@@ -45,14 +45,14 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
 
 
     @classmethod
-    def create(cls, email: str, username: str, password_hash: str) -> "User":
+    def create(cls, email: str, username: str, password_hash: str, roles: list['Role']) -> "User":
         user = User(
             email=email,
             username=username,
-            password_hash=password_hash
+            password_hash=password_hash,
+            roles = roles
         )
         user.set_jwt_data()
-        user.roles = []
 
         user.register_event(
             CreatedUserEvent(
@@ -61,6 +61,10 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
             )
         )
         return user
+
+    def add_role(self, role: 'Role') -> None:
+        self.roles.append(role)
+        self.set_jwt_data()
 
     def set_jwt_data(self, device_id: str | None = None) -> None:
         security_lvl = 999

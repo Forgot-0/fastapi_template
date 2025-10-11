@@ -32,7 +32,6 @@ class UserJWTData(BaseModel):
             raise
 
         jwt_data: dict[str, Any] = orjson.loads(user.jwt_data)
-
         return cls(
             id=str(jwt_data["sub"]),
             security_level=jwt_data['lvl'],

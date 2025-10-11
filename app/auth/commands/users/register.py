@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameException, WrongDataException
 from app.auth.models.user import User
+from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO
 from app.auth.services.hash import HashService
@@ -27,6 +28,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
     session: AsyncSession
     event_bus: BaseEventBus
     user_repository: UserRepository
+    role_repository: RoleRepository
     hash_service: HashService
 
     async def handle(self, command: RegisterCommand) -> UserDTO:
@@ -42,15 +44,20 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         if command.password != command.password_repeat:
             raise WrongDataException()
 
+        role = await self.role_repository.get_with_permission_by_name("user")
+        if not role:
+            raise
+
         user = User.create(
             email=command.email,
             username=command.username,
-            password_hash=self.hash_service.hash_password(command.password)
+            password_hash=self.hash_service.hash_password(command.password),
+            roles=[role]
         )
         await self.user_repository.create(user)
-        await self.session.flush([user])
-        user.set_jwt_data()
+        await self.session.commit()
 
+        user.set_jwt_data()
         await self.session.commit()
         await self.session.refresh(user)
 

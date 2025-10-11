@@ -19,7 +19,6 @@ class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
 
         if not user:
             raise WrongDataException()
-        user.set_jwt_data()
 
         # token = generate_verify_token(email=event.email)
         # email_data = EmailData(subject="Код для верификации почты", recipient=user.email)

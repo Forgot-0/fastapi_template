@@ -14,6 +14,8 @@ from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
+from app.auth.repositories.permission import PermissionRepository
+from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
@@ -31,6 +33,8 @@ class AuthModuleProvider(Provider):
     # repository
     user_repository = provide(UserRepository)
     token_repository = provide(SessionRepository)
+    role_repository = provide(RoleRepository)
+    permission_repository = provide(PermissionRepository)
 
     @provide(scope=Scope.APP)
     def token_blacklist(self) -> TokenBlacklistRepository:

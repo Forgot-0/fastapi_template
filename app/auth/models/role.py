@@ -42,3 +42,6 @@ class Role(BaseModel, DateMixin):
     permissions: Mapped[list["Permission"]] = relationship(
         argument="Permission", secondary="role_permissions", back_populates="roles"
     )
+
+    def add_permission(self, permission: Permission) -> None:
+        self.permissions.append(permission)

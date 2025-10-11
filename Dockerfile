@@ -37,3 +37,6 @@ WORKDIR /app
 COPY ./app /app
 COPY alembic.ini /app/
 COPY migrations/ /app/migrations/
+
+
+CMD ["./app/init_data.py", "-flag"]

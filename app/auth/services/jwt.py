@@ -34,6 +34,7 @@ class JWTManager:
             "sub": user_data.id,
             "lvl": user_data.security_level,
             "did": user_data.device_id,
+            "roles": user_data.roles,
             "jti": str(uuid4()),
             "exp": (
                 now + timedelta(minutes=self.access_token_expire_minutes)
@@ -42,6 +43,9 @@ class JWTManager:
             ).timestamp(),
             "iat": now.timestamp(),
         }
+        if token_type == TokenType.ACCESS:
+            payload['permissions'] = user_data.permissions
+
         return payload
 
     def create_token_pair(
