@@ -4,6 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import WrongDataException
+from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
@@ -21,16 +22,23 @@ class VerifyCommandHandler(BaseCommandHandler[VerifyCommand, None]):
     session: AsyncSession
     event_bus: BaseEventBus
     user_repository: UserRepository
+    token_repository: TokenBlacklistRepository
 
     async def handle(self, command: VerifyCommand) -> None:
-        # verify_token = decode_verify_token(token=command.token)
-        # user = await self.user_repository.get_by_email(email=verify_token.sub)
+        user_id = await self.token_repository.is_valid_token(token=command.token)
 
-        # if not user:
-        #     raise WrongDataException()
+        if user_id is None:
+            raise
 
-        # user.verify()
-        # await self.session.commit()
-        # await self.event_bus.publish(user.pull_events())
-        # logger.info("Verify", extra={"email": user.email, "user_id": user.id})
-        ...
+        user = await self.user_repository.get_by_id(user_id=user_id)
+
+        if not user:
+            raise WrongDataException()
+
+        user.verify()
+        await self.token_repository.invalidate_token(command.token)
+
+        await self.session.commit()
+        await self.event_bus.publish(user.pull_events())
+
+        logger.info("Verify", extra={"email": user.email, "user_id": user.id})

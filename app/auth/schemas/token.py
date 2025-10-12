@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TokenType(str, Enum):
@@ -13,37 +13,12 @@ class TokenType(str, Enum):
     OAUTH_CONNECT = "oauth_connect_state"
 
 
-class AccessTokenPayload(BaseModel):
-    sub: str
-    exp: datetime
-
-class RefreshTokenCreate(BaseModel):
-    user_id: int
-    expires_at: datetime
-    jti: str
-    device_id: str
-
-class TokenPayload(BaseModel):
-    sub: str
-    jti: str
-    exp: datetime
-    device_id: str
-    type: Literal['access', 'refresh']
-
-class ResetToken(BaseModel):
-    sub: str
-    exp: datetime
-
 class TokenGroup(BaseModel):
     refresh_token: str
     access_token: str
 
-class VerifyToken(BaseModel):
-    sub: str
-    exp: datetime
 
-
-class AccessToken(BaseModel):
+class Token(BaseModel):
     type: str
     sub: str
     lvl: int
@@ -52,7 +27,7 @@ class AccessToken(BaseModel):
     exp: float
     iat: float
     roles: list[str]
-    permissions: list[str]
+    permissions: list[str] = Field(default_factory=list)
 
 
 class DeviceInformation(BaseModel):

@@ -18,8 +18,24 @@ class UserRepository:
         result = await self.session.execute(User.select_not_deleted().where(User.email == email))
         return result.scalars().first()
 
+    async def get_with_roles_by_email(self, email: str) -> (User | None):
+        result = await self.session.execute(
+            User.select_not_deleted().options(
+                selectinload(User.roles).selectinload(Role.permissions)
+            ).where(User.email == email)
+        )
+        return result.scalars().first()
+
     async def get_by_username(self, username: str) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.username == username))
+        return result.scalars().first()
+
+    async def get_with_roles_by_username(self, username: str) -> (User | None):
+        result = await self.session.execute(
+            User.select_not_deleted().options(
+                selectinload(User.roles).selectinload(Role.permissions)
+            ).where(User.username == username)
+        )
         return result.scalars().first()
 
     async def get_by_id(self, user_id: int) -> (User | None):

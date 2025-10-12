@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.models.user import User
 from app.auth.schemas.base import PasswordMixinSchema
-from app.auth.schemas.token import AccessToken
+from app.auth.schemas.token import Token
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
@@ -28,20 +28,28 @@ class UserJWTData(BaseModel):
 
     @classmethod
     def create_from_user(cls, user: User, device_id: str | None=None) -> 'UserJWTData':
-        if user.jwt_data is None:
-            raise
+        security_lvl = 999
+        permissions = set()
+        roles = set()
 
-        jwt_data: dict[str, Any] = orjson.loads(user.jwt_data)
+        for role in user.roles:
+            roles.add(role.name)
+
+            security_lvl = min(security_lvl, role.security_level)
+
+            for permission in role.permissions:
+                permissions.add(permission.name)
+
         return cls(
-            id=str(jwt_data["sub"]),
-            security_level=jwt_data['lvl'],
-            device_id=device_id,
-            roles=jwt_data["roles"],
-            permissions=jwt_data["permissions"],
+            id=str(user.id),
+            security_level=security_lvl,
+            roles=list(roles),
+            permissions=list(permissions),
+            device_id=device_id
         )
 
     @classmethod
-    def create_from_token(cls, token_dto: AccessToken) -> 'UserJWTData':
+    def create_from_token(cls, token_dto: Token) -> 'UserJWTData':
         return cls(
             id=token_dto.sub,
             roles=token_dto.roles,

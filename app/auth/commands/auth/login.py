@@ -31,10 +31,10 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
     hash_service: HashService
 
     async def handle(self, command: LoginCommand) -> TokenGroup:
-        user = await self.user_repository.get_by_username(command.username) or \
-        await self.user_repository.get_by_email(command.username)
+        user = await self.user_repository.get_with_roles_by_username(command.username) or \
+        await self.user_repository.get_with_roles_by_email(command.username)
 
-        if not user or not self.hash_service.verify_password(command.password, user.password_hash):
+        if user is None or not self.hash_service.verify_password(command.password, user.password_hash):
             raise WrongDataException()
 
         session = await self.session_manager.get_or_create_session(
@@ -42,7 +42,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
         )
 
         await self.session.commit()
-        token_group =  self.jwt_manager.create_token_pair(
+        token_group = self.jwt_manager.create_token_pair(
             UserJWTData.create_from_user(user, device_id=session.device_id)
         )
 

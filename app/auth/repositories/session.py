@@ -34,7 +34,7 @@ class SessionRepository:
 class TokenBlacklistRepository:
     client: Redis
 
-    async def add_token(self, jti: str, expiration: timedelta) -> None:
+    async def add_jwt_token(self, jti: str, expiration: timedelta) -> None:
         await self.client.set(
             f"revoked:{jti}",  str(expiration.total_seconds()), ex=expiration
         )
@@ -46,3 +46,17 @@ class TokenBlacklistRepository:
         if now_utc() > datetime.fromtimestamp(float(time_str)):
             return False
         return True
+
+    async def add_token(self, token: str, user_id: int, expiration: timedelta) -> None:
+        await self.client.set(
+            token,
+            value=user_id,
+            ex=expiration
+        )
+
+    async def is_valid_token(self, token: str) -> int | None:
+        user_id = await self.client.get(token)
+        return user_id
+
+    async def invalidate_token(self, token: str) -> None:
+        await self.client.delete(token)

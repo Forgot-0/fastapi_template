@@ -54,10 +54,9 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             password_hash=self.hash_service.hash_password(command.password),
             roles=[role]
         )
-        await self.user_repository.create(user)
-        await self.session.commit()
 
-        user.set_jwt_data()
+        await self.user_repository.create(user)
+
         await self.session.commit()
         await self.session.refresh(user)
 

@@ -6,7 +6,7 @@ from uuid import uuid4
 from jose import jwt
 
 from app.auth.repositories.session import TokenBlacklistRepository
-from app.auth.schemas.token import AccessToken, TokenGroup, TokenType
+from app.auth.schemas.token import Token, TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
 from app.core.utils import now_utc
 
@@ -64,9 +64,9 @@ class JWTManager:
 
         return TokenGroup(access_token=access_token, refresh_token=refresh_token)
 
-    async def validate_token(self, token: str) -> AccessToken:
+    async def validate_token(self, token: str) -> Token:
         payload = self.decode(token)
-        token_data = AccessToken(**payload)
+        token_data = Token(**payload)
 
         if await self.token_blacklist.is_blacklisted(token_data.jti):
             raise
@@ -82,10 +82,10 @@ class JWTManager:
         return token_pair
 
     async def revoke_token(self, token: str) -> None:
-        token_data: AccessToken = AccessToken(**self.decode(token))
+        token_data: Token = Token(**self.decode(token))
 
         current_time = now_utc()
         token_exp_dt = datetime.fromtimestamp(token_data.exp,)
 
         seconds_until_expiry = token_exp_dt - current_time + timedelta(days=1)
-        await self.token_blacklist.add_token(token_data.sub, seconds_until_expiry)
+        await self.token_blacklist.add_jwt_token(token_data.sub, seconds_until_expiry)
