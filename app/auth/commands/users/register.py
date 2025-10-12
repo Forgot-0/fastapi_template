@@ -52,7 +52,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             email=command.email,
             username=command.username,
             password_hash=self.hash_service.hash_password(command.password),
-            roles=[role]
+            roles={role, }
         )
 
         await self.user_repository.create(user)

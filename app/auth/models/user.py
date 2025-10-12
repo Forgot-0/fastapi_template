@@ -39,17 +39,16 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     roles: Mapped[set["Role"]] = relationship(
         secondary="user_roles",
         back_populates="users",
-        lazy="selectin",
     )
 
 
     @classmethod
-    def create(cls, email: str, username: str, password_hash: str, roles: list['Role']) -> "User":
+    def create(cls, email: str, username: str, password_hash: str, roles: set['Role']) -> "User":
         user = User(
             email=email,
             username=username,
             password_hash=password_hash,
-            roles = roles
+            roles=roles
         )
 
         user.register_event(

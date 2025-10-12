@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
+from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
@@ -14,12 +15,14 @@ from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
+from app.auth.queries.auth.verify import VerifyToken, VerifyTokenHandler
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
+from app.auth.services.rbac import RBACManager
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
 from app.core.events.event import EventRegisty
@@ -65,10 +68,14 @@ class AuthModuleProvider(Provider):
             token_blacklist=token_blacklist
         )
 
+    @provide(scope=Scope.APP)
+    def rbac_manager(self) -> RBACManager:
+        return RBACManager()
+
     session_manager = provide(SessionManager)
 
     #handelr command
-    register_handler = provide(RegisterCommandHandler)
+    register_user_handler = provide(RegisterCommandHandler)
     reset_password_handler = provide(ResetPasswordCommandHandler)
     send_reset_password_handler = provide(SendResetPasswordCommandHandler)
     send_verify_handler = provide(SendVerifyCommandHandler)
@@ -77,6 +84,8 @@ class AuthModuleProvider(Provider):
     login_handler = provide(LoginCommandHandler)
     logout_handler = provide(LogoutCommandHandler)
     refresh_handler = provide(RefreshTokenCommandHandler)
+
+    create_role_handler = provide(CreateRoleCommandHandler)
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
@@ -91,6 +100,9 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(LoginCommand, [LoginCommandHandler])
         command_registry.register_command(LogoutCommand, [LogoutCommandHandler])
         command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
+
+        #Role
+        command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])
         return command_registry
 
     #event
@@ -106,9 +118,11 @@ class AuthModuleProvider(Provider):
 
     # query
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
+    get_jwt_data = provide(VerifyTokenHandler)
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
         # Auth queries
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)
+        query_registry.register_query(VerifyToken, VerifyTokenHandler)
         return query_registry

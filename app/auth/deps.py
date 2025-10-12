@@ -1,11 +1,13 @@
-from typing import Annotated
+from typing import Annotated, Any
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.auth.models.user import User
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
-from app.auth.schemas.user import UserDTO
+from app.auth.queries.auth.verify import VerifyToken
+from app.auth.schemas.user import UserDTO, UserJWTData
+from app.auth.services.jwt import JWTManager
 from app.core.exceptions import ApplicationException
 from app.core.mediators.base import BaseMediator
 
@@ -47,3 +49,26 @@ class ActiveUserGetter:
 
 CurrentUserModel = Annotated[UserDTO, Depends(CurrentUserGetter())]
 ActiveUserModel = Annotated[UserDTO, Depends(ActiveUserGetter())]
+
+
+class UserJWTDataGetter:
+    @inject
+    async def __call__(
+        self,
+        mediator: FromDishka[BaseMediator],
+        token: Annotated[str, Depends(oauth2_scheme)],
+    ) -> UserJWTData:
+        try:
+            user_jwt_data = await mediator.handle_query(
+                VerifyToken(token=token)
+            )
+        except ApplicationException:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Invalid token',
+                headers={'WWW-Authenticate': 'Bearer'},
+            )
+        return user_jwt_data
+
+
+CurrentUserJWTData = Annotated[UserJWTData, Depends(UserJWTDataGetter())]

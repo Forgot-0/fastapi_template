@@ -14,15 +14,13 @@ from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
 from app.auth.schemas.auth.requests import (
-    LogoutRequest,
     ResetPasswordRequest,
     SendResetPasswordCodeRequest,
     SendVerifyCodeRequest,
-    RefreshTokenRequest,
     VerifyEmailRequest
 )
 from app.auth.schemas.auth.responses import (
-    TokenResponse,
+    AccessTokenResponse,
 )
 from app.auth.schemas.token import TokenGroup
 from app.core.api.rate_limiter import ConfigurableRateLimiter
@@ -34,7 +32,7 @@ router = APIRouter(route_class=DishkaRoute)
     "/login",
     summary="Вход пользователя",
     description="Аутентифицирует пользователя и возвращает пару токенов: access и refresh.",
-    response_model=TokenResponse,
+    response_model=AccessTokenResponse,
     status_code=status.HTTP_200_OK
 )
 async def login(
@@ -42,7 +40,7 @@ async def login(
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
     request: Request,
     response: Response
-) -> TokenResponse:
+) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
         LoginCommand(
@@ -53,40 +51,38 @@ async def login(
     )
     response.set_cookie(
         "refresh_token",
-        token_group.refresh_token,
-        httponly=True, secure=True, samesite="lax", path="/token/refresh"
+        token_group.refresh_token, samesite="strict",
+        httponly=True, secure=True, path="/"
     )
 
-    return TokenResponse(
-        access_token=token_group.access_token,
-        refresh_token=token_group.refresh_token
+    return AccessTokenResponse(
+        access_token=token_group.access_token
     )
 
 @router.post(
     "/refresh",
     summary="Обновление access токена",
     description="Обновляет access токен, используя refresh токен.",
-    response_model=TokenResponse,
+    response_model=AccessTokenResponse,
     status_code=status.HTTP_200_OK
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
     response: Response,
     refresh_token: str | None = Cookie(default=None),
-) -> TokenResponse:
+) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
         RefreshTokenCommand(refresh_token=refresh_token)
     )
     response.set_cookie(
         "refresh_token",
-        token_group.refresh_token,
-        httponly=True, secure=True, samesite="lax", path="/token/refresh"
+        token_group.refresh_token, samesite="strict",
+        httponly=True, secure=True, path="/"
     )
 
-    return TokenResponse(
+    return AccessTokenResponse(
         access_token=token_group.access_token,
-        refresh_token=token_group.refresh_token
     )
 
 @router.post(
@@ -101,7 +97,7 @@ async def logout(
     refresh_token: str | None = Cookie(default=None)
 ) -> None:
     await mediator.handle_command(LogoutCommand(refresh_token=refresh_token))
-    response.delete_cookie("refresh_token", path="/token/refresh")
+    response.delete_cookie("refresh_token", samesite="strict", path="/")
 
 @router.post(
     "/send_verify_code",

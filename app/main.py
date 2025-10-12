@@ -17,13 +17,12 @@ from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
 
-
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting FastStream")    
+    logger.info("Starting FastStream")   
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
     message_broker = await app.state.dishka_container.get(BaseMessageBroker)

@@ -23,7 +23,7 @@ class UserJWTData(BaseModel):
     id: str
     roles: list[str]
     permissions: list[str]
-    security_level: int | None = Field(default=None)
+    security_level: int
     device_id: str | None = Field(default=None)
 
     @classmethod
