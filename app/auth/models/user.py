@@ -36,7 +36,7 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         cascade="all, delete-orphan"
     )
 
-    roles: Mapped[list["Role"]] = relationship(
+    roles: Mapped[set["Role"]] = relationship(
         secondary="user_roles",
         back_populates="users",
         lazy="selectin",
@@ -61,7 +61,7 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         return user
 
     def add_role(self, role: 'Role') -> None:
-        self.roles.append(role)
+        self.roles.add(role)
 
     def password_reset(self, password_hash: str) -> None:
         self.password_hash = password_hash

@@ -31,12 +31,9 @@ class PermissionEnum(Enum):
     DELETE_PERMISSION = Permission(name="permission:delete")
     VIEW_PERMISSION = Permission(name="permission:view")
 
-
     @classmethod
     def get_allpermissions(cls) -> set[Permission]:
         return {permission.value for permission in cls}
-
-
 
 
 class RolesEnum(Enum):
