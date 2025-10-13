@@ -12,6 +12,10 @@ class RoleAssignRequest(BaseModel):
     role_name: str
 
 
+class RoleRemoveRequest(BaseModel):
+    role_name: str
+
+
 class RolePermissionRequest(BaseModel):
     permission: set[str] = Field(default_factory=set)
 

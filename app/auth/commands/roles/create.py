@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository

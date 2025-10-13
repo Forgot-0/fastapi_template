@@ -30,13 +30,12 @@ class AddPermissionRoleCommandHandler(BaseCommandHandler[AddPermissionRoleComman
     rbac_manager: RBACManager
 
     async def handle(self, command: AddPermissionRoleCommand) -> None:
-        self.rbac_manager.check_permission(command.user_jwt_data, {"role:update", })
+        self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", })
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
             raise
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
-
 
         for name in command.permissions:
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)

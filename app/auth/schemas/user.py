@@ -28,14 +28,14 @@ class UserJWTData(BaseModel):
 
     @classmethod
     def create_from_user(cls, user: User, device_id: str | None=None) -> 'UserJWTData':
-        security_lvl = 999
+        security_lvl = 0
         permissions = set()
         roles = set()
 
         for role in user.roles:
             roles.add(role.name)
 
-            security_lvl = min(security_lvl, role.security_level)
+            security_lvl = max(security_lvl, role.security_level)
 
             for permission in role.permissions:
                 permissions.add(permission.name)

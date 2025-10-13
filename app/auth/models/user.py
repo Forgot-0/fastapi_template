@@ -62,6 +62,9 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     def add_role(self, role: 'Role') -> None:
         self.roles.add(role)
 
+    def delete_role(self, role: 'Role') -> None:
+        self.roles.remove(role)
+
     def password_reset(self, password_hash: str) -> None:
         self.password_hash = password_hash
 

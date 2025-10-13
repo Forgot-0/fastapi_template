@@ -58,7 +58,7 @@ class RBACManager:
         if role_level == 0:
             raise 
 
-        if user_level >= role_level:
+        if user_level <= role_level:
             raise
 
     def check_permission(self, jwt_data: UserJWTData, permissions: set[str]) -> bool:

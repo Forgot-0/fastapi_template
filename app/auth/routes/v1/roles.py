@@ -5,8 +5,9 @@ from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.create import CreateRoleCommand
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand
+from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.deps import CurrentUserJWTData
-from app.auth.schemas.roles.requests import RoleAssignRequest, RoleCreateRequest, RolePermissionRequest
+from app.auth.schemas.roles.requests import RoleAssignRequest, RoleCreateRequest, RolePermissionRequest, RoleRemoveRequest
 from app.core.mediators.base import BaseMediator
 
 
@@ -52,6 +53,28 @@ async def assign_role(
     await mediator.handle_command(
         AssignRoleCommand(
             assign_to_user=user_id,
+            role_name=role_request.role_name,
+            user_jwt_data=user_jwt_data
+        )
+    )
+
+
+@router.post(
+    "/remove/{user_id}",
+    summary="Удаление роли пользователю",
+    description="Удаление роли пользователю",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def remove_role(
+    user_id: int,
+    role_request: RoleRemoveRequest,
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: CurrentUserJWTData
+) -> None:
+    await mediator.handle_command(
+        RemoveRoleCommand(
+            remove_from_user=user_id,
             role_name=role_request.role_name,
             user_jwt_data=user_jwt_data
         )
