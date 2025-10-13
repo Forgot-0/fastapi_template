@@ -16,6 +16,7 @@ from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
+from app.init_data import create_data
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting FastStream")   
+    await create_data()
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
     message_broker = await app.state.dishka_container.get(BaseMessageBroker)

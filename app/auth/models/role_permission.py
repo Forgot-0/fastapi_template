@@ -40,14 +40,14 @@ class RolesEnum(Enum):
     SUPER_ADMIN = Role(
         name="super_admin",
         description="Complete system access with all permissions",
-        security_level=0,
+        security_level=10,
         permissions=PermissionEnum.get_allpermissions(),
     )
 
     SYSTEM_ADMIN = Role(
         name="system_admin",
         description="Manages system settings and organizations",
-        security_level=1,
+        security_level=9,
         permissions={
             PermissionEnum.MANAGE_SYSTEM_SETTINGS.value,
             PermissionEnum.VIEW_SYSTEM_LOGS.value,
@@ -64,7 +64,7 @@ class RolesEnum(Enum):
     STANDARD_USER = Role(
         name="user",
         description="Normal application access",
-        security_level=8,
+        security_level=1,
         permissions=set()
     )
 

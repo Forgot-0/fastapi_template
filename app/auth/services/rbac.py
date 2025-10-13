@@ -38,16 +38,16 @@ class RBACManager:
         if len(role_name) > 24 or len(role_name) < 3:
             raise 
 
-        if role_name.startswith(("system_", "admin_")) or not self.is_system_user(jwt_data):
+        if role_name.startswith(("system_", "admin_")) and not self.is_system_user(jwt_data):
             raise 
 
-    def validate_permissions(self, jwt_data: UserJWTData, permission_name) -> None:
+    def validate_permissions(self, jwt_data: UserJWTData, permission_name: str) -> None:
         if self.is_system_user(jwt_data):
             return
 
         if permission_name in self.protected_permissions:
             raise
-        
+
         if permission_name not in jwt_data.permissions:
             raise
 

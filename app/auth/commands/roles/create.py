@@ -20,7 +20,7 @@ class CreateRoleCommand(BaseCommand):
     role_name: str
     description: str
     security_level: int
-    permissions: list[str]
+    permissions: set[str]
 
 
 @dataclass(frozen=True)
@@ -31,8 +31,11 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
     rbac_manager: RBACManager
 
     async def handle(self, command: CreateRoleCommand) -> None:
+        self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", })
+
         self.rbac_manager.validate_role_name(command.user_jwt_data, command.role_name)
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, command.security_level)
+
 
         role = await self.role_repository.get_by_name(command.role_name)
         if role is not None:
@@ -47,11 +50,11 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
         for name in command.permissions:
             permission = await self.permission_repository.get_permission_by_name(name)
 
-            if permission is not None:
+            if permission is None:
                 raise
 
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)
-            role.permissions.add(Permission(name=name))
+            role.add_permission(permission)
 
         await self.role_repository.create(role)
         await self.session.commit()

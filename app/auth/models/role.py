@@ -46,3 +46,8 @@ class Role(BaseModel, DateMixin):
     def add_permission(self, permission: Permission) -> None:
         self.permissions.add(permission)
 
+    def delete_permission(self, permission: Permission) -> None:
+        if permission not in self.permissions:
+            return
+
+        self.permissions.remove(permission)

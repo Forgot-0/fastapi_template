@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
+from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
@@ -86,6 +87,7 @@ class AuthModuleProvider(Provider):
     refresh_handler = provide(RefreshTokenCommandHandler)
 
     create_role_handler = provide(CreateRoleCommandHandler)
+    assign_role_handler = provide(AssignRoleCommandHandler)
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
@@ -103,6 +105,7 @@ class AuthModuleProvider(Provider):
 
         #Role
         command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])
+        command_registry.register_command(AssignRoleCommand, [AssignRoleCommandHandler])
         return command_registry
 
     #event
