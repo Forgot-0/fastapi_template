@@ -34,7 +34,6 @@ class JWTManager:
             "sub": user_data.id,
             "lvl": user_data.security_level,
             "did": user_data.device_id,
-            "roles": user_data.roles,
             "jti": str(uuid4()),
             "exp": (
                 now + timedelta(minutes=self.access_token_expire_minutes)
@@ -44,6 +43,7 @@ class JWTManager:
             "iat": now.timestamp(),
         }
         if token_type == TokenType.ACCESS:
+            payload['roles'] = user_data.roles
             payload['permissions'] = user_data.permissions
 
         return payload
@@ -73,9 +73,8 @@ class JWTManager:
 
         return token_data
 
-    async def refresh_tokens(self, refresh_token: str) -> TokenGroup:
-        token_data = await self.validate_token(refresh_token)
-        security_user = UserJWTData.create_from_token(token_data)
+    async def refresh_tokens(self, refresh_token: str, security_user: UserJWTData) -> TokenGroup:
+        await self.validate_token(refresh_token)
 
         token_pair = self.create_token_pair(security_user=security_user)
 
@@ -88,4 +87,4 @@ class JWTManager:
         token_exp_dt = datetime.fromtimestamp(token_data.exp,)
 
         seconds_until_expiry = token_exp_dt - current_time + timedelta(days=1)
-        await self.token_blacklist.add_jwt_token(token_data.sub, seconds_until_expiry)
+        await self.token_blacklist.add_jwt_token(token_data.jti, seconds_until_expiry)

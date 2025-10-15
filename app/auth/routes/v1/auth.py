@@ -13,6 +13,7 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
+from app.auth.deps import CurrentUserJWTData
 from app.auth.schemas.auth.requests import (
     ResetPasswordRequest,
     SendResetPasswordCodeRequest,
@@ -26,7 +27,10 @@ from app.auth.schemas.token import TokenGroup
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
 
+
+
 router = APIRouter(route_class=DishkaRoute)
+
 
 @router.post(
     "/login",
@@ -69,11 +73,15 @@ async def login(
 async def refresh(
     mediator: FromDishka[BaseMediator],
     response: Response,
+    user_jwt_data: CurrentUserJWTData,
     refresh_token: str | None = Cookie(default=None),
 ) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
-        RefreshTokenCommand(refresh_token=refresh_token)
+        RefreshTokenCommand(
+            refresh_token=refresh_token,
+            user_jwt_data=user_jwt_data
+        )
     )
     response.set_cookie(
         "refresh_token",

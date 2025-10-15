@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import Any, TYPE_CHECKING
 import orjson
-from sqlalchemy import Boolean, Integer, LargeBinary, String
+from sqlalchemy import Boolean, ForeignKey, Integer, LargeBinary, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.auth.models.permission import Permission
 from app.core.db.base_model import BaseModel, DateMixin, SoftDeleteMixin
 from app.core.events.event import BaseEvent
 
@@ -19,6 +20,20 @@ class CreatedUserEvent(BaseEvent):
 
     __event_name__: str = "user_created"
 
+
+class UserPermissions(BaseModel):
+    __tablename__ = "user_permissions"
+
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="cascade", onupdate="cascade"),
+        primary_key=True,
+    )
+    permission_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("permissions.id", ondelete="cascade", onupdate="cascade"),
+        primary_key=True,
+    )
 
 
 class User(BaseModel, DateMixin, SoftDeleteMixin):
@@ -41,6 +56,9 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         back_populates="users",
     )
 
+    permissions: Mapped[set["Permission"]] = relationship(
+        "Permission", secondary="user_permissions", back_populates="users"
+    )
 
     @classmethod
     def create(cls, email: str, username: str, password_hash: str, roles: set['Role']) -> "User":

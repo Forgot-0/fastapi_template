@@ -40,7 +40,7 @@ class Role(BaseModel, DateMixin):
     )
 
     permissions: Mapped[set["Permission"]] = relationship(
-        argument="Permission", secondary="role_permissions", back_populates="roles"
+        "Permission", secondary="role_permissions", back_populates="roles"
     )
 
     def add_permission(self, permission: Permission) -> None:
@@ -51,3 +51,18 @@ class Role(BaseModel, DateMixin):
             return
 
         self.permissions.remove(permission)
+
+    def update(
+        self,
+        name: str | None=None,
+        description: str | None=None,
+        security_level: int | None=None
+    ) -> None:
+        if name is not None:
+            self.name = name
+
+        if description is not None:
+            self.description = description
+
+        if security_level is not None:
+            self.security_level = security_level

@@ -7,6 +7,7 @@ from app.core.db.base_model import BaseModel, DateMixin
 
 if TYPE_CHECKING:
     from app.auth.models.role import Role
+    from app.auth.models.user import User
 
 
 class RolePermissions(BaseModel):
@@ -33,6 +34,12 @@ class Permission(BaseModel, DateMixin):
     roles: Mapped[list["Role"]] = relationship(
         "Role",
         secondary="role_permissions",
+        back_populates="permissions",
+        lazy="noload",
+    )
+    users: Mapped[list["User"]] = relationship(
+        "User",
+        secondary="user_permissions",
         back_populates="permissions",
         lazy="noload",
     )

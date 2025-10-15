@@ -1,11 +1,6 @@
 from dataclasses import dataclass, field
 
-from app.auth.models.permission import Permission
-from app.auth.models.role import Role
 from app.auth.models.role_permission import PermissionEnum, RolesEnum
-from app.auth.repositories.permission import PermissionRepository
-from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
-from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 
 
@@ -63,11 +58,10 @@ class RBACManager:
 
     def check_permission(self, jwt_data: UserJWTData, permissions: set[str]) -> bool:
         set_user_permission = set(jwt_data.permissions)
-
         if self.is_system_user(jwt_data):
             return True
 
-        if not set_user_permission <= permissions:
-            return False
+        if not set_user_permission >= permissions:
+            raise
 
         return True

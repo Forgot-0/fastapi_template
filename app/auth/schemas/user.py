@@ -40,6 +40,8 @@ class UserJWTData(BaseModel):
             for permission in role.permissions:
                 permissions.add(permission.name)
 
+        permissions.update(user.permissions)
+
         return cls(
             id=str(user.id),
             security_level=security_lvl,

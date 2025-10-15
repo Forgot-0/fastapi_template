@@ -1,6 +1,4 @@
-from datetime import datetime
 from enum import Enum
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -26,7 +24,7 @@ class Token(BaseModel):
     did: str
     exp: float
     iat: float
-    roles: list[str]
+    roles: list[str] = Field(default_factory=list)
     permissions: list[str] = Field(default_factory=list)
 
 

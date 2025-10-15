@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +9,9 @@ from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -41,3 +45,8 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
         user.delete_role(role)
 
         await self.session.commit()
+        logger.info("Remove role user", extra={
+            "remove_role": command.role_name,
+            "remove_to": command.remove_from_user,
+            "removed_by": command.user_jwt_data.id,
+        })

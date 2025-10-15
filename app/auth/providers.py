@@ -5,11 +5,14 @@ from redis.asyncio import Redis
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
+from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
+from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand, AddPermissionRoleCommandHandler
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand, DeletePermissionRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
+from app.auth.commands.roles.update import RoleUpdateCommand, RoleUpdateCommandHandler
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
@@ -90,10 +93,14 @@ class AuthModuleProvider(Provider):
     refresh_handler = provide(RefreshTokenCommandHandler)
 
     create_role_handler = provide(CreateRoleCommandHandler)
+    update_role_handler = provide(RoleUpdateCommandHandler)
     assign_role_handler = provide(AssignRoleCommandHandler)
     remove_role_handler = provide(RemoveRoleCommandHandler)
     add_permission_role_handler = provide(AddPermissionRoleCommandHandler)
     remove_permission_role_handler = provide(DeletePermissionRoleCommandHandler)
+
+    create_permission_handler = provide(CreatePermissionCommandHandler)
+    delete_permission_handler = provide(DeletePermissionCommandHandler)
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
@@ -115,6 +122,11 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(RemoveRoleCommand, [RemoveRoleCommandHandler])
         command_registry.register_command(AddPermissionRoleCommand, [AddPermissionRoleCommandHandler])
         command_registry.register_command(DeletePermissionRoleCommand, [DeletePermissionRoleCommandHandler])
+        command_registry.register_command(RoleUpdateCommand, [RoleUpdateCommandHandler])
+
+        #Permission
+        command_registry.register_command(CreatePermissionCommand, [CreatePermissionCommandHandler])
+        command_registry.register_command(DeletePermissionCommand, [DeletePermissionCommandHandler])
         return command_registry
 
     #event
@@ -129,8 +141,8 @@ class AuthModuleProvider(Provider):
         return event_registry
 
     # query
-    get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
     get_jwt_data = provide(VerifyTokenHandler)
+    get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:

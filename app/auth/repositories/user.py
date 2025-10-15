@@ -21,7 +21,7 @@ class UserRepository:
     async def get_with_roles_by_email(self, email: str) -> (User | None):
         result = await self.session.execute(
             User.select_not_deleted().options(
-                selectinload(User.roles).selectinload(Role.permissions)
+                selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
             ).where(User.email == email)
         )
         return result.scalars().first()
@@ -33,7 +33,7 @@ class UserRepository:
     async def get_with_roles_by_username(self, username: str) -> (User | None):
         result = await self.session.execute(
             User.select_not_deleted().options(
-                selectinload(User.roles).selectinload(Role.permissions)
+                selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
             ).where(User.username == username)
         )
         return result.scalars().first()
@@ -52,7 +52,7 @@ class UserRepository:
 
     async def get_user_with_permission_by_id(self, user_id: int) -> User | None:
         query = select(User).options(
-            selectinload(User.roles).selectinload(Role.permissions)
+           selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
         ).where(User.id == user_id)
         reults = await self.session.execute(query)
         return reults.scalar()
