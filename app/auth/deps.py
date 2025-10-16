@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.auth.models.user import User
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
-from app.auth.queries.auth.verify import VerifyToken
+from app.auth.queries.auth.verify import VerifyTokenQuery
 from app.auth.schemas.user import UserDTO, UserJWTData
 from app.core.exceptions import ApplicationException
 from app.core.mediators.base import BaseMediator
@@ -59,7 +59,7 @@ class UserJWTDataGetter:
     ) -> UserJWTData:
         try:
             user_jwt_data = await mediator.handle_query(
-                VerifyToken(token=token)
+                VerifyTokenQuery(token=token)
             )
         except ApplicationException:
             raise HTTPException(

@@ -47,9 +47,3 @@ class PaginatedResult(BaseModel, Generic[T]):
     items: list[T]
     pagination: Pagination
 
-
-ET = TypeVar("ET", bound=ApplicationException)
-
-class ExceptionResponse(BaseModel, Generic[ET]):
-    status_code: int
-    data: ET

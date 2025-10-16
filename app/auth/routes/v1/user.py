@@ -3,10 +3,15 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, status
+from app.auth.commands.permissions.add_permission_user import AddPermissionToUserCommand
+from app.auth.commands.permissions.remove_permission_user import DeletePermissionToUserCommand
+from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
+from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.commands.users.register import RegisterCommand
-from app.auth.deps import ActiveUserModel
+from app.auth.deps import ActiveUserModel, CurrentUserJWTData
+from app.auth.schemas.roles.requests import RoleAssignRequest
 from app.auth.schemas.user import UserDTO
-from app.auth.schemas.users.requests import UserCreateRequest
+from app.auth.schemas.users.requests import UserCreateRequest, UserPermissionRequest
 from app.auth.schemas.users.responses import UserResponse
 from app.core.mediators.base import BaseMediator
 
@@ -46,9 +51,93 @@ async def register_user(
     status_code=status.HTTP_200_OK,
     response_model=UserResponse,
 )
-async def me(mediator: FromDishka[BaseMediator], user: ActiveUserModel) -> UserResponse:
+async def me(user: ActiveUserModel) -> UserResponse:
     return UserResponse(
         id=user.id,
         username=user.username,
         email=user.email
+    )
+
+@router.post(
+    "/{user_id}/roles",
+    summary="Добавление роли пользователю",
+    description="Добавление роли пользователю",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def assign_role(
+    user_id: int,
+    role_request: RoleAssignRequest,
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: CurrentUserJWTData
+) -> None:
+    await mediator.handle_command(
+        AssignRoleCommand(
+            assign_to_user=user_id,
+            role_name=role_request.role_name,
+            user_jwt_data=user_jwt_data
+        )
+    )
+
+@router.delete(
+    "/{user_id}/roles/{role_name}",
+    summary="Удаление роли пользователю",
+    description="Удаление роли пользователю",
+    response_model=None,
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_role(
+    user_id: int,
+    role_name: str,
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: CurrentUserJWTData
+) -> None:
+    await mediator.handle_command(
+        RemoveRoleCommand(
+            remove_from_user=user_id,
+            role_name=role_name,
+            user_jwt_data=user_jwt_data
+        )
+    )
+
+@router.post(
+    "/{user_id}/permissions",
+    summary="Добавление прав пользователю",
+    description="Добавление прав пользователю",
+    response_model=None,
+    status_code=status.HTTP_200_OK,
+)
+async def add_permissions_to_user(
+    user_id: int,
+    permissions_request: UserPermissionRequest,
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: CurrentUserJWTData
+) -> None:
+    await mediator.handle_command(
+        AddPermissionToUserCommand(
+            user_id=user_id,
+            permissions=permissions_request.permissions,
+            user_jwt_data=user_jwt_data
+        )
+    )
+
+@router.delete(
+    "/{user_id}/permissions",
+    summary="удаление прав пользователю",
+    description="удаление прав пользователю",
+    response_model=None,
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_permissions_to_user(
+    user_id: int,
+    permissions_request: UserPermissionRequest,
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: CurrentUserJWTData
+) -> None:
+    await mediator.handle_command(
+        DeletePermissionToUserCommand(
+            user_id=user_id,
+            permissions=permissions_request.permissions,
+            user_jwt_data=user_jwt_data
+        )
     )

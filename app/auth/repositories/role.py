@@ -7,12 +7,12 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
+from app.core.db.repository import BaseRepositoryMixin
 
 
 
 @dataclass
-class RoleRepository:
-    session: AsyncSession
+class RoleRepository(BaseRepositoryMixin):
 
     async def get_with_permission_by_name(self, name: str) -> Role | None:
         query = select(Role).options(selectinload(Role.permissions)).where(Role.name == name)

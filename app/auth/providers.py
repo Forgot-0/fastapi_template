@@ -5,8 +5,16 @@ from redis.asyncio import Redis
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
+from app.auth.commands.permissions.add_permission_user import (
+    AddPermissionToUserCommand,
+    AddPermissionToUserCommandHandler
+)
 from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
 from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
+from app.auth.commands.permissions.remove_permission_user import (
+    DeletePermissionToUserCommand,
+    DeletePermissionToUserCommandHandler
+)
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand, AddPermissionRoleCommandHandler
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler
@@ -22,7 +30,9 @@ from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
-from app.auth.queries.auth.verify import VerifyToken, VerifyTokenHandler
+from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
+from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
+from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
@@ -101,6 +111,8 @@ class AuthModuleProvider(Provider):
 
     create_permission_handler = provide(CreatePermissionCommandHandler)
     delete_permission_handler = provide(DeletePermissionCommandHandler)
+    add_permission_to_user_handler = provide(AddPermissionToUserCommandHandler)
+    delete_permission_to_user_handler = provide(DeletePermissionToUserCommandHandler)
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
@@ -127,6 +139,8 @@ class AuthModuleProvider(Provider):
         #Permission
         command_registry.register_command(CreatePermissionCommand, [CreatePermissionCommandHandler])
         command_registry.register_command(DeletePermissionCommand, [DeletePermissionCommandHandler])
+        command_registry.register_command(AddPermissionToUserCommand, [AddPermissionToUserCommandHandler])
+        command_registry.register_command(DeletePermissionToUserCommand, [DeletePermissionToUserCommandHandler])
         return command_registry
 
     #event
@@ -141,12 +155,20 @@ class AuthModuleProvider(Provider):
         return event_registry
 
     # query
-    get_jwt_data = provide(VerifyTokenHandler)
+    get_jwt_data = provide(VerifyTokenQueryHandler)
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
+    get_permissions_query_handler = provide(GetListPemissionsQueryHandler)
+    get_roles_query_handler = provide(GetListRolesQueryHandler)
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
-        # Auth queries
+        # Auth
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)
-        query_registry.register_query(VerifyToken, VerifyTokenHandler)
+        query_registry.register_query(VerifyTokenQuery, VerifyTokenQueryHandler)
+
+        # Permissions
+        query_registry.register_query(GetListPemissionsQuery, GetListPemissionsQueryHandler)
+
+        # Role
+        query_registry.register_query(GetListRolesQuery, GetListRolesQueryHandler)
         return query_registry

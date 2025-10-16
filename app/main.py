@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting FastStream")   
+    logger.info("Starting FastAPI")   
     await create_data()
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
@@ -33,7 +33,8 @@ async def lifespan(app: FastAPI):
     await redis_client.aclose()
     await message_broker.close()
     await app.state.dishka_container.close()
-    logger.info("Shutting down FastStream")
+    logger.info("Shutting down FastAPI")
+
 
 def handle_application_exeption(request: Request, exception: ApplicationException):
     logger.exception(

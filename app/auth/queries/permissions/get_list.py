@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.schemas.permissions import PermissionDTO, PermissionListParams
 from app.auth.schemas.user import UserJWTData
@@ -15,16 +16,17 @@ class GetListPemissionsQuery(BaseQuery):
 
 
 @dataclass(frozen=True)
-class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, list[PermissionDTO]]):
+class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, PaginatedResult[PermissionDTO]]):
     permission_repository: PermissionRepository
     rbac_manager: RBACManager
 
     async def handle(self, query: GetListPemissionsQuery) -> PaginatedResult[PermissionDTO]:
         self.rbac_manager.check_permission(query.user_jwt_data, {"permission:view", })
         pagination_permissions = await self.permission_repository.get_list(
-            query.permission_query
+            params=query.permission_query, model=Permission
         )
+
         return PaginatedResult(
-            items=[PermissionDTO.model_validate(permission) for permission in pagination_permissions],
+            items=[PermissionDTO.model_validate(permission.to_dict()) for permission in pagination_permissions.items],
             pagination=pagination_permissions.pagination
         )
