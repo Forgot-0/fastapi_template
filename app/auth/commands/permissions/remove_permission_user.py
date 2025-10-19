@@ -4,6 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.permission import PermissionRepository
+from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
@@ -26,6 +27,7 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
     user_repository: UserRepository
     permission_repository: PermissionRepository
     rbac_manager: RBACManager
+    token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: DeletePermissionToUserCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:update", "user:update"}):
@@ -43,6 +45,7 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
 
             user.delete_permission(permission)
 
+        await self.token_blacklist.add_user(user.id)
         await self.session.commit()
 
         logger.info("Delete permission to user", extra={

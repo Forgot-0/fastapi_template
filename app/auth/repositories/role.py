@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
 from app.core.db.repository import BaseRepositoryMixin
+from app.core.utils import now_utc
 
 
 
@@ -42,7 +43,7 @@ class RoleInvalidateRepository:
             expiration = timedelta(days=8)
 
         key = f"invalid_role:{role_name}"
-        value = expiration.microseconds
+        value = now_utc().microsecond
         await self.client.set(key, value=value, ex=expiration)
 
     async def get_role_invalidation_time(self, role_name: str) -> int | None:

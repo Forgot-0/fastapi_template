@@ -33,6 +33,7 @@ from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAcces
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
 from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
+from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
@@ -156,6 +157,7 @@ class AuthModuleProvider(Provider):
 
     # query
     get_jwt_data = provide(VerifyTokenQueryHandler)
+    get_list_user_query_handler = provide(GetListUserQueryHandler)
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
     get_permissions_query_handler = provide(GetListPemissionsQueryHandler)
     get_roles_query_handler = provide(GetListRolesQueryHandler)
@@ -165,6 +167,9 @@ class AuthModuleProvider(Provider):
         # Auth
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)
         query_registry.register_query(VerifyTokenQuery, VerifyTokenQueryHandler)
+
+        # User
+        query_registry.register_query(GetListUserQuery, GetListUserQueryHandler)
 
         # Permissions
         query_registry.register_query(GetListPemissionsQuery, GetListPemissionsQueryHandler)

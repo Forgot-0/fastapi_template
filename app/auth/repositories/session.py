@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+
 from redis.asyncio import Redis
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.config import auth_config
 from app.auth.models.session import Session
 from app.core.utils import now_utc
 
@@ -34,18 +36,26 @@ class SessionRepository:
 class TokenBlacklistRepository:
     client: Redis
 
-    async def add_jwt_token(self, jti: str, expiration: timedelta) -> None:
+    async def add_jwt_token(self, jti: str, expiration: timedelta | None=None) -> None:
         await self.client.set(
-            f"revoked:{jti}",  str(expiration.total_seconds()), ex=expiration
+            f"revoked:{jti}",  str(now_utc().timestamp()), ex=expiration
         )
 
-    async def is_blacklisted(self, jti: str) -> bool:
+    async def get_token_backlist(self, jti: str) -> datetime:
         time_str = await self.client.get(f"revoked:{jti}")
-        if time_str is None:
-            return False
-        if now_utc() > datetime.fromtimestamp(float(time_str)):
-            return False
-        return True
+        return datetime.fromtimestamp(float(time_str))
+
+    async def add_user(self, user_id: int, expiration: timedelta | None=None) -> None:
+        if expiration is None:
+            expiration = timedelta(minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES + 1)
+
+        await self.client.set(
+            f"user:{user_id}",  str(now_utc().timestamp()), ex=expiration
+        )
+
+    async def get_user_backlist(self, user_id: int)  -> datetime:
+        time_str = await self.client.get(f"user:{user_id}")
+        return datetime.fromtimestamp(float(time_str))
 
     async def add_token(self, token: str, user_id: int, expiration: timedelta) -> None:
         await self.client.set(

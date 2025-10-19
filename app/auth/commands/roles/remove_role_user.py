@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
+from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
@@ -28,6 +29,7 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
     role_repository: RoleRepository
     permission_repository: PermissionRepository
     rbac_manager: RBACManager
+    token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: RemoveRoleCommand) -> None:
         self.rbac_manager.check_permission(command.user_jwt_data, {"user:update", "role:remove"})
@@ -43,6 +45,7 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
             raise
 
         user.delete_role(role)
+        await self.token_blacklist.add_user(user.id)
 
         await self.session.commit()
         logger.info("Remove role user", extra={

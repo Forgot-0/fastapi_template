@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -7,11 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
 from app.auth.models.user import User
-from app.auth.schemas.user import UserListParams
+from app.core.db.repository import BaseRepositoryMixin
+
 
 
 @dataclass
-class UserRepository:
+class UserRepository(BaseRepositoryMixin):
     session: AsyncSession
 
     async def get_by_email(self, email: str) -> (User | None):
@@ -41,9 +41,6 @@ class UserRepository:
     async def get_by_id(self, user_id: int) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.id == user_id))
         return result.scalars().first()
-
-    async def get_list(self, params: UserListParams) -> List[User]:
-        ...
 
     async def get_user_with_roles_by_id(self, user_id: int) -> User | None:
         query = select(User).options(selectinload(User.roles)).where(User.id == user_id)

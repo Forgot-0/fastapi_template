@@ -67,8 +67,14 @@ class JWTManager:
     async def validate_token(self, token: str) -> Token:
         payload = self.decode(token)
         token_data = Token(**payload)
+        token_date = datetime.fromtimestamp(token_data.iat)
 
-        if await self.token_blacklist.is_blacklisted(token_data.jti):
+        date =  await self.token_blacklist.get_token_backlist(token_data.jti)
+        if date > token_date:
+            raise
+
+        date = await self.token_blacklist.get_user_backlist(int(token_data.sub))
+        if date > token_date:
             raise
 
         return token_data

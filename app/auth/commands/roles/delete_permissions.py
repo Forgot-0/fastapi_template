@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.repositories.permission import PermissionRepository
-from app.auth.repositories.role import RoleRepository
+from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -26,6 +26,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
     role_repository: RoleRepository
     permission_repository: PermissionRepository
     rbac_manager: RBACManager
+    role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: DeletePermissionRoleCommand) -> None:
         self.rbac_manager.check_permission(command.user_jwt_data, {"role:update", })
@@ -39,6 +40,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
                 raise
             role.delete_permission(permission)
 
+        await self.role_invalidation.invalidate_role(role.name)
         await self.session.commit()
         logging.info("Delete permission to user", extra={
             "role_name": command.role_name,

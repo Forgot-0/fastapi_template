@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.repositories.session import SessionRepository
+from app.auth.config import auth_config
+from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
@@ -23,6 +25,7 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     session_manager: SessionManager
     jwt_manager: JWTManager
     session_repository: SessionRepository
+    token_blacklist: TokenBlacklistRepository
 
 
     async def handle(self, command: LogoutCommand) -> None:
@@ -36,6 +39,10 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
         await self.session_repository.deactivate_user_session(
             user_id=int(user.id),
             device_id=user.device_id,
+        )
+
+        await self.token_blacklist.add_jwt_token(
+            refresh_data.jti, timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS + 1)
         )
 
         await self.session.commit()

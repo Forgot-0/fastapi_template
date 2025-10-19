@@ -23,6 +23,8 @@ ProcessorType = Callable[
 def additionally_serialize(obj: object) -> Any:
     if isinstance(obj, UUID):
         return str(obj)
+    elif isinstance(obj, set):
+        return str(obj)
 
     logger.warning("Not serializable: %s", type(obj), extra={"obj": repr(obj)})
     return repr(obj)

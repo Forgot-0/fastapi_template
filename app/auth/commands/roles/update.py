@@ -3,7 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.repositories.role import RoleRepository
+from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -25,6 +25,7 @@ class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
     session: AsyncSession
     role_repository: RoleRepository
     rbac_manager: RBACManager
+    role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: RoleUpdateCommand) -> None:
         self.rbac_manager.check_permission(command.user_jwt_data, {"role:update", })
@@ -37,6 +38,8 @@ class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
         role.update(name=command.name, description=command.name, security_level=command.security_level)
+
+        await self.role_invalidation.invalidate_role(role.name)
         await self.session.commit()
 
         logger.info("Update role", extra={
