@@ -4,7 +4,6 @@ from datetime import timedelta
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
 from app.core.db.repository import BaseRepositoryMixin
@@ -43,9 +42,9 @@ class RoleInvalidateRepository:
             expiration = timedelta(days=8)
 
         key = f"invalid_role:{role_name}"
-        value = now_utc().microsecond
+        value = str(now_utc().timestamp())
         await self.client.set(key, value=value, ex=expiration)
 
-    async def get_role_invalidation_time(self, role_name: str) -> int | None:
+    async def get_role_invalidation_time(self, role_name: str) -> str | None:
         key = f"invalid_role:{role_name}"
         return await self.client.get(key)

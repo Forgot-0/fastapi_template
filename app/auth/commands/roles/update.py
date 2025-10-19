@@ -37,7 +37,7 @@ class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
             raise
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
-        role.update(name=command.name, description=command.name, security_level=command.security_level)
+        role.update(name=command.name, description=command.description, security_level=command.security_level)
 
         await self.role_invalidation.invalidate_role(role.name)
         await self.session.commit()

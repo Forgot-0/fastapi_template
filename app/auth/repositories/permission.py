@@ -1,11 +1,8 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.auth.models.permission import Permission
-from app.auth.schemas.permissions import PermissionListParams
-from app.core.api.schemas import PaginatedResult, Pagination, SortOrder
 from app.core.db.repository import BaseRepositoryMixin
 
 

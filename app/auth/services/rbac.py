@@ -62,6 +62,6 @@ class RBACManager:
             return True
 
         if not set_user_permission >= permissions:
-            raise
+            return False
 
         return True
