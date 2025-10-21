@@ -60,3 +60,69 @@ class WrongDataException(ApplicationException):
     @property
     def status(self) -> int:
         return 400
+
+
+@dataclass(eq=False)
+class InvalidRoleNameException(ApplicationException):
+    @property
+    def message(self):
+        return "Недопустимое имя роли. Должно быть от 3 до 24 символов."
+
+    @property
+    def status(self) -> int:
+        return 400
+
+
+@dataclass(eq=False)
+class SystemRoleAccessDeniedException(ApplicationException):
+    @property
+    def message(self):
+        return "Доступ к системным ролям запрещен для обычных пользователей"
+
+    @property
+    def status(self) -> int:
+        return 403
+
+
+@dataclass(eq=False)
+class ProtectedPermissionException(ApplicationException):
+    @property
+    def message(self):
+        return "Доступ к защищенным разрешениям запрещен"
+
+    @property
+    def status(self) -> int:
+        return 403
+
+
+@dataclass(eq=False)
+class PermissionDeniedException(ApplicationException):
+    @property
+    def message(self):
+        return "Отсутствует необходимое разрешение"
+
+    @property
+    def status(self) -> int:
+        return 403
+
+
+@dataclass(eq=False)
+class InvalidSecurityLevelException(ApplicationException):
+    @property
+    def message(self):
+        return "Уровень безопасности роли некорректен"
+
+    @property
+    def status(self) -> int:
+        return 400
+
+
+@dataclass(eq=False)
+class InsufficientSecurityLevelException(ApplicationException):
+    @property
+    def message(self):
+        return "Недостаточный уровень безопасности для выполнения операции"
+
+    @property
+    def status(self) -> int:
+        return 403
