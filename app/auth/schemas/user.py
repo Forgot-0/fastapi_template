@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.models.user import User
 from app.auth.schemas.base import PasswordMixinSchema
+from app.auth.schemas.permissions import PermissionDTO
+from app.auth.schemas.role import RoleDTO
 from app.auth.schemas.token import Token
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
@@ -69,6 +71,8 @@ class UserCreate(BaseUser, PasswordMixinSchema):
 
 class UserDTO(BaseUser):
     id: int
+    roles: list[RoleDTO]
+    permissions: list[PermissionDTO]
     is_active: bool
     is_verified: bool
 

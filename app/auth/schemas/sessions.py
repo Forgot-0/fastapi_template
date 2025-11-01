@@ -17,11 +17,11 @@ class SessionDTO(BaseModel):
 
 
 class SessionSortParam(SortParam):
-    field: Literal['last_activity', 'id', 'created_at']
+    field: Literal['id', 'last_activity', 'created_at']
 
 
 class SessionFilterParam(FilterParam):
-    field: Literal['user_id', 'id', 'device_id', 'is_active']
+    field: Literal['id', 'user_id', 'device_id', 'is_active']
 
 
 class SessionListParams(ListParams):

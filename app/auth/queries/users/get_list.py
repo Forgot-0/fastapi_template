@@ -24,7 +24,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PaginatedResult
             raise
 
         pagination_users = await self.user_repository.get_list(
-            params=query.user_query, model=User
+            params=query.user_query, model=User, relations={"select": ["permissions", "roles.permissions"]}
         )
 
         return PaginatedResult(

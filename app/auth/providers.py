@@ -34,6 +34,7 @@ from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAcces
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
 from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
+from app.auth.queries.sessions.get_list import GetListSessionQuery, GetListSessionQueryHandler
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
 from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
 from app.auth.repositories.permission import PermissionRepository
@@ -169,6 +170,7 @@ class AuthModuleProvider(Provider):
     get_permissions_query_handler = provide(GetListPemissionsQueryHandler)
     get_roles_query_handler = provide(GetListRolesQueryHandler)
     get_list_user_sessions = provide(GetListSessionsUserQueryHandler)
+    get_list_sessions = provide(GetListSessionQueryHandler)
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
@@ -187,4 +189,5 @@ class AuthModuleProvider(Provider):
 
         # Session
         query_registry.register_query(GetListSessionsUserQuery, GetListSessionsUserQueryHandler)
+        query_registry.register_query(GetListSessionQuery, GetListSessionQueryHandler)
         return query_registry

@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.config import auth_config
 from app.auth.models.session import Session
+from app.core.db.repository import BaseRepositoryMixin
 from app.core.utils import now_utc
 
 
 
 @dataclass
-class SessionRepository:
+class SessionRepository(BaseRepositoryMixin):
     session: AsyncSession
 
     async def get_by_id(self, session_id: int) -> Session | None:

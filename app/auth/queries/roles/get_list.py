@@ -25,7 +25,7 @@ class GetListRolesQueryHandler(BaseQueryHandler[GetListRolesQuery, PaginatedResu
             raise
 
         pagination_roles = await self.role_repository.get_list(
-            params=query.role_query, model=Role
+            params=query.role_query, model=Role, relations={'select': ['permissions']}
         )
 
         return PaginatedResult(
