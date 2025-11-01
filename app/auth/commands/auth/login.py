@@ -46,5 +46,6 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
             UserJWTData.create_from_user(user, device_id=session.device_id)
         )
 
+        print(token_group.refresh_token)
         logger.info("Logining user", extra={"user_id": user.id, "device_id": session.device_id})
         return token_group

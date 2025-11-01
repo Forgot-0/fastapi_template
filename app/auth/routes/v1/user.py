@@ -9,8 +9,10 @@ from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel, CurrentUserJWTData
+from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery
 from app.auth.queries.users.get_list import GetListUserQuery
 from app.auth.schemas.roles.requests import RoleAssignRequest
+from app.auth.schemas.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
 from app.auth.schemas.user import UserDTO, UserFilterParam, UserListParams, UserSortParam
 from app.auth.schemas.users.requests import UserCreateRequest, UserPermissionRequest
 from app.auth.schemas.users.responses import UserResponse
@@ -21,7 +23,8 @@ from app.core.mediators.base import BaseMediator
 
 router = APIRouter(route_class=DishkaRoute)
 
-list_params_builder = ListParamsBuilder(UserSortParam, UserFilterParam, UserListParams)
+user_list_params_builder = ListParamsBuilder(UserSortParam, UserFilterParam, UserListParams)
+session_list_params_builder = ListParamsBuilder(SessionSortParam, SessionFilterParam, SessionListParams)
 
 
 
@@ -153,12 +156,13 @@ async def delete_permissions_to_user(
     "/",
     summary="Получить список пользователей",
     description="Получить список пользователей",
+    status_code=status.HTTP_200_OK,
     response_model=PaginatedResult[UserDTO]
 )
 async def get_list_user(
     user_jwt_data: CurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
-    params: UserListParams = Depends(list_params_builder),
+    params: UserListParams = Depends(user_list_params_builder),
 ) -> PaginatedResult[UserDTO]:
     list_user = await mediator.handle_query(
         GetListUserQuery(
@@ -167,3 +171,22 @@ async def get_list_user(
         )
     )
     return list_user
+
+
+@router.get(
+    "/sessions",
+    summary="Получить активные сессии пользователя",
+    description="Получить активные сессии пользователя",
+    status_code=status.HTTP_200_OK,
+    response_model=list[SessionDTO]
+)
+async def get_list_user_session(
+    user_jwt_data: CurrentUserJWTData,
+    mediator: FromDishka[BaseMediator],
+) -> list[SessionDTO]:
+    return await mediator.handle_query(
+        GetListSessionsUserQuery(
+            user_id=int(user_jwt_data.id)
+        )
+    )
+

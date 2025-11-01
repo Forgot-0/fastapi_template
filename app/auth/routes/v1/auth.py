@@ -108,7 +108,7 @@ async def logout(
     response.delete_cookie("refresh_token", samesite="strict", path="/")
 
 @router.post(
-    "/send_verify_code",
+    "/verifications/email",
     summary="Отправка кода верификации",
     description="Отправляет код для верификации email. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -123,7 +123,7 @@ async def send_verify_code(
     )
 
 @router.post(
-    "/send_reset_password_code",
+    "/password-resets",
     summary="Отправка кода сброса пароля",
     description="Отправляет код для сброса пароля. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -139,10 +139,11 @@ async def send_reset_password_code(
 
 
 @router.post(
-    '/verify_email',
+    '/verifications/email/verify',
     summary="Подтверждение email",
     description="Подтверждает email, используя переданный токен.",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def verify_email(
     mediator: FromDishka[BaseMediator],
@@ -152,10 +153,11 @@ async def verify_email(
 
 
 @router.post(
-    '/reset_password',
+    '/password-resets/confirm',
     summary="Сброс пароля",
     description="Сбрасывает пароль, используя токен и новые данные пароля.",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def reset_password(
     mediator: FromDishka[BaseMediator],

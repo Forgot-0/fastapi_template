@@ -20,7 +20,7 @@ async def create_first_data(db: AsyncSession) -> None:
 
 
 
-async def create_data() -> None:
+async def init_data() -> None:
     async for db in get_session():
         await create_first_data(db)
         break

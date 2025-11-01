@@ -69,7 +69,7 @@ class JWTManager:
         token_data = Token(**payload)
         token_date = datetime.fromtimestamp(token_data.iat)
 
-        date =  await self.token_blacklist.get_token_backlist(token_data.jti)
+        date = await self.token_blacklist.get_token_backlist(token_data.jti)
         if date > token_date:
             raise
 

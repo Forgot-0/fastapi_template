@@ -26,3 +26,5 @@ class Session(BaseModel):
 
     user: Mapped['User'] = relationship("User", back_populates="sessions")
 
+    def deactivate(self) -> None:
+        self.is_active = False

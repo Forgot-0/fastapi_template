@@ -3,11 +3,13 @@ import logging
 
 from dishka import AsyncContainer
 from dishka.integrations.fastapi import setup_dishka
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
 from starlette.middleware.cors import CORSMiddleware
 
+from app.pre_start import pre_start
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
@@ -16,7 +18,7 @@ from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.logging import LoggingMiddleware
-from app.init_data import create_data
+from app.init_data import init_data
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting FastAPI")
-    await create_data()
+    await pre_start()
+    await init_data()
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
     message_broker = await app.state.dishka_container.get(BaseMessageBroker)
@@ -36,16 +39,33 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down FastAPI")
 
 
-def handle_application_exeption(request: Request, exception: ApplicationException):
+
+def handle_application_exeption(request: Request, exc: ApplicationException) -> JSONResponse:
     logger.exception(
         "Application exception",
-        exc_info=exception,
-        extra={"status": exception.status, "detail": exception.message}
+        exc_info=exc,
+        extra={"status": exc.status, "detail": exc.message}
     )
-    raise HTTPException(
-        detail={"error": exception.message},
-        status_code=exception.status
+    return JSONResponse(
+        status_code=exc.status,
+        content={"message": exc.message},
     )
+
+def handle_exception(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception(
+        "Unhandled exception",
+        exc_info=exc,
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "exception_type": type(exc).__name__
+        }
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"title":"Internal Server Error", "status":500}
+    )
+
 
 def setup_middleware(app: FastAPI, container: AsyncContainer) -> None:
     app.add_middleware(LoggingMiddleware)
@@ -80,6 +100,6 @@ def init_app() -> FastAPI:
     setup_router(app)
 
     app.add_exception_handler(ApplicationException, handle_application_exeption) # type: ignore
-
+    app.add_exception_handler(Exception, handle_exception)
     return app
 

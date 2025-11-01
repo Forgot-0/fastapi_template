@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from sqlalchemy import select
@@ -26,13 +25,9 @@ async def init(db: AsyncSession) -> None:
         raise exc
 
 
-async def main() -> None:
+async def pre_start() -> None:
     logger.info('app_initialization_started')
     async for db in get_session():
         await init(db)
         break
     logger.info('app_initialization_finished')
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

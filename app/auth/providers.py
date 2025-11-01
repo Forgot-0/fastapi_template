@@ -21,6 +21,7 @@ from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandH
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand, DeletePermissionRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
 from app.auth.commands.roles.update import RoleUpdateCommand, RoleUpdateCommandHandler
+from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand, UserDeactivateSessionCommandHandler
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
@@ -33,6 +34,7 @@ from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAcces
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
 from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
+from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
 from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
@@ -115,6 +117,8 @@ class AuthModuleProvider(Provider):
     add_permission_to_user_handler = provide(AddPermissionToUserCommandHandler)
     delete_permission_to_user_handler = provide(DeletePermissionToUserCommandHandler)
 
+    deactivate_session_handler = provide(UserDeactivateSessionCommandHandler)
+
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
         # User commands
@@ -142,6 +146,9 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(DeletePermissionCommand, [DeletePermissionCommandHandler])
         command_registry.register_command(AddPermissionToUserCommand, [AddPermissionToUserCommandHandler])
         command_registry.register_command(DeletePermissionToUserCommand, [DeletePermissionToUserCommandHandler])
+
+        # Session
+        command_registry.register_command(UserDeactivateSessionCommand, [UserDeactivateSessionCommandHandler])
         return command_registry
 
     #event
@@ -161,6 +168,7 @@ class AuthModuleProvider(Provider):
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
     get_permissions_query_handler = provide(GetListPemissionsQueryHandler)
     get_roles_query_handler = provide(GetListRolesQueryHandler)
+    get_list_user_sessions = provide(GetListSessionsUserQueryHandler)
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
@@ -176,4 +184,7 @@ class AuthModuleProvider(Provider):
 
         # Role
         query_registry.register_query(GetListRolesQuery, GetListRolesQueryHandler)
+
+        # Session
+        query_registry.register_query(GetListSessionsUserQuery, GetListSessionsUserQueryHandler)
         return query_registry
