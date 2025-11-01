@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import NotFoundRoleException, NotFoundUserByException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
@@ -36,13 +37,13 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise
+            raise NotFoundRoleException(command.role_name)
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
 
         user = await self.user_repository.get_user_with_permission_by_id(command.remove_from_user)
         if user is None:
-            raise
+            raise NotFoundUserByException("user_id")
 
         user.delete_role(role)
         await self.token_blacklist.add_user(user.id)

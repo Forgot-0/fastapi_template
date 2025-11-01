@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import NotFoundPermissionException, NotFoundRoleException, PermissionDeniedException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.schemas.user import UserJWTData
@@ -31,18 +32,19 @@ class AddPermissionRoleCommandHandler(BaseCommandHandler[AddPermissionRoleComman
 
     async def handle(self, command: AddPermissionRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", }):
-            raise
+            raise PermissionDeniedException()
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise
+            raise NotFoundRoleException(command.role_name)
+
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
 
         for name in command.permissions:
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)
             permission = await self.permission_repository.get_permission_by_name(name)
             if permission is None:
-                raise
+                raise NotFoundPermissionException(name)
 
             role.add_permission(permission)
 

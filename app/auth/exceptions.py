@@ -15,6 +15,7 @@ class AlreadyUserEmailException(ApplicationException):
     def status(self) -> int:
         return 400
 
+
 @dataclass(eq=False)
 class AlreadyUserUsernameException(ApplicationException):
     field: str
@@ -26,6 +27,7 @@ class AlreadyUserUsernameException(ApplicationException):
     @property
     def status(self) -> int:
         return 400
+
 
 @dataclass(eq=False)
 class InvalidJWTTokenException(ApplicationException):
@@ -88,7 +90,7 @@ class SystemRoleAccessDeniedException(ApplicationException):
 class ProtectedPermissionException(ApplicationException):
     @property
     def message(self):
-        return "Доступ к защищенным разрешениям запрещен"
+        return "Доступ к защищенным правам запрещен"
 
     @property
     def status(self) -> int:
@@ -126,3 +128,40 @@ class InsufficientSecurityLevelException(ApplicationException):
     @property
     def status(self) -> int:
         return 403
+
+
+@dataclass(eq=False)
+class NotFoundSessionException(ApplicationException):
+    @property
+    def message(self):
+        return "Cессия не найдена"
+
+    @property
+    def status(self) -> int:
+        return 404
+
+
+@dataclass(eq=True)
+class NotFoundRoleException(ApplicationException):
+    role_name: str
+
+    @property
+    def message(self):
+        return f"Роль {self.role_name} не найдена"
+
+    @property
+    def status(self) -> int:
+        return 404
+
+
+@dataclass(eq=True)
+class NotFoundPermissionException(ApplicationException):
+    permission_name: str
+
+    @property
+    def message(self):
+        return f"Право {self.permission_name} не найдено"
+
+    @property
+    def status(self) -> int:
+        return 404

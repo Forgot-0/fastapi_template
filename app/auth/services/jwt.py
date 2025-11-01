@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from jose import jwt
 
+from app.auth.exceptions import InvalidJWTTokenException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.schemas.token import Token, TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
@@ -71,11 +72,11 @@ class JWTManager:
 
         date = await self.token_blacklist.get_token_backlist(token_data.jti)
         if date > token_date:
-            raise
+            raise InvalidJWTTokenException()
 
         date = await self.token_blacklist.get_user_backlist(int(token_data.sub))
         if date > token_date:
-            raise
+            raise InvalidJWTTokenException()
 
         return token_data
 
