@@ -38,12 +38,16 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
         if user is None:
             raise
 
-        for permission_name in command.permissions:
+        permissions = await self.permission_repository.get_permissions_by_names(
+            command.permissions
+        )
 
-            permission = await self.permission_repository.get_permission_by_name(permission_name)
-            if permission is None:
-                raise NotFoundPermissionException(permission_name)
+        if len(permissions) != len(command.permissions):
+            found_names = {p.name for p in permissions}
+            missing = command.permissions - found_names
+            raise NotFoundPermissionException(", ".join(missing))
 
+        for permission in permissions:
             user.delete_permission(permission)
 
         await self.token_blacklist.add_user(user.id)

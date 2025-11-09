@@ -26,7 +26,7 @@ class GetByAccessTokenQueryHandler(BaseQueryHandler[GetByAccessTokenQuery, User]
         if not user_id:
             raise InvalidJWTTokenException()
 
-        user = await self.user_repository.get_by_id(int(user_id))
+        user = await self.user_repository.get_user_with_permission_by_id(int(user_id))
         if not user:
             raise InvalidJWTTokenException()
 

@@ -13,6 +13,7 @@ from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class RefreshTokenCommand(BaseCommand):
     refresh_token: str | None

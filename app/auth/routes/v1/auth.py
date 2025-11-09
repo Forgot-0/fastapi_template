@@ -58,7 +58,6 @@ async def login(
         token_group.refresh_token, samesite="strict",
         httponly=True, secure=True, path="/"
     )
-
     return AccessTokenResponse(
         access_token=token_group.access_token
     )
@@ -68,7 +67,8 @@ async def login(
     summary="Обновление access токена",
     description="Обновляет access токен, используя refresh токен.",
     response_model=AccessTokenResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    # dependencies=[Depends(ConfigurableRateLimiter(times=2, seconds=5*60))]
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],

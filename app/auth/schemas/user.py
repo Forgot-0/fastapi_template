@@ -71,8 +71,10 @@ class UserCreate(BaseUser, PasswordMixinSchema):
 
 class UserDTO(BaseUser):
     id: int
+
     roles: list[RoleDTO]
-    permissions: list[PermissionDTO]
+    permissions: list[PermissionDTO] = Field(default_factory=list)
+
     is_active: bool
     is_verified: bool
 

@@ -29,17 +29,16 @@ class Permission(BaseModel, DateMixin):
     __tablename__ = "permissions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(64), index=True, unique=True, nullable=False)
 
     roles: Mapped[list["Role"]] = relationship(
         "Role",
         secondary="role_permissions",
         back_populates="permissions",
-        lazy="noload",
     )
+
     users: Mapped[list["User"]] = relationship(
         "User",
         secondary="user_permissions",
         back_populates="permissions",
-        lazy="noload",
     )

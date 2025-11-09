@@ -66,7 +66,10 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
             email=email,
             username=username,
             password_hash=password_hash,
-            roles=roles
+            roles=roles,
+            is_active=True,
+            is_verified=False,
+            permissions=set()
         )
 
         user.register_event(

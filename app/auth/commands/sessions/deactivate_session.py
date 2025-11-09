@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import NotFoundSessionException, PermissionDeniedException
-from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
+from app.auth.repositories.session import SessionRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler

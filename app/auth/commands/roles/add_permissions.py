@@ -40,12 +40,16 @@ class AddPermissionRoleCommandHandler(BaseCommandHandler[AddPermissionRoleComman
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
 
-        for name in command.permissions:
-            self.rbac_manager.validate_permissions(command.user_jwt_data, name)
-            permission = await self.permission_repository.get_permission_by_name(name)
-            if permission is None:
-                raise NotFoundPermissionException(name)
+        permissions = await self.permission_repository.get_permissions_by_names(
+            command.permissions
+        )
 
+        if len(permissions) != len(command.permissions):
+            found_names = {p.name for p in permissions}
+            missing = command.permissions - found_names
+            raise NotFoundPermissionException(", ".join(missing))
+
+        for permission in permissions:
             role.add_permission(permission)
 
         await self.role_invalidation.invalidate_role(role.name)

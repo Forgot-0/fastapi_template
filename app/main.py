@@ -70,14 +70,14 @@ def handle_exception(request: Request, exc: Exception) -> JSONResponse:
 def setup_middleware(app: FastAPI, container: AsyncContainer) -> None:
     app.add_middleware(LoggingMiddleware)
 
-    if app_config.BACKEND_CORS_ORIGINS:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=[str(origin).strip('/') for origin in app_config.BACKEND_CORS_ORIGINS],
-            allow_credentials=True,
-            allow_methods=['*'],
-            allow_headers=['*'],
-        )
+    # if app_config.BACKEND_CORS_ORIGINS:
+    #     app.add_middleware(
+    #         CORSMiddleware,
+    #         allow_origins=[str(origin).strip('/') for origin in app_config.BACKEND_CORS_ORIGINS],
+    #         allow_credentials=True,
+    #         allow_methods=['*'],
+    #         allow_headers=['*'],
+    #     )
     app.add_middleware(ContextMiddleware)
 
 

@@ -2,7 +2,7 @@
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from app.auth.commands.permissions.add_permission_user import AddPermissionToUserCommand
 from app.auth.commands.permissions.remove_permission_user import DeletePermissionToUserCommand
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand

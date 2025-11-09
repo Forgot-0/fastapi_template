@@ -31,8 +31,8 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
     hash_service: HashService
 
     async def handle(self, command: LoginCommand) -> TokenGroup:
-        user = await self.user_repository.get_with_roles_by_username(command.username) or \
-        await self.user_repository.get_with_roles_by_email(command.username)
+        user = await self.user_repository.get_with_roles_by_email(command.username) or \
+        await self.user_repository.get_with_roles_by_username(command.username)
 
         if user is None or not self.hash_service.verify_password(command.password, user.password_hash):
             raise WrongDataException()

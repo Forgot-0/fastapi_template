@@ -3,7 +3,12 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import AlreadyUserEmailException, AlreadyUserUsernameException, NotFoundRoleException, WrongDataException
+from app.auth.exceptions import (
+    AlreadyUserEmailException,
+    AlreadyUserUsernameException,
+    NotFoundRoleException,
+    WrongDataException
+)
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
@@ -44,7 +49,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         if command.password != command.password_repeat:
             raise WrongDataException()
 
-        role = await self.role_repository.get_with_permission_by_name("user")
+        role = await self.role_repository.get_with_permission_by_name("super_admin")
         if not role:
             raise NotFoundRoleException("user")
 
@@ -54,12 +59,10 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             password_hash=self.hash_service.hash_password(command.password),
             roles={role, }
         )
-
+        user.is_verified = True
         await self.user_repository.create(user)
 
         await self.session.commit()
-        await self.session.refresh(user)
-
         await self.event_bus.publish(user.pull_events())
 
         user_dto = UserDTO.model_validate(user.to_dict())

@@ -15,13 +15,13 @@ class Session(BaseModel):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     device_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
     device_info: Mapped[bytes] = mapped_column(LargeBinary)
     user_agent: Mapped[str] = mapped_column(String)
 
-    last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     user: Mapped['User'] = relationship("User", back_populates="sessions")

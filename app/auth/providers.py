@@ -21,7 +21,10 @@ from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandH
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand, DeletePermissionRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
 from app.auth.commands.roles.update import RoleUpdateCommand, RoleUpdateCommandHandler
-from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand, UserDeactivateSessionCommandHandler
+from app.auth.commands.sessions.deactivate_session import (
+    UserDeactivateSessionCommand,
+    UserDeactivateSessionCommandHandler
+)
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
@@ -37,7 +40,7 @@ from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQuery
 from app.auth.queries.sessions.get_list import GetListSessionQuery, GetListSessionQueryHandler
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
 from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
-from app.auth.repositories.permission import PermissionRepository
+from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
@@ -69,6 +72,12 @@ class AuthModuleProvider(Provider):
     @provide(scope=Scope.APP)
     def role_blacklist(self) -> RoleInvalidateRepository:
         return RoleInvalidateRepository(
+            Redis.from_url(app_config.redis_url)
+        )
+
+    @provide(scope=Scope.APP)
+    def permission_blacklist(self) -> PermissionInvalidateRepository:
+        return PermissionInvalidateRepository(
             Redis.from_url(app_config.redis_url)
         )
 

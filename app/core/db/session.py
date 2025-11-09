@@ -19,7 +19,7 @@ def create_engine() -> AsyncEngine:
     return create_async_engine(
             str(app_config.postgres_url),
             pool_pre_ping=True,
-            pool_size=5,
+            pool_size=15,
             max_overflow=10,
             echo=app_config.SQL_ECHO,
             future=True,

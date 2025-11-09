@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
 from sqlalchemy import select
@@ -48,3 +48,11 @@ class RoleInvalidateRepository:
     async def get_role_invalidation_time(self, role_name: str) -> str | None:
         key = f"invalid_role:{role_name}"
         return await self.client.get(key)
+
+    async def get_max_invalidation_time(self, role_names: list[str]) -> datetime:
+        keys = [f"invalid_role:{permission_name}" for permission_name in role_names]
+        values = await self.client.mget(*keys)
+        if not values:
+            return datetime.fromtimestamp(0.00)
+        max_date = max(values, key=lambda x: datetime.fromtimestamp(float(x)))
+        return datetime.fromtimestamp(float(max_date))

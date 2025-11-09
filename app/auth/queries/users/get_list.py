@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from app.auth.exceptions import PermissionDeniedException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO, UserJWTData, UserListParams
@@ -21,7 +22,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PaginatedResult
 
     async def handle(self, query: GetListUserQuery) -> PaginatedResult[UserDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view", }):
-            raise
+            raise PermissionDeniedException()
 
         pagination_users = await self.user_repository.get_list(
             params=query.user_query, model=User, relations={"select": ["permissions", "roles.permissions"]}

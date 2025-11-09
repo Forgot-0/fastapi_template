@@ -5,6 +5,8 @@ from user_agents import parse
 
 from app.auth.schemas.token import DeviceInformation
 
+
+
 def generate_device_info(user_agent: str) -> DeviceInformation:
 
     ua = parse(user_agent)

@@ -35,11 +35,16 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
         if role is None:
             raise NotFoundRoleException(command.role_name)
 
-        for name in command.permissions:
-            permission = await self.permission_repository.get_permission_by_name(name)
-            if permission is None:
-                raise NotFoundPermissionException(name)
+        permissions = await self.permission_repository.get_permissions_by_names(
+            command.permissions
+        )
 
+        if len(permissions) != len(command.permissions):
+            found_names = {p.name for p in permissions}
+            missing = command.permissions - found_names
+            raise NotFoundPermissionException(", ".join(missing))
+
+        for permission in permissions:
             role.delete_permission(permission)
 
         await self.role_invalidation.invalidate_role(role.name)

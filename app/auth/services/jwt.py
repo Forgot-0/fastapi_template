@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
-from jose import jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 
 from app.auth.exceptions import InvalidJWTTokenException
 from app.auth.repositories.session import TokenBlacklistRepository
@@ -26,7 +26,13 @@ class JWTManager:
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
     def decode(self, token: str) -> dict[str, Any]:
-        return jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+        try:
+            data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+        except ExpiredSignatureError:
+            raise InvalidJWTTokenException()
+        except JWTError:
+            raise InvalidJWTTokenException()
+        return data
 
     def generate_payload(self, user_data: UserJWTData, token_type: TokenType) -> dict[str, Any]:
         now = now_utc()
@@ -68,21 +74,22 @@ class JWTManager:
     async def validate_token(self, token: str) -> Token:
         payload = self.decode(token)
         token_data = Token(**payload)
-        token_date = datetime.fromtimestamp(token_data.iat)
-
-        date = await self.token_blacklist.get_token_backlist(token_data.jti)
-        if date > token_date:
-            raise InvalidJWTTokenException()
-
-        date = await self.token_blacklist.get_user_backlist(int(token_data.sub))
-        if date > token_date:
-            raise InvalidJWTTokenException()
 
         return token_data
 
     async def refresh_tokens(self, refresh_token: str, security_user: UserJWTData) -> TokenGroup:
-        await self.validate_token(refresh_token)
+        token = await self.validate_token(refresh_token)
+        token_date = datetime.fromtimestamp(token.iat)
 
+        date = await self.token_blacklist.get_token_backlist(token.jti)
+        if date > token_date:
+            raise InvalidJWTTokenException()
+
+        date = await self.token_blacklist.get_user_backlist(int(token.sub))
+        if date > token_date:
+            raise InvalidJWTTokenException()
+
+        await self.revoke_token(refresh_token)
         token_pair = self.create_token_pair(security_user=security_user)
 
         return token_pair
@@ -91,7 +98,8 @@ class JWTManager:
         token_data: Token = Token(**self.decode(token))
 
         current_time = now_utc()
-        token_exp_dt = datetime.fromtimestamp(token_data.exp,)
+        token_exp_dt = datetime.fromtimestamp(token_data.exp)
 
         seconds_until_expiry = token_exp_dt - current_time + timedelta(days=1)
         await self.token_blacklist.add_jwt_token(token_data.jti, seconds_until_expiry)
+
