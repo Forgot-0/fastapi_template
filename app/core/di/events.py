@@ -16,3 +16,4 @@ class EventProvider(Provider):
     @provide
     def event_bus(self, event_registy: EventRegisty, container: AsyncContainer) -> BaseEventBus:
         return MediatorEventBus(event_registy=event_registy, container=container)
+

@@ -28,3 +28,4 @@ class Session(BaseModel):
 
     def deactivate(self) -> None:
         self.is_active = False
+

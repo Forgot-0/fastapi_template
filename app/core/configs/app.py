@@ -55,6 +55,16 @@ class AppConfig(BaseConfig):
     def redis_url(self) -> str:
         return f'redis://{self.REDIS_HOST}:{self.REDIS_PORT}'
 
+    STORAGE_HOST: str = ""
+    STORAGE_PORT: int = 9000
+    STORAGE_ACCESS_KEY: str = ""
+    STORAGE_SECRET_KEY: str = ""
+
+    @computed_field
+    @property
+    def storage_url(self) -> str:
+        return f"{self.STORAGE_HOST}:{self.STORAGE_PORT}"
+
     BROKER_URL: str = ""
     GROUP_ID: str = ""
 

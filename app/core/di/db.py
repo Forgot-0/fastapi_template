@@ -7,19 +7,16 @@ from app.core.db.session import create_async_marker, create_engine
 
 
 
-
-
-
 class DBProvider(Provider):
     scope = Scope.APP
 
-    @provide
+    @provide(scope=Scope.APP)
     async def get_engine(self) -> AsyncIterable[AsyncEngine]:
         engine = create_engine()
         yield engine
         await engine.dispose(True)
 
-    @provide
+    @provide(scope=Scope.APP)
     async def get_marker(self, engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
         return create_async_marker(engine=engine)
 
@@ -29,3 +26,4 @@ class DBProvider(Provider):
     ) -> AsyncIterable[AsyncSession]:
         async with marker() as session:
             yield session
+

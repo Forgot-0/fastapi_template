@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Any, TYPE_CHECKING
-import orjson
-from sqlalchemy import Boolean, ForeignKey, Integer, LargeBinary, String
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.auth.models.permission import Permission

@@ -53,3 +53,4 @@ class PermissionInvalidateRepository:
             return datetime.fromtimestamp(0.00)
         max_date = max(values, key=lambda x: datetime.fromtimestamp(float(x)))
         return datetime.fromtimestamp(float(max_date))
+
