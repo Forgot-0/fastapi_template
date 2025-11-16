@@ -5,6 +5,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, LargeBinary, Stri
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db.base_model import BaseModel
+from app.core.utils import now_utc
 
 if TYPE_CHECKING:
     from app.auth.models.user import User
@@ -29,3 +30,5 @@ class Session(BaseModel):
     def deactivate(self) -> None:
         self.is_active = False
 
+    def online(self) -> None:
+        self.last_activity = now_utc()

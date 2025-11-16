@@ -186,7 +186,7 @@ async def get_list_user_session(
 ) -> list[SessionDTO]:
     return await mediator.handle_query(
         GetListSessionsUserQuery(
-            user_id=int(user_jwt_data.id)
+            user_jwt_data=user_jwt_data
         )
     )
 

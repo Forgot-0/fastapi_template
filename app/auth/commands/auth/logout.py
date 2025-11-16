@@ -27,7 +27,6 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     session_repository: SessionRepository
     token_blacklist: TokenBlacklistRepository
 
-
     async def handle(self, command: LogoutCommand) -> None:
         if command.refresh_token is None:
             raise

@@ -110,6 +110,10 @@ class MinioStorageService(BaseStorageService):
         if metadata:
             s3_metadata.update({k: str(v) for k, v in metadata.items()})
 
+        file_content.seek(0, 2)
+        file_size = file_content.tell()
+        file_content.seek(0)
+
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             self.thread_executor,
@@ -117,7 +121,7 @@ class MinioStorageService(BaseStorageService):
                 bucket_name=bucket_name,
                 object_name=file_key,
                 data=file_content,
-                length=-1,
+                length=file_size,
                 content_type=content_type,
                 metadata=s3_metadata, # type: ignore
                 sse=SseS3() if self.bucket_policy[bucket_name] == Policy.none else None

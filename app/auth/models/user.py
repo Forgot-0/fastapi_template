@@ -4,9 +4,11 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.auth.models.oauth import OAuthAccount
 from app.auth.models.permission import Permission
 from app.core.db.base_model import BaseModel, DateMixin, SoftDeleteMixin
 from app.core.events.event import BaseEvent
+
 
 if TYPE_CHECKING:
     from app.auth.models.role import Role
@@ -42,11 +44,16 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
-    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     sessions: Mapped[list['Session']] = relationship(
+        back_populates='user',
+        cascade="all, delete-orphan"
+    )
+    oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
+        "OAuthAccount",
         back_populates='user',
         cascade="all, delete-orphan"
     )

@@ -49,7 +49,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         if command.password != command.password_repeat:
             raise WrongDataException()
 
-        role = await self.role_repository.get_with_permission_by_name("super_admin")
+        role = await self.role_repository.get_with_permission_by_name("user")
         if not role:
             raise NotFoundRoleException("user")
 
@@ -59,7 +59,6 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             password_hash=self.hash_service.hash_password(command.password),
             roles={role, }
         )
-        user.is_verified = True
         await self.user_repository.create(user)
 
         await self.session.commit()

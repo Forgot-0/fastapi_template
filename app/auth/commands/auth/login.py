@@ -34,7 +34,11 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
         user = await self.user_repository.get_with_roles_by_email(command.username) or \
         await self.user_repository.get_with_roles_by_username(command.username)
 
-        if user is None or not self.hash_service.verify_password(command.password, user.password_hash):
+        if (
+            (user is None) or
+            (user.password_hash is None) or
+            (not self.hash_service.verify_password(command.password, user.password_hash))
+        ):
             raise WrongDataException()
 
         session = await self.session_manager.get_or_create_session(

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import UUID as SAUUID, Boolean
+from sqlalchemy import UUID as SAUUID
 from sqlalchemy.orm import Mapped,  mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 

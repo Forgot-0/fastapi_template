@@ -71,9 +71,12 @@ class JWTManager:
 
         return TokenGroup(access_token=access_token, refresh_token=refresh_token)
 
-    async def validate_token(self, token: str) -> Token:
+    async def validate_token(self, token: str, token_type: TokenType=TokenType.ACCESS) -> Token:
         payload = self.decode(token)
         token_data = Token(**payload)
+
+        if token_data.type != token_type:
+            raise InvalidJWTTokenException()
 
         return token_data
 

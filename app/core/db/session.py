@@ -22,6 +22,7 @@ def create_engine() -> AsyncEngine:
             pool_size=15,
             max_overflow=10,
             echo=app_config.SQL_ECHO,
+            pool_recycle=3600,
             future=True,
         )
 

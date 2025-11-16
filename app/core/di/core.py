@@ -17,7 +17,7 @@ class CoreProvider(Provider):
         return ConnectionManager()
 
 
-    @provide
+    @provide(scope=Scope.APP)
     def client_storage(self) -> Minio:
         return Minio(
             endpoint=app_config.storage_url,

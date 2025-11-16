@@ -46,6 +46,6 @@ class ConnectionManager(BaseConnectionManager):
         async with self.lock_map[key]:
             for websocket in self.connections_map[key]:
                 await websocket.send_json({
-                    'message': 'Chat has been deleted',
+                    'message': 'Abort connection',
                 })
                 await websocket.close()

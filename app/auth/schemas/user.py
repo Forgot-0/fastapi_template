@@ -1,6 +1,5 @@
-from typing import Any, Literal
+from typing import Literal
 
-import orjson
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.models.user import User
