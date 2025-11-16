@@ -32,7 +32,7 @@ class PermissionEnum(Enum):
     VIEW_PERMISSION = Permission(name="permission:view")
 
     @classmethod
-    def get_allpermissions(cls) -> set[Permission]:
+    def get_all_permissions(cls) -> set[Permission]:
         return {permission.value for permission in cls}
 
 
@@ -41,7 +41,7 @@ class RolesEnum(Enum):
         name="super_admin",
         description="Complete system access with all permissions",
         security_level=10,
-        permissions=PermissionEnum.get_allpermissions(),
+        permissions=PermissionEnum.get_all_permissions(),
     )
 
     SYSTEM_ADMIN = Role(

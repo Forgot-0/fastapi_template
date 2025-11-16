@@ -165,3 +165,16 @@ class NotFoundPermissionException(ApplicationException):
     @property
     def status(self) -> int:
         return 404
+
+
+@dataclass(eq=True)
+class NotExsistProviderException(ApplicationException):
+    provider: str
+
+    @property
+    def message(self):
+        return f"Нет такого {self.provider}"
+
+    @property
+    def status(self):
+        return 400
