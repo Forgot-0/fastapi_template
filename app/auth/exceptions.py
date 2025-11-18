@@ -178,3 +178,15 @@ class NotExsistProviderException(ApplicationException):
     @property
     def status(self):
         return 400
+
+
+@dataclass(eq=False)
+class OAuthException(ApplicationException):
+
+    @property
+    def message(self):
+        return "Ошибка OAuth авторизации"
+
+    @property
+    def status(self) -> int:
+        return 400

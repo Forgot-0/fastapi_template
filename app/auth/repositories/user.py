@@ -44,15 +44,15 @@ class UserRepository(BaseRepositoryMixin):
 
     async def get_user_with_roles_by_id(self, user_id: int) -> User | None:
         query = select(User).options(selectinload(User.roles)).where(User.id == user_id)
-        reults = await self.session.execute(query)
-        return reults.scalar()
+        results = await self.session.execute(query)
+        return results.scalar()
 
     async def get_user_with_permission_by_id(self, user_id: int) -> User | None:
         query = select(User).options(
            selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
         ).where(User.id == user_id)
-        reults = await self.session.execute(query)
-        return reults.scalar()
+        results = await self.session.execute(query)
+        return results.scalar()
 
     async def create(self, user: User) -> None:
         self.session.add(user)

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class TokenType(str, Enum):
@@ -38,3 +38,17 @@ class DeviceInfo(BaseModel):
     browser_family: str
     os_family: str
     device: str
+
+
+class OAuthToken(BaseModel):
+    access_token: str
+    token_type: str
+    expires_in: int | None = Field(None)
+    refresh_token: str | None = Field(None)
+    scope: str | None = Field(None)
+
+
+class OAuthData(BaseModel):
+    provider_user_id: str
+    email: EmailStr
+    username: str | None = Field(None)

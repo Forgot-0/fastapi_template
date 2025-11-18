@@ -8,19 +8,19 @@ from app.core.queries import QR, BaseQuery, BaseQueryHandler
 
 @dataclass
 class QueryRegistry:
-    quries_map: dict[Type[BaseQuery], Type[BaseQueryHandler]] = field(
+    queries_map: dict[Type[BaseQuery], Type[BaseQueryHandler]] = field(
         default_factory=dict,
         kw_only=True,
     )
 
     def register_query(self, query: Type[BaseQuery], type_handler: Type[BaseQueryHandler]) -> None:
-        self.quries_map[query] = type_handler
+        self.queries_map[query] = type_handler
 
     def get_handler_types(self, query: BaseQuery) -> Type[BaseQueryHandler]:
-        if query.__class__ not in self.quries_map:
+        if query.__class__ not in self.queries_map:
             raise NotHandlerRegistry()
 
-        return self.quries_map[query.__class__]
+        return self.queries_map[query.__class__]
 
 
 @dataclass(eq=False)

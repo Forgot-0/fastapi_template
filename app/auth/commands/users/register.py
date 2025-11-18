@@ -9,6 +9,7 @@ from app.auth.exceptions import (
     NotFoundRoleException,
     WrongDataException
 )
+from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
@@ -49,9 +50,11 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         if command.password != command.password_repeat:
             raise WrongDataException()
 
-        role = await self.role_repository.get_with_permission_by_name("user")
+        role = await self.role_repository.get_with_permission_by_name(
+            RolesEnum.STANDARD_USER.value.name
+        )
         if not role:
-            raise NotFoundRoleException("user")
+            raise NotFoundRoleException(RolesEnum.STANDARD_USER.value.name)
 
         user = User.create(
             email=command.email,

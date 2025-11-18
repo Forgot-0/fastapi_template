@@ -4,12 +4,7 @@ from redis.asyncio import Redis
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
-from app.auth.commands.auth.oauth_connect import OAuthConnectCommand, OAuthConnectCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
-from app.auth.commands.auth.oauth_login import (
-    OAuthLoginCommand,
-    OAuthLoginCommandHandler,
-)
 from app.auth.commands.permissions.add_permission_user import (
     AddPermissionToUserCommand,
     AddPermissionToUserCommandHandler
@@ -37,7 +32,6 @@ from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCom
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
 from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
-from app.auth.models.oauth import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
@@ -47,7 +41,7 @@ from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQuery
 from app.auth.queries.sessions.get_list import GetListSessionQuery, GetListSessionQueryHandler
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
 from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
-from app.auth.repositories.oauth import OauthAccountRepository
+from app.auth.repositories.oauth import OAuthCodeRepository, OauthAccountRepository
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
@@ -55,6 +49,7 @@ from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
+from app.auth.services.providers import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.services.rbac import RBACManager
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
@@ -91,6 +86,12 @@ class AuthModuleProvider(Provider):
             Redis.from_url(app_config.redis_url)
         )
 
+    @provide(scope=Scope.APP)
+    def oauth_code_repository(self) -> OAuthCodeRepository:
+        return OAuthCodeRepository(
+            Redis.from_url(app_config.redis_url)
+        )
+
     #services
     @provide(scope=Scope.APP)
     def hash_service(self) -> HashService:
@@ -110,37 +111,52 @@ class AuthModuleProvider(Provider):
 
     @provide(scope=Scope.APP)
     def oauth_factory(self) -> OAuthProviderFactory:
-        return OAuthProviderFactory(
-            {
-                "google": OAuthGoogle(
+        provider_factory =  OAuthProviderFactory()
+
+        if auth_config.OAUTH_GOOGLE_CLIENT_ID:
+            provider_factory.register_provider(
+                OAuthGoogle(
                     name="google",
                     client_id=auth_config.OAUTH_GOOGLE_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GOOGLE_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GOOGLE_REDIRECT_URI,
-                    connect_url=auth_config.OAUTH_GOOGLE_REDIRECT_URI,
+                    connect_url=auth_config.GOOGLE_CONNECT_URI,
+                    base_auth_url="https://accounts.google.com/o/oauth2/v2/auth",
                     token_url="https://oauth2.googleapis.com/token",
                     userinfo_url="https://openidconnect.googleapis.com/v1/userinfo"
-                ),
-                "yandex": OAuthYandex(
+                )
+            )
+
+        if auth_config.OAUTH_YANDEX_CLIENT_ID:
+            provider_factory.register_provider(
+                OAuthYandex(
                     name="yandex",
                     client_id=auth_config.OAUTH_YANDEX_CLIENT_ID,
                     client_secret=auth_config.OAUTH_YANDEX_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_YANDEX_REDIRECT_URI,
-                    connect_url=auth_config.OAUTH_YANDEX_REDIRECT_URI,
+                    connect_url=auth_config.YANDEX_CONNECT_URI,
+                    base_auth_url="https://oauth.yandex.ru/authorize",
                     token_url="https://oauth.yandex.ru/token",
                     userinfo_url="https://login.yandex.ru/info"
-                ),
-                "github": OAuthGithub(
+                )
+            )
+
+        if auth_config.OAUTH_GITHUB_CLIENT_ID:
+            provider_factory.register_provider(
+                OAuthGithub(
                     name="github",
                     client_id=auth_config.OAUTH_GITHUB_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GITHUB_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GITHUB_REDIRECT_URI,
-                    connect_url=auth_config.OAUTH_GITHUB_REDIRECT_URI,
+                    connect_url=auth_config.GITHUB_CONNECT_URI,
+                    base_auth_url="https://github.com/login/oauth/authorize",
                     token_url="https://github.com/login/oauth/access_token",
                     userinfo_url="https://api.github.com/user"
                 )
-            }
-        )
+            )
+
+        return provider_factory
+
 
     @provide(scope=Scope.APP)
     def rbac_manager(self) -> RBACManager:
@@ -159,9 +175,6 @@ class AuthModuleProvider(Provider):
     login_handler = provide(LoginCommandHandler)
     logout_handler = provide(LogoutCommandHandler)
     refresh_handler = provide(RefreshTokenCommandHandler)
-    
-    oauth_login_handler = provide(OAuthLoginCommandHandler)
-    oauth_connect_handler = provide(OAuthConnectCommandHandler)
 
     create_role_handler = provide(CreateRoleCommandHandler)
     update_role_handler = provide(RoleUpdateCommandHandler)
@@ -192,8 +205,6 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
         
         # OAuth commands
-        command_registry.register_command(OAuthLoginCommand, [OAuthLoginCommandHandler])
-        command_registry.register_command(OAuthConnectCommand, [OAuthConnectCommandHandler])
 
         #Role
         command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])
