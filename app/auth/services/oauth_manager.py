@@ -1,12 +1,7 @@
-import logging
 from dataclasses import dataclass, field
-from typing import Any
-from urllib.parse import parse_qs, urlencode
-
-import httpx
 
 from app.auth.exceptions import OAuthException
-from app.auth.repositories.oauth import OAuthCodeRepository
+from app.auth.schemas.token import OAuthData
 from app.auth.services.providers import OAuthProvider
 
 
@@ -27,4 +22,15 @@ class OAuthProviderFactory:
 @dataclass
 class OAuthManager:
     provider_factory: OAuthProviderFactory
-    repository: OAuthCodeRepository
+
+    async def get_authorize_url(self, provider_name: str, state: str) -> str:
+        provider = self.provider_factory.get_provider(provider_name)
+        return provider.get_auth_url(state)
+
+    async def process_callback(self, provider_name: str, code: str) -> OAuthData:
+        provider = self.provider_factory.get_provider(provider_name)
+
+        token = await provider.exchange_code_for_token(code)
+        oauth_user = await provider.get_user_info(token.access_token)
+
+        return oauth_user

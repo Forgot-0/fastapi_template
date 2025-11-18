@@ -1,0 +1,96 @@
+from dataclasses import dataclass
+import logging
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.exceptions import NotFoundRoleException
+from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
+from app.auth.models.role_permission import RolesEnum
+from app.auth.models.user import User
+from app.auth.repositories.oauth import OAuthCodeRepository, OauthAccountRepository
+from app.auth.repositories.role import RoleRepository
+from app.auth.repositories.user import UserRepository
+from app.auth.schemas.user import UserJWTData
+from app.auth.services.jwt import JWTManager
+from app.auth.services.session import SessionManager
+from app.core.commands import BaseCommand, BaseCommandHandler
+from app.auth.services.oauth_manager import OAuthManager
+from app.auth.schemas.token import TokenGroup
+
+
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ProcessOAuthCallbackCommand(BaseCommand):
+    provider: str
+    code: str
+    state: str
+    user_agent: str
+
+
+@dataclass(frozen=True)
+class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallbackCommand, TokenGroup]):
+    session: AsyncSession
+    jwt_manager: JWTManager
+    oauth_manager: OAuthManager
+    user_repository: UserRepository
+    role_repository: RoleRepository
+    session_manager: SessionManager
+    oauth_repository: OauthAccountRepository
+    oauth_code_repository: OAuthCodeRepository
+
+    async def handle(self, command: ProcessOAuthCallbackCommand) -> TokenGroup:
+        oauth_data = await self.oauth_manager.process_callback(command.provider, command.code)
+        user_id = await self.oauth_code_repository.get_state(command.state)
+
+        oauth_account = await self.oauth_repository.get_by_provider_and_user_id(
+            provider=OAuthProviderEnum(command.provider), provider_user_id=oauth_data.provider_user_id
+        )
+
+        if not oauth_account:
+            role = await self.role_repository.get_with_permission_by_name(
+                RolesEnum.STANDARD_USER.value.name
+            )
+            if not role:
+                raise NotFoundRoleException(RolesEnum.STANDARD_USER.value.name)
+
+            user = User.create_oauth(
+                email=oauth_data.email,
+                username=oauth_data.email,
+                roles={role, }
+            )
+
+            oauth_account = OAuthAccount(
+                provider=OAuthProviderEnum(command.provider),
+                provider_email=oauth_data.email,
+                provider_user_id=oauth_data.provider_user_id,
+                user_id=user.id
+            )
+            await self.user_repository.create(user)
+            await self.oauth_repository.create(oauth_account)
+            await self.session.commit()
+
+        session = await self.session_manager.get_or_create_session(
+            user_id=oauth_account.user_id, user_agent=command.user_agent
+        )
+        user = await self.user_repository.get_user_with_permission_by_id(oauth_account.user_id)
+        if not user or user.id != user_id:
+            raise
+
+        await self.session.commit()
+        token_group = self.jwt_manager.create_token_pair(
+            UserJWTData.create_from_user(user, device_id=session.device_id)
+        )
+
+        logger.info(
+            "OAuth Callback",
+            extra={
+                "provider": command.provider,
+                "oauth_id": oauth_account.id,
+                "user_id": oauth_account.user_id
+            }
+        )
+
+        return token_group

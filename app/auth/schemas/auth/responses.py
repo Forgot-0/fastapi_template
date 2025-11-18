@@ -7,3 +7,6 @@ class AccessTokenResponse(BaseModel):
     """
     access_token: str = Field(..., description="Новый access токен")
 
+
+class OAuthUrlResponse(BaseModel):
+    url: str

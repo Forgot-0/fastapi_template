@@ -2,7 +2,15 @@ from dishka import Provider, Scope, decorate, provide
 from passlib.context import CryptContext
 from redis.asyncio import Redis
 
+from app.auth.commands.auth.auth_url import (
+    CreateOAuthAuthorizeUrlCommand,
+    CreateOAuthAuthorizeUrlCommandHandler
+)
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
+from app.auth.commands.auth.oauth import (
+    ProcessOAuthCallbackCommand,
+    ProcessOAuthCallbackCommandHandler,
+)
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
 from app.auth.commands.permissions.add_permission_user import (
@@ -120,7 +128,6 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_GOOGLE_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GOOGLE_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GOOGLE_REDIRECT_URI,
-                    connect_url=auth_config.GOOGLE_CONNECT_URI,
                     base_auth_url="https://accounts.google.com/o/oauth2/v2/auth",
                     token_url="https://oauth2.googleapis.com/token",
                     userinfo_url="https://openidconnect.googleapis.com/v1/userinfo"
@@ -134,7 +141,6 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_YANDEX_CLIENT_ID,
                     client_secret=auth_config.OAUTH_YANDEX_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_YANDEX_REDIRECT_URI,
-                    connect_url=auth_config.YANDEX_CONNECT_URI,
                     base_auth_url="https://oauth.yandex.ru/authorize",
                     token_url="https://oauth.yandex.ru/token",
                     userinfo_url="https://login.yandex.ru/info"
@@ -148,7 +154,6 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_GITHUB_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GITHUB_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GITHUB_REDIRECT_URI,
-                    connect_url=auth_config.GITHUB_CONNECT_URI,
                     base_auth_url="https://github.com/login/oauth/authorize",
                     token_url="https://github.com/login/oauth/access_token",
                     userinfo_url="https://api.github.com/user"
@@ -205,6 +210,8 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
         
         # OAuth commands
+        command_registry.register_command(CreateOAuthAuthorizeUrlCommand, [CreateOAuthAuthorizeUrlCommandHandler])
+        command_registry.register_command(ProcessOAuthCallbackCommand, [ProcessOAuthCallbackCommandHandler])
 
         #Role
         command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])

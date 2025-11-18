@@ -18,7 +18,7 @@ class OauthAccountRepository(BaseRepositoryMixin):
         query = select(OAuthAccount).where(OAuthAccount.id == account_id)
         result = await self.session.execute(query)
         return result.scalar()
-    
+
     async def get_by_provider_and_user_id(
         self, provider: OAuthProviderEnum, provider_user_id: str
     ) -> OAuthAccount | None:
@@ -28,7 +28,7 @@ class OauthAccountRepository(BaseRepositoryMixin):
         )
         result = await self.session.execute(query)
         return result.scalar()
-    
+
     async def get_by_user_id(self, user_id: int) -> list[OAuthAccount]:
         query = select(OAuthAccount).where(OAuthAccount.user_id == user_id)
         result = await self.session.execute(query)
@@ -39,12 +39,12 @@ class OauthAccountRepository(BaseRepositoryMixin):
 class OAuthCodeRepository:
     client: Redis
 
-    async def add_oauth_state(self, user_id: int, state: str) -> None:
+    async def add_oauth_state(self, state: str, user_id: int | None=None) -> None:
         await self.client.set(
-            f"state:{state}", user_id, ex=timedelta(minutes=10)
+            f"state:{state}", user_id if user_id else 0, ex=timedelta(minutes=10)
         )
 
-    async def get_oauth_state(self, state: str) -> int | None:
+    async def get_state(self, state: str) -> int | None:
         return await self.client.get(f"state:{state}")
 
     async def delete(self, state: str) -> None:

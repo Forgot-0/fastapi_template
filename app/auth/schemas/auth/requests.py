@@ -54,4 +54,8 @@ class ResetPasswordRequest(PasswordMixinSchema):
     Схема запроса для сброса пароля.
     """
     token: str = Field(..., description="Токен сброса пароля")
-    
+
+
+class CallbackRequest(BaseModel):
+    code: str
+    state: str

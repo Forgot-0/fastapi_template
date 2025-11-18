@@ -16,7 +16,6 @@ class OAuthProvider(ABC):
     client_id: str
     client_secret: str
     redirect_uri: str
-    connect_url: str
     base_auth_url: str
     token_url: str
     userinfo_url: str

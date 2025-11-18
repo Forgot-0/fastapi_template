@@ -87,6 +87,20 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         )
         return user
 
+    @classmethod
+    def create_oauth(cls, email: str, username: str, roles: set['Role']) -> "User":
+        user = User(
+            email=email,
+            username=username,
+            roles=roles,
+            is_active=True,
+            is_verified=True,
+            permissions=set()
+        )
+
+        return user
+
+
     def add_role(self, role: 'Role') -> None:
         self.roles.add(role)
 
