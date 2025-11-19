@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: c621a31e3384
+Revision ID: b72ed306e02e
 Revises: 
-Create Date: 2025-11-16 15:28:57.801195
+Create Date: 2025-11-19 10:00:11.410100
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'c621a31e3384'
+revision: str = 'b72ed306e02e'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -61,7 +61,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('oauth_accounts',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('provider', sa.Enum('VK', 'YANDEX', 'GOOGLE', 'GITHUB', name='oauthproviderenum'), nullable=False),
+    sa.Column('provider', sa.Enum('YANDEX', 'GOOGLE', 'GITHUB', name='oauthproviderenum'), nullable=False),
     sa.Column('provider_user_id', sa.String(), nullable=False),
     sa.Column('provider_email', sa.String(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),

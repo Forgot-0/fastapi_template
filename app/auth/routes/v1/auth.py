@@ -4,6 +4,7 @@ from typing import Annotated
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.commands.auth.auth_url import CreateOAuthAuthorizeUrlCommand
@@ -24,7 +25,6 @@ from app.auth.schemas.auth.requests import (
 )
 from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
-    OAuthUrlResponse,
 )
 from app.auth.schemas.token import TokenGroup
 from app.core.api.rate_limiter import ConfigurableRateLimiter
@@ -75,7 +75,7 @@ async def login(
     description="Обновляет access токен, используя refresh токен.",
     response_model=AccessTokenResponse,
     status_code=status.HTTP_200_OK,
-    # dependencies=[Depends(ConfigurableRateLimiter(times=2, seconds=5*60))]
+    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
@@ -182,53 +182,54 @@ async def reset_password(
 @router.get(
     '/oauth/{provider}/authorize',
     summary='Получить URL для OAuth авторизации',
-    response_model=OAuthUrlResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT
 )
 async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
     provider: str,
-) -> OAuthUrlResponse:
+) -> RedirectResponse:
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=None)
     )
-    return OAuthUrlResponse(url=url)
+    
+    return RedirectResponse(url=url)
 
 
 @router.get(
     '/oauth/{provider}/authorize/connect',
     summary='Получить URL для подключения OAuth к существующему пользователю',
-    response_model=OAuthUrlResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT
 )
 async def oauth_authorize_connect(
     mediator: FromDishka[BaseMediator],
     provider: str,
     current_user: CurrentUserModel,
-) -> OAuthUrlResponse:
+) -> RedirectResponse:
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=current_user.id)
     )
-    return OAuthUrlResponse(url=url)
+    return RedirectResponse(url=url)
 
 
 @router.get(
     '/oauth/{provider}/callback',
     summary='Callback для OAuth провайдера',
-    status_code=status.HTTP_200_OK
+    response_model=AccessTokenResponse,
+    status_code=status.HTTP_200_OK,
 )
 async def oauth_callback(
     mediator: FromDishka[BaseMediator],
     provider: str,
-    callback_request: CallbackRequest,
+    code: str,
+    state: str,
     request: Request,
     response: Response,
-) -> AccessTokenResponse | None:
+) -> AccessTokenResponse:
     token_group, *_ = await mediator.handle_command(
         ProcessOAuthCallbackCommand(
             provider=provider,
-            code=callback_request.code,
-            state=callback_request.state,
+            code=code,
+            state=state,
             user_agent=request.headers.get('user-agent', ''),
         )
     )
@@ -237,3 +238,4 @@ async def oauth_callback(
         'refresh_token', token_group.refresh_token, samesite='strict', httponly=True, secure=True, path='/'
     )
     return AccessTokenResponse(access_token=token_group.access_token)
+

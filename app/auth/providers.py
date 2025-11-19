@@ -180,6 +180,8 @@ class AuthModuleProvider(Provider):
     login_handler = provide(LoginCommandHandler)
     logout_handler = provide(LogoutCommandHandler)
     refresh_handler = provide(RefreshTokenCommandHandler)
+    oauth_url = provide(CreateOAuthAuthorizeUrlCommandHandler)
+    callback_oauth = provide(ProcessOAuthCallbackCommandHandler)
 
     create_role_handler = provide(CreateRoleCommandHandler)
     update_role_handler = provide(RoleUpdateCommandHandler)
