@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundRoleException
 from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
 from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
@@ -83,7 +82,7 @@ class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallback
                         RolesEnum.STANDARD_USER.value.name
                     )
                     if not role:
-                        raise NotFoundRoleException(RolesEnum.STANDARD_USER.value.name)
+                        raise 
 
                     user = User.create_oauth(
                         email=oauth_data.email,
@@ -105,7 +104,7 @@ class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallback
             session = await self.session_manager.get_or_create_session(
                 user_id=user_id, user_agent=command.user_agent
             )
-
+            await self.oauth_code_repository.delete(command.state)
             await self.session.commit()
             token_group = self.jwt_manager.create_token_pair(
                 UserJWTData.create_from_user(user, device_id=session.device_id)

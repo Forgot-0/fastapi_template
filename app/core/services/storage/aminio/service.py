@@ -6,12 +6,11 @@ from dataclasses import dataclass, field
 import mimetypes
 from typing import BinaryIO
 
-from minio import Minio, S3Error
+from minio import Minio
 from minio.datatypes import PostPolicy
 from minio.sse import SseS3
 
 
-from app.core.exceptions import ApplicationException
 from app.core.services.storage.aminio.policy import Policy
 from app.core.services.storage.service import BaseStorageService
 from app.core.utils import now_utc

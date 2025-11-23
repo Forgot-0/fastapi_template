@@ -3,12 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import (
-    AlreadyUserEmailException,
-    AlreadyUserUsernameException,
-    NotFoundRoleException,
-    WrongDataException
-)
 from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
@@ -41,20 +35,20 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         user = await self.user_repository.get_by_username(command.username)
 
         if user:
-            raise AlreadyUserUsernameException(command.username)
+            raise 
 
         user = await self.user_repository.get_by_email(command.email)
         if user:
-            raise AlreadyUserEmailException(command.email)
+            raise 
 
         if command.password != command.password_repeat:
-            raise WrongDataException()
+            raise 
 
         role = await self.role_repository.get_with_permission_by_name(
             RolesEnum.STANDARD_USER.value.name
         )
         if not role:
-            raise NotFoundRoleException(RolesEnum.STANDARD_USER.value.name)
+            raise 
 
         user = User.create(
             email=command.email,

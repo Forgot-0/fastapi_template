@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundPermissionException, NotFoundRoleException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.schemas.user import UserJWTData
@@ -33,7 +32,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
         self.rbac_manager.check_permission(command.user_jwt_data, {"role:update", })
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise NotFoundRoleException(command.role_name)
+            raise 
 
         permissions = await self.permission_repository.get_permissions_by_names(
             command.permissions
@@ -42,7 +41,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise NotFoundPermissionException(", ".join(missing))
+            raise 
 
         for permission in permissions:
             role.delete_permission(permission)

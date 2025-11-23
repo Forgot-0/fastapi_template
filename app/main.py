@@ -13,7 +13,6 @@ from app.pre_start import pre_start
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
-from app.core.exceptions import ApplicationException
 from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
@@ -39,32 +38,6 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down FastAPI")
 
 
-
-def handle_application_exeption(request: Request, exc: ApplicationException) -> JSONResponse:
-    logger.exception(
-        "Application exception",
-        exc_info=exc,
-        extra={"status": exc.status, "detail": exc.message}
-    )
-    return JSONResponse(
-        status_code=exc.status,
-        content={"message": exc.message},
-    )
-
-def handle_exception(request: Request, exc: Exception) -> JSONResponse:
-    logger.exception(
-        "Unhandled exception",
-        exc_info=exc,
-        extra={
-            "path": request.url.path,
-            "method": request.method,
-            "exception_type": type(exc).__name__
-        }
-    )
-    return JSONResponse(
-        status_code=500,
-        content={"title":"Internal Server Error", "status":500}
-    )
 
 
 def setup_middleware(app: FastAPI, container: AsyncContainer) -> None:
@@ -98,8 +71,5 @@ def init_app() -> FastAPI:
 
     setup_middleware(app, container)
     setup_router(app)
-
-    app.add_exception_handler(ApplicationException, handle_application_exeption) # type: ignore
-    app.add_exception_handler(Exception, handle_exception)
     return app
 

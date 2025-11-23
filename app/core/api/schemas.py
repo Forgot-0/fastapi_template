@@ -1,9 +1,7 @@
 from enum import Enum
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from app.core.exceptions import ApplicationException
 
 
 
@@ -46,4 +44,20 @@ class PaginatedResult(BaseModel, Generic[T]):
 
     items: list[T]
     pagination: Pagination
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    detail: dict[str, Any] | None = None
+
+
+ER = TypeVar("ER", bound=ErrorDetail)
+
+
+class ErrorResponse(BaseModel, Generic[ER]):
+    error: ER
+    status: int
+    request_id: str
+    timestamp: float
 

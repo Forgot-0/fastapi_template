@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import WrongDataException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -33,7 +32,7 @@ class VerifyCommandHandler(BaseCommandHandler[VerifyCommand, None]):
         user = await self.user_repository.get_by_id(user_id=user_id)
 
         if not user:
-            raise WrongDataException()
+            raise 
 
         user.verify()
         await self.token_repository.invalidate_token(command.token)

@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundPermissionException, PermissionDeniedException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
@@ -32,7 +31,7 @@ class AddPermissionToUserCommandHandler(BaseCommandHandler[AddPermissionToUserCo
 
     async def handle(self, command: AddPermissionToUserCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:update", "user:update"}):
-            raise PermissionDeniedException()
+            raise 
 
         user = await self.user_repository.get_user_with_permission_by_id(command.user_id)
         if user is None:
@@ -45,7 +44,7 @@ class AddPermissionToUserCommandHandler(BaseCommandHandler[AddPermissionToUserCo
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise NotFoundPermissionException(", ".join(missing))
+            raise 
 
         for permission in permissions:
             user.add_permission(permission)

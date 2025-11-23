@@ -1,19 +1,31 @@
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import Any
 
 
-
-@dataclass(eq=False)
+@dataclass
 class ApplicationException(Exception):
-    status: ClassVar[int] = 500
+    code: str
+    status: int
 
     @property
     def message(self) -> str:
-        return 'App error'
+        return ""
 
-
-@dataclass(eq=False)
-class NotHandlerRegistry(ApplicationException):
     @property
-    def message(self) -> str:
-        return 'Не был зарегестрирован обработчик'
+    def detail(self) -> dict[str, Any]:
+        return {}
+
+
+@dataclass(kw_only=True)
+class NotHandlerRegisterException(ApplicationException):
+    classes: list[str]
+    code: str = "INTERNAL_EXCEPTION"
+    status: int = 503
+
+    @property
+    def message(self):
+        return "No handler/handlers registered"
+
+    @property
+    def detail(self) :
+        return {"classes": self.classes}

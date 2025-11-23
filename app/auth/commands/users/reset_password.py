@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import WrongDataException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
@@ -39,7 +38,7 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
         if not user: return
 
         if command.password != command.repeat_password:
-            raise WrongDataException()
+            raise 
 
         user.password_reset(self.hash_service.hash_password(command.password))
         await self.token_repository.invalidate_token(token=command.token)

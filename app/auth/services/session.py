@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 
-import orjson
-
 from app.auth.models.session import Session
 from app.auth.repositories.session import SessionRepository
-from app.auth.schemas.token import DeviceInfo
 from app.auth.services.device import generate_device_info
 from app.core.utils import now_utc
 

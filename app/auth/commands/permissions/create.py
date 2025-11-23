@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundPermissionException, PermissionDeniedException
 from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.schemas.user import UserJWTData
@@ -28,13 +27,13 @@ class CreatePermissionCommandHandler(BaseCommandHandler[CreatePermissionCommand,
 
     async def handle(self, command: CreatePermissionCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:create",}):
-            raise PermissionDeniedException()
+            raise 
 
         self.rbac_manager.validate_permissions(command.user_jwt_data, command.name)
 
         permission = await self.permission_repository.get_permission_by_name(command.name)
         if permission is not None:
-            raise NotFoundPermissionException(command.name)
+            raise 
 
         permission = Permission(name=command.name)
         await self.permission_repository.create(permission)

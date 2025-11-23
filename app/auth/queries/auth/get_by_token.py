@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import logging
 
-from app.auth.exceptions import InvalidJWTTokenException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.services.jwt import JWTManager
@@ -24,11 +23,11 @@ class GetByAccessTokenQueryHandler(BaseQueryHandler[GetByAccessTokenQuery, User]
         token_data = await self.jwt_manager.validate_token(token=query.token)
         user_id = token_data.sub
         if not user_id:
-            raise InvalidJWTTokenException()
+            raise 
 
         user = await self.user_repository.get_user_with_permission_by_id(int(user_id))
         if not user:
-            raise InvalidJWTTokenException()
+            raise 
 
         logger.debug("Get user by access token", extra={"user_id": user.id})
         return user

@@ -57,7 +57,7 @@ from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
-from app.auth.services.providers import OAuthGithub, OAuthGoogle, OAuthYandex
+from app.auth.services.oauth_providers import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.services.rbac import RBACManager
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
@@ -210,7 +210,7 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(LoginCommand, [LoginCommandHandler])
         command_registry.register_command(LogoutCommand, [LogoutCommandHandler])
         command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
-        
+
         # OAuth commands
         command_registry.register_command(CreateOAuthAuthorizeUrlCommand, [CreateOAuthAuthorizeUrlCommandHandler])
         command_registry.register_command(ProcessOAuthCallbackCommand, [ProcessOAuthCallbackCommandHandler])
@@ -259,7 +259,7 @@ class AuthModuleProvider(Provider):
         # Auth
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)
         query_registry.register_query(VerifyTokenQuery, VerifyTokenQueryHandler)
-        
+
         # OAuth
         query_registry.register_query(GetUserOAuthAccountsQuery, GetUserOAuthAccountsQueryHandler)
 

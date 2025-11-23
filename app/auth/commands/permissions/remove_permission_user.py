@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundPermissionException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
@@ -45,7 +44,7 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise NotFoundPermissionException(", ".join(missing))
+            raise 
 
         for permission in permissions:
             user.delete_permission(permission)

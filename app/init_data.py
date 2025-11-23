@@ -1,8 +1,6 @@
-import asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 from app.auth.models.role_permission import RolesEnum
 from app.core.db.session import get_session
@@ -17,7 +15,6 @@ async def create_first_data(db: AsyncSession) -> None:
         if role.scalar() is None:
             db.add(base_role)
     await db.commit()
-
 
 
 async def init_data() -> None:

@@ -1,11 +1,23 @@
 import ast
 from dataclasses import dataclass
+from datetime import datetime
 import re
+from typing import Any, Union
+from uuid import uuid4
 
 from fastapi import Query
-from pydantic import ValidationError
+from pydantic import ConfigDict, ValidationError, create_model
 
-from app.core.api.schemas import FilterParam, ListParams, ListParamsWithoutPagination, SortOrder, SortParam
+from app.core.api.schemas import (
+    ErrorDetail,
+    ErrorResponse,
+    FilterParam,
+    ListParams,
+    ListParamsWithoutPagination,
+    SortOrder,
+    SortParam
+)
+from app.core.exceptions import ApplicationException
 
 
 @dataclass(frozen=True)
@@ -17,7 +29,6 @@ class BuilderFilters:
             return None
 
         try:
-            # Split by comma, but not within square brackets
             items = re.split(r',(?![^\[]*])', value)
             items = [item.strip() for item in items if item.strip()]
         except Exception:
@@ -33,7 +44,6 @@ class BuilderFilters:
         return self.filter_param(field=field, value=self._convert_filter_value(value))
 
     def _convert_filter_value(self, value: str) -> str | int | list:
-        # Check if the value is a list (enclosed in square brackets)
         if value.startswith('[') and value.endswith(']'):
             try:
                 list_value = ast.literal_eval(value)
@@ -50,6 +60,7 @@ class BuilderFilters:
             return int(value)
         except ValueError:
             return value
+
 
 @dataclass(frozen=True)
 class BuilderSort:
@@ -73,6 +84,7 @@ class BuilderSort:
             for item in items
         ]
 
+
 @dataclass(frozen=True)
 class ListParamsBuilder(BuilderFilters, BuilderSort):
     list_params: type[ListParams]
@@ -88,6 +100,7 @@ class ListParamsBuilder(BuilderFilters, BuilderSort):
             sort=self._build_sort(sort), filters=self._build_filters(filters), page=page, page_size=page_size
         )
 
+
 @dataclass(frozen=True)
 class ListWithoutPaginationParamsBuilder(BuilderFilters, BuilderSort):
     list_params: type[ListParamsWithoutPagination]
@@ -100,3 +113,75 @@ class ListWithoutPaginationParamsBuilder(BuilderFilters, BuilderSort):
         return self.list_params(
             sort=self._build_sort(sort), filters=self._build_filters(filters)
         )
+
+
+def create_response(
+    excs: ApplicationException | list[ApplicationException],
+    description: str = "",
+) -> dict[str, Any]:
+
+    if isinstance(excs, ApplicationException):
+        exc_list: list[ApplicationException] = [excs]
+    else:
+        exc_list = list(excs)
+
+    models: list[type[ErrorDetail]] = []
+    examples: dict[str, dict[str, Any]] = {}
+    for exc in exc_list:
+
+        model_name = f"ErrorResponse_{exc.__class__.__name__}"
+
+        example_payload = {
+            "code": exc.code,
+            "message": exc.message,
+            "detail": exc.detail or None,
+        }
+
+        ErrorModel = create_model(model_name, __base__=ErrorDetail)
+
+        ErrorModel.model_config = ConfigDict(json_schema_extra={"example": example_payload})
+
+        models.append(ErrorModel)
+        examples[exc.__class__.__name__] = {
+            "summary": exc.__class__.__name__,
+            "value": {
+                "error": example_payload, 
+                "status": exc.status,
+                "request_id": uuid4().hex,
+                "timestamp": datetime.now().timestamp(),
+            },
+        }
+
+    if len(models) == 1:
+        param_model = ErrorResponse[models[0]]
+        param_model.model_config = ConfigDict(
+            json_schema_extra={"schema_extra": {"example": list(examples.values())[0]["value"]}}
+        )
+
+        content = {
+            "application/json": {
+                "example": list(examples.values())[0]["value"],
+            }
+        }
+    else:
+        union_type = Union[tuple(models)]
+        param_model = ErrorResponse[union_type] # type: ignore
+        first_example = list(examples.values())[0]["value"]
+        param_model.model_config = ConfigDict(
+            json_schema_extra={
+                "schema_extra": {
+                    "example": first_example, "examples": {k: v["value"] for k, v in examples.items()}
+                }
+            },
+        )
+        content = {
+            "application/json": {
+                "examples": examples,
+            }
+        }
+
+    return {
+        "description": description,
+        "model": param_model,
+        "content": content,
+    }

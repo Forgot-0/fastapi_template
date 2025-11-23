@@ -131,10 +131,9 @@ class OAuthYandex(OAuthProvider):
 
         return OAuthData(
             provider_user_id=user_data["id"],
-            email=email, # pyright: ignore[reportArgumentType]
+            email=email, # type: ignore
             username=user_data.get("login"),
         )
-
 
 
 class OAuthGithub(OAuthProvider):

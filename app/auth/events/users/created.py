@@ -5,7 +5,6 @@ import secrets
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
-from app.auth.exceptions import WrongDataException
 from app.auth.models.user import CreatedUserEvent
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
@@ -23,7 +22,7 @@ class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
         user = await self.user_repository.get_by_email(email=event.email)
 
         if not user:
-            raise WrongDataException()
+            raise 
 
         reset_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(reset_token.encode()).hexdigest()

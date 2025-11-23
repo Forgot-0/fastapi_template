@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from app.auth.exceptions import PermissionDeniedException
 from app.auth.models.session import Session
 from app.auth.repositories.session import SessionRepository
 from app.auth.schemas.sessions import SessionDTO, SessionListParams
@@ -23,7 +22,7 @@ class GetListSessionQueryHandler(BaseQueryHandler[GetListSessionQuery, Paginated
 
     async def handle(self, query: GetListSessionQuery) -> PaginatedResult[SessionDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view", }):
-            raise PermissionDeniedException()
+            raise 
 
         pagination_session = await self.session_repository.get_list(
             Session, params=query.session_query

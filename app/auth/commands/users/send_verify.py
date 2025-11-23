@@ -6,7 +6,6 @@ import secrets
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
-from app.auth.exceptions import WrongDataException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -31,7 +30,7 @@ class SendVerifyCommandHandler(BaseCommandHandler[SendVerifyCommand, None]):
         user = await self.user_repository.get_by_email(email=command.email)
 
         if not user:
-            raise WrongDataException()
+            raise 
 
         verify_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(verify_token.encode()).hexdigest()

@@ -3,7 +3,6 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundUserByException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
@@ -42,7 +41,7 @@ class AssignRoleCommandHandler(BaseCommandHandler[AssignRoleCommand, None]):
 
         assign_user = await self.user_repository.get_user_with_permission_by_id(command.assign_to_user)
         if assign_user is None:
-            raise NotFoundUserByException("user_id")
+            raise 
 
         self.rbac_manager.check_security_level(
             command.user_jwt_data.security_level,
