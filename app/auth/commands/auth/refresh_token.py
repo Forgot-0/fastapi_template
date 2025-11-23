@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import NotFoundOrInactiveSessionException, InvalidTokenException
 from app.auth.repositories.session import SessionRepository
 from app.auth.schemas.token import TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
@@ -27,7 +28,7 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
 
     async def handle(self, command: RefreshTokenCommand) -> TokenGroup:
         if command.refresh_token is None:
-            raise
+            raise InvalidTokenException(token=None)
 
         refresh_data = await self.jwt_manager.validate_token(command.refresh_token, TokenType.REFRESH)
         session = await self.session_repository.get_active_by_device(
@@ -36,7 +37,7 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
         )
 
         if not session or session.is_active == False:
-            raise 
+            raise NotFoundOrInactiveSessionException()
 
         session.online()
         token_group = await self.jwt_manager.refresh_tokens(

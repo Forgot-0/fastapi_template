@@ -2,15 +2,21 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, status
 
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand
-from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.create import CreateRoleCommand
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand
-from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.exceptions import (
+    AccessDeniedException,
+    DuplicateRoleException,
+    InvalidRoleNameException,
+    NotFoundPermissionsException,
+    NotFoundRoleException,
+    ProtectedPermissionException
+)
 from app.auth.queries.roles.get_list import GetListRolesQuery
 from app.auth.schemas.role import RoleDTO, RoleFilterParam, RoleListParams, RoleSortParam
-from app.auth.schemas.roles.requests import RoleAssignRequest, RoleCreateRequest, RolePermissionRequest, RoleRemoveRequest
-from app.core.api.builder import ListParamsBuilder
+from app.auth.schemas.roles.requests import RoleCreateRequest, RolePermissionRequest
+from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator
 
@@ -26,6 +32,14 @@ list_params_builder = ListParamsBuilder(RoleSortParam, RoleFilterParam, RoleList
     description="Создает новую роль с правами",
     response_model=None,
     status_code=status.HTTP_201_CREATED,
+    responses={
+        400: create_response(InvalidRoleNameException(name="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(NotFoundPermissionsException(missing={"string", })),
+        409: create_response([
+            DuplicateRoleException(name="string"), ProtectedPermissionException(name="string")
+        ])
+    }
 )
 async def create_role(
     role_request: RoleCreateRequest,
@@ -46,7 +60,10 @@ async def create_role(
     "/",
     summary="Получить список ролей",
     description="Получить список ролей",
-    response_model=PaginatedResult[RoleDTO]
+    response_model=PaginatedResult[RoleDTO],
+    responses={
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+    }
 )
 async def get_list_news(
     user_jwt_data: CurrentUserJWTData,
@@ -68,6 +85,12 @@ async def get_list_news(
     description="Добавления прав роли",
     response_model=None,
     status_code=status.HTTP_200_OK,
+    responses={
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response([
+            NotFoundRoleException(name="string"), NotFoundPermissionsException(missing={"string"})
+        ])
+    }
 )
 async def add_permission_role(
     role_name: str,
@@ -90,6 +113,12 @@ async def add_permission_role(
     description="Удаляет права в роли",
     response_model=None,
     status_code=status.HTTP_200_OK,
+    responses={
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response([
+            NotFoundRoleException(name="string"), NotFoundPermissionsException(missing={"string"})
+        ])
+    }
 )
 async def delete_permission_role(
     role_name: str,

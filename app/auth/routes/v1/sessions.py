@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends, status
 
 from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.exceptions import AccessDeniedException, NotFoundOrInactiveSessionException
 from app.auth.queries.sessions.get_list import GetListSessionQuery
 from app.auth.schemas.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
-from app.core.api.builder import ListParamsBuilder
+from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator
 
@@ -21,7 +22,11 @@ list_params_builder = ListParamsBuilder(SessionSortParam, SessionFilterParam, Se
     "/{session_id}",
     summary="Выйти из сессии",
     description="Выйти из сессии",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(NotFoundOrInactiveSessionException()),
+    }
 )
 async def user_session_delete(
     session_id: int,
@@ -40,7 +45,10 @@ async def user_session_delete(
     summary="Получить список сессий",
     description="Получить список сессий",
     status_code=status.HTTP_200_OK,
-    response_model=PaginatedResult[SessionDTO]
+    response_model=PaginatedResult[SessionDTO],
+    responses={
+        403: create_response(AccessDeniedException(need_permissions={"string", }))
+    }
 )
 async def get_list_sessions(
     user_jwt_data: CurrentUserJWTData,

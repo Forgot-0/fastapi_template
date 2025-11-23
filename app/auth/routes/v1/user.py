@@ -9,6 +9,7 @@ from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel, CurrentUserJWTData
+from app.auth.exceptions import AccessDeniedException, DuplicateUserException, InvalidTokenException, NotFoundPermissionsException, NotFoundRoleException, NotFoundUserException, PasswordMismatchException
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery
 from app.auth.queries.users.get_list import GetListUserQuery
 from app.auth.schemas.roles.requests import RoleAssignRequest
@@ -16,7 +17,7 @@ from app.auth.schemas.sessions import SessionDTO, SessionFilterParam, SessionLis
 from app.auth.schemas.user import UserDTO, UserFilterParam, UserListParams, UserSortParam
 from app.auth.schemas.users.requests import UserCreateRequest, UserPermissionRequest
 from app.auth.schemas.users.responses import UserResponse
-from app.core.api.builder import ListParamsBuilder
+from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator
 
@@ -32,7 +33,11 @@ session_list_params_builder = ListParamsBuilder(SessionSortParam, SessionFilterP
     "/register",
     summary="",
     description="",
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: create_response(PasswordMismatchException()),
+        409: create_response(DuplicateUserException(field="string", value="string"))
+    }
 )
 async def register_user(
     mediator: FromDishka[BaseMediator],
@@ -59,6 +64,11 @@ async def register_user(
     description="",
     status_code=status.HTTP_200_OK,
     response_model=UserResponse,
+    responses={
+        400: create_response(InvalidTokenException()),
+        403: create_response(AccessDeniedException(need_permissions={"user:active", })),
+        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+    }
 )
 async def me(user: ActiveUserModel) -> UserResponse:
     return UserResponse(
@@ -73,6 +83,13 @@ async def me(user: ActiveUserModel) -> UserResponse:
     description="Добавление роли пользователю",
     response_model=None,
     status_code=status.HTTP_200_OK,
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(
+            [NotFoundRoleException(name="strig"), NotFoundUserException(user_by=1, user_field="id")]
+        )
+    }
 )
 async def assign_role(
     user_id: int,
@@ -94,6 +111,13 @@ async def assign_role(
     description="Удаление роли пользователю",
     response_model=None,
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(
+            [NotFoundRoleException(name="strig"), NotFoundUserException(user_by=1, user_field="id")]
+        )
+    }
 )
 async def remove_role(
     user_id: int,
@@ -115,6 +139,16 @@ async def remove_role(
     description="Добавление прав пользователю",
     response_model=None,
     status_code=status.HTTP_200_OK,
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(
+            [
+                NotFoundPermissionsException(missing={"string", }),
+                NotFoundUserException(user_by=1, user_field="id")
+            ]
+        )
+    }
 )
 async def add_permissions_to_user(
     user_id: int,
@@ -136,6 +170,16 @@ async def add_permissions_to_user(
     description="удаление прав пользователю",
     response_model=None,
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+        404: create_response(
+            [
+                NotFoundPermissionsException(missing={"string", }),
+                NotFoundUserException(user_by=1, user_field="id")
+            ]
+        )
+    }
 )
 async def delete_permissions_to_user(
     user_id: int,
@@ -157,7 +201,11 @@ async def delete_permissions_to_user(
     summary="Получить список пользователей",
     description="Получить список пользователей",
     status_code=status.HTTP_200_OK,
-    response_model=PaginatedResult[UserDTO]
+    response_model=PaginatedResult[UserDTO],
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+        403: create_response(AccessDeniedException(need_permissions={"string", })),
+    }
 )
 async def get_list_user(
     user_jwt_data: CurrentUserJWTData,
@@ -178,7 +226,10 @@ async def get_list_user(
     summary="Получить активные сессии пользователя",
     description="Получить активные сессии пользователя",
     status_code=status.HTTP_200_OK,
-    response_model=list[SessionDTO]
+    response_model=list[SessionDTO],
+    responses={
+        400: create_response(InvalidTokenException(token="string")),
+    }
 )
 async def get_list_user_session(
     user_jwt_data: CurrentUserJWTData,

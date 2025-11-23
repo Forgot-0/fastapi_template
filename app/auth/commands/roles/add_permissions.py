@@ -7,6 +7,7 @@ from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
+from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundPermissionsException
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -31,11 +32,11 @@ class AddPermissionRoleCommandHandler(BaseCommandHandler[AddPermissionRoleComman
 
     async def handle(self, command: AddPermissionRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", }):
-            raise 
+            raise AccessDeniedException(need_permissions={"role:create",} - set(command.user_jwt_data.permissions))
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise 
+            raise NotFoundRoleException(name=command.role_name)
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
 
@@ -46,7 +47,7 @@ class AddPermissionRoleCommandHandler(BaseCommandHandler[AddPermissionRoleComman
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise 
+            raise NotFoundPermissionsException(missing=missing)
 
         for permission in permissions:
             role.add_permission(permission)

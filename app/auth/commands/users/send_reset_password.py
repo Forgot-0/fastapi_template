@@ -4,6 +4,7 @@ import hashlib
 import logging
 import secrets
 
+from app.auth.exceptions import NotFoundUserException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.core.configs.app import app_config
 from app.auth.config import auth_config
@@ -29,7 +30,7 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
     async def handle(self, command: SendResetPasswordCommand) -> None:
         user = await self.user_repository.get_by_email(email=command.email)
         if not user:
-            return
+            raise NotFoundUserException(user_by=command.email, user_field="email") 
 
         reset_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(reset_token.encode()).hexdigest()

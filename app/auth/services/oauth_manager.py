@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from app.auth.schemas.token import OAuthData
 from app.auth.services.oauth_providers import OAuthProvider
+from app.auth.exceptions import NotExistProviderOAuthException
 
 
 @dataclass
@@ -11,7 +12,7 @@ class OAuthProviderFactory:
     def get_provider(self, provider_name: str) -> OAuthProvider:
         provider = self.providers.get(provider_name)
         if not provider:
-            raise 
+            raise NotExistProviderOAuthException(provider=provider_name)
         return provider
 
     def register_provider(self, provider: OAuthProvider) -> None:

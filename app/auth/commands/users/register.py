@@ -9,6 +9,7 @@ from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO
 from app.auth.services.hash import HashService
+from app.auth.exceptions import DuplicateUserException, PasswordMismatchException, NotFoundRoleException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
 
@@ -35,20 +36,20 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         user = await self.user_repository.get_by_username(command.username)
 
         if user:
-            raise 
+            raise DuplicateUserException(field="username", value=command.username)
 
         user = await self.user_repository.get_by_email(command.email)
         if user:
-            raise 
+            raise DuplicateUserException(field="email", value=command.email)
 
         if command.password != command.password_repeat:
-            raise 
+            raise PasswordMismatchException()
 
         role = await self.role_repository.get_with_permission_by_name(
             RolesEnum.STANDARD_USER.value.name
         )
         if not role:
-            raise 
+            raise NotFoundRoleException(name=RolesEnum.STANDARD_USER.value.name)
 
         user = User.create(
             email=command.email,

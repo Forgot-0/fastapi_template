@@ -8,6 +8,7 @@ from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.exceptions import NotFoundUserException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.mail.service import BaseMailService, EmailData
 
@@ -30,7 +31,7 @@ class SendVerifyCommandHandler(BaseCommandHandler[SendVerifyCommand, None]):
         user = await self.user_repository.get_by_email(email=command.email)
 
         if not user:
-            raise 
+            raise NotFoundUserException(user_by=command.email, user_field="email")
 
         verify_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(verify_token.encode()).hexdigest()

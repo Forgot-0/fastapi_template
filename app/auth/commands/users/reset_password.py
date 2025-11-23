@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
+from app.auth.exceptions import InvalidTokenException, NotFoundUserException, PasswordMismatchException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
 
@@ -31,14 +32,15 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
         user_id = await self.token_repository.is_valid_token(token=command.token)
 
         if user_id is None:
-            raise
+            raise InvalidTokenException(token=command.token)
 
         user = await self.user_repository.get_by_id(user_id=user_id)
 
-        if not user: return
+        if not user:
+            raise NotFoundUserException(user_by="1", user_field="id")
 
         if command.password != command.repeat_password:
-            raise 
+            raise PasswordMismatchException()
 
         user.password_reset(self.hash_service.hash_password(command.password))
         await self.token_repository.invalidate_token(token=command.token)

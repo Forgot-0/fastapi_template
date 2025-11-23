@@ -3,6 +3,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import WrongLoginDataException
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.token import TokenGroup
 from app.auth.schemas.user import UserJWTData
@@ -38,7 +39,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
             (user.password_hash is None) or
             (not self.hash_service.verify_password(command.password, user.password_hash))
         ):
-            raise 
+            raise WrongLoginDataException(username=command.username)
 
         session = await self.session_manager.get_or_create_session(
             user_id=user.id, user_agent=command.user_agent

@@ -8,6 +8,7 @@ from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.auth.queries.auth.verify import VerifyTokenQuery
 from app.auth.schemas.user import UserDTO, UserJWTData
 from app.core.mediators.base import BaseMediator
+from app.auth.exceptions import AccessDeniedException
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", refreshUrl="/api/v1/auth/refresh")
@@ -30,7 +31,7 @@ class CurrentUserGetter:
 class ActiveUserGetter:
     async def __call__(self, user: Annotated[UserDTO, Depends(CurrentUserGetter())]) -> UserDTO:
         if not user.is_active:
-            raise 
+            raise AccessDeniedException(need_permissions=set())
         return user
 
 

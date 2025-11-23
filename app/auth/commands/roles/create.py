@@ -8,6 +8,7 @@ from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
+from app.auth.exceptions import AccessDeniedException, DuplicateRoleException, NotFoundPermissionsException
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 
@@ -30,7 +31,10 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
     rbac_manager: RBACManager
 
     async def handle(self, command: CreateRoleCommand) -> None:
-        self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", })
+        if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", }):
+            raise AccessDeniedException(
+                need_permissions={"role:create", } - set(command.user_jwt_data.permissions)
+            )
 
         self.rbac_manager.validate_role_name(command.user_jwt_data, command.role_name)
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, command.security_level)
@@ -38,7 +42,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
 
         role = await self.role_repository.get_by_name(command.role_name)
         if role is not None:
-            raise 
+            raise DuplicateRoleException(name=command.role_name)
 
         role = Role(
             name=command.role_name,
@@ -50,7 +54,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
             permission = await self.permission_repository.get_permission_by_name(name)
 
             if permission is None:
-                raise 
+                raise NotFoundPermissionsException(missing={name,})
 
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)
             role.add_permission(permission)

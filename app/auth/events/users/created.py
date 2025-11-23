@@ -8,6 +8,7 @@ from app.auth.emails.templates import VerifyTokenTemplate
 from app.auth.models.user import CreatedUserEvent
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.exceptions import NotFoundUserException
 from app.core.events.event import BaseEventHandler
 from app.core.services.mail.service import BaseMailService, EmailData
 
@@ -22,7 +23,7 @@ class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
         user = await self.user_repository.get_by_email(email=event.email)
 
         if not user:
-            raise 
+            raise NotFoundUserException(user_by=event.email, user_field="email")
 
         reset_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(reset_token.encode()).hexdigest()

@@ -5,6 +5,8 @@ from uuid import uuid4
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
+from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
+
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.schemas.token import Token, TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
@@ -28,9 +30,9 @@ class JWTManager:
         try:
             data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
         except ExpiredSignatureError:
-            raise 
+            raise ExpiredTokenException(token=token)
         except JWTError:
-            raise 
+            raise InvalidTokenException(token=token)
         return data
 
     def generate_payload(self, user_data: UserJWTData, token_type: TokenType) -> dict[str, Any]:
@@ -75,7 +77,7 @@ class JWTManager:
         token_data = Token(**payload)
 
         if token_data.type != token_type:
-            raise 
+            raise InvalidTokenException(token=token)
 
         return token_data
 
@@ -85,11 +87,11 @@ class JWTManager:
 
         date = await self.token_blacklist.get_token_backlist(token.jti)
         if date > token_date:
-            raise 
+            raise ExpiredTokenException(token=refresh_token)
 
         date = await self.token_blacklist.get_user_backlist(int(token.sub))
         if date > token_date:
-            raise 
+            raise ExpiredTokenException(token=refresh_token)
 
         await self.revoke_token(refresh_token)
         token_pair = self.create_token_pair(security_user=security_user)

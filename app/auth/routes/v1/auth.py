@@ -16,8 +16,18 @@ from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.exceptions import (
+    ExpiredTokenException,
+    InvalidTokenException,
+    LinkedAnotherUserOAuthException,
+    NotExistProviderOAuthException,
+    NotFoundOrInactiveSessionException,
+    NotFoundUserException,
+    OAuthStateNotFoundException,
+    PasswordMismatchException,
+    WrongLoginDataException
+)
 from app.auth.schemas.auth.requests import (
-    CallbackRequest,
     ResetPasswordRequest,
     SendResetPasswordCodeRequest,
     SendVerifyCodeRequest,
@@ -27,6 +37,7 @@ from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
 )
 from app.auth.schemas.token import TokenGroup
+from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
 from app.auth.commands.auth.oauth import (
@@ -44,7 +55,10 @@ router = APIRouter(route_class=DishkaRoute)
     summary="Вход пользователя",
     description="Аутентифицирует пользователя и возвращает пару токенов: access и refresh.",
     response_model=AccessTokenResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: create_response(WrongLoginDataException(username="aboba"))
+    }
 )
 async def login(
     mediator: FromDishka[BaseMediator],
@@ -75,6 +89,10 @@ async def login(
     description="Обновляет access токен, используя refresh токен.",
     response_model=AccessTokenResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        400: create_response([InvalidTokenException(), ExpiredTokenException()]),
+        404: create_response(NotFoundOrInactiveSessionException())
+    },
     dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def refresh(
@@ -104,7 +122,10 @@ async def refresh(
     "/logout",
     summary="Выход пользователя",
     description="Аннулирует refresh токен для выхода пользователя.",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        400: create_response(InvalidTokenException())
+    }
 )
 async def logout(
     mediator: FromDishka[BaseMediator],
@@ -119,6 +140,9 @@ async def logout(
     summary="Отправка кода верификации",
     description="Отправляет код для верификации email. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
+    },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))],
 )
 async def send_verify_code(
@@ -134,6 +158,9 @@ async def send_verify_code(
     summary="Отправка кода сброса пароля",
     description="Отправляет код для сброса пароля. Ограничение: 3 запроса в час.",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
+    },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def send_reset_password_code(
@@ -150,6 +177,10 @@ async def send_reset_password_code(
     summary="Подтверждение email",
     description="Подтверждает email, используя переданный токен.",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        400: create_response(InvalidTokenException()),
+        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+    },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def verify_email(
@@ -164,6 +195,10 @@ async def verify_email(
     summary="Сброс пароля",
     description="Сбрасывает пароль, используя токен и новые данные пароля.",
     status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        400: create_response([InvalidTokenException(), PasswordMismatchException()]),
+        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+    },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
 async def reset_password(
@@ -182,7 +217,10 @@ async def reset_password(
 @router.get(
     '/oauth/{provider}/authorize',
     summary='Получить URL для OAuth авторизации',
-    status_code=status.HTTP_307_TEMPORARY_REDIRECT
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    responses={
+        400: create_response(NotExistProviderOAuthException(provider="test"))
+    }
 )
 async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
@@ -198,7 +236,10 @@ async def oauth_authorize(
 @router.get(
     '/oauth/{provider}/authorize/connect',
     summary='Получить URL для подключения OAuth к существующему пользователю',
-    status_code=status.HTTP_307_TEMPORARY_REDIRECT
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    responses={
+        400: create_response(NotExistProviderOAuthException(provider="test"))
+    }
 )
 async def oauth_authorize_connect(
     mediator: FromDishka[BaseMediator],
@@ -216,6 +257,16 @@ async def oauth_authorize_connect(
     summary='Callback для OAuth провайдера',
     response_model=AccessTokenResponse,
     status_code=status.HTTP_200_OK,
+    responses={
+        400: create_response(NotExistProviderOAuthException(provider="string")),
+        404: create_response(
+            [
+                OAuthStateNotFoundException(state="string"),
+                NotFoundUserException(user_by=1,user_field="id"),
+            ]
+        ),
+        409: create_response(LinkedAnotherUserOAuthException(provider="string"))
+    }
 )
 async def oauth_callback(
     mediator: FromDishka[BaseMediator],
