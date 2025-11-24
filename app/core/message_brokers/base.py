@@ -2,8 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator
+from typing import Any
 
 from app.core.events.event import BaseEvent
 
@@ -12,15 +13,15 @@ from app.core.events.event import BaseEvent
 class BaseMessageBroker(ABC):
 
     @abstractmethod
-    async def start(self):
+    async def start(self) -> None:
         ...
 
     @abstractmethod
-    async def close(self):
+    async def close(self) -> None:
         ...
 
     @abstractmethod
-    async def send_message(self, key: str, topic: str, value: bytes):
+    async def send_message(self, key: bytes, topic: str, value: bytes) -> None:
         ...
 
     @abstractmethod
@@ -36,5 +37,5 @@ class BaseMessageBroker(ABC):
         ...
 
     @abstractmethod
-    async def stop_consuming(self, topic: str):
+    async def stop_consuming(self) -> None:
         ...

@@ -30,7 +30,7 @@ class CoreProvider(Provider):
         return MinioStorageService(
             client=client,
             bucket_policy={
-                "base": Policy.none
+                "base": Policy.NONE
             }
         )
 

@@ -4,7 +4,6 @@ from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 
 
-
 class PermissionEnum(Enum):
     # System Management
     MANAGE_SYSTEM_SETTINGS = Permission(name="system:manage_settings")

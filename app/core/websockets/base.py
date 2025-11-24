@@ -20,15 +20,15 @@ class BaseConnectionManager(ABC):
     )
 
     @abstractmethod
-    async def accept_connection(self, websocket: WebSocket, key: str, subprotocol: str | None=None):
+    async def accept_connection(self, websocket: WebSocket, key: str, subprotocol: str | None=None) -> None:
         ...
 
     @abstractmethod
-    async def remove_connection(self, websocket: WebSocket, key: str):
+    async def remove_connection(self, websocket: WebSocket, key: str) -> None:
         ...
 
     @abstractmethod
-    async def send_all(self, key: str, bytes_: bytes):
+    async def send_all(self, key: str, bytes_: bytes) -> None:
         ...
 
     @abstractmethod
@@ -36,5 +36,5 @@ class BaseConnectionManager(ABC):
         ...
 
     @abstractmethod
-    async def disconnect_all(self, key: str):
+    async def disconnect_all(self, key: str) -> None:
         ...

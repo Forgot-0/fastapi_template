@@ -6,7 +6,7 @@ from app.auth.models.user import User
 from app.auth.schemas.base import PasswordMixinSchema
 from app.auth.schemas.permissions import PermissionDTO
 from app.auth.schemas.role import RoleDTO
-from app.auth.schemas.token import Token
+from app.auth.schemas.tokens import Token
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
@@ -16,7 +16,6 @@ class BaseUser(BaseModel):
         min_length=4,
         max_length=100,
         pattern=r"^[a-zA-Z0-9 ,.\'-]+$",
-        description="Позывной может содержать буквы, цифры, пробелы, а также '-' и '_'.",
     )
     email: EmailStr
 
@@ -28,7 +27,7 @@ class UserJWTData(BaseModel):
     device_id: str | None = Field(default=None)
 
     @classmethod
-    def create_from_user(cls, user: User, device_id: str | None=None) -> 'UserJWTData':
+    def create_from_user(cls, user: User, device_id: str | None=None) -> "UserJWTData":
         security_lvl = 0
         permissions = set()
         roles = set()
@@ -53,7 +52,7 @@ class UserJWTData(BaseModel):
         )
 
     @classmethod
-    def create_from_token(cls, token_dto: Token) -> 'UserJWTData':
+    def create_from_token(cls, token_dto: Token) -> "UserJWTData":
         return cls(
             id=token_dto.sub,
             roles=token_dto.roles,
@@ -65,7 +64,7 @@ class UserJWTData(BaseModel):
 
 class UserCreate(BaseUser, PasswordMixinSchema):
     """Schema for user creation request."""
-    ...
+
 
 
 class UserDTO(BaseUser):
@@ -79,11 +78,11 @@ class UserDTO(BaseUser):
 
 
 class UserSortParam(SortParam):
-    field: Literal['id', 'username', 'created_at']
+    field: Literal["id", "username", "created_at"]
 
 
 class UserFilterParam(FilterParam):
-    field: Literal['id', 'username']
+    field: Literal["id", "username"]
 
 
 class UserListParams(ListParams):

@@ -9,7 +9,6 @@ from app.core.db.repository import BaseRepositoryMixin
 from app.core.utils import now_utc
 
 
-
 @dataclass
 class PermissionRepository(BaseRepositoryMixin):
 

@@ -1,18 +1,17 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import DuplicateUserException, NotFoundRoleException, PasswordMismatchException
 from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserDTO
 from app.auth.services.hash import HashService
-from app.auth.exceptions import DuplicateUserException, PasswordMismatchException, NotFoundRoleException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             raise DuplicateUserException(field="email", value=command.email)
 
         if command.password != command.password_repeat:
-            raise PasswordMismatchException()
+            raise PasswordMismatchException
 
         role = await self.role_repository.get_with_permission_by_name(
             RolesEnum.STANDARD_USER.value.name
@@ -55,7 +54,7 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
             email=command.email,
             username=command.username,
             password_hash=self.hash_service.hash_password(command.password),
-            roles={role, }
+            roles={role }
         )
         await self.user_repository.create(user)
 

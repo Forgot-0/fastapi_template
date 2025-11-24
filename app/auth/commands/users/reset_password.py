@@ -1,15 +1,14 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import InvalidTokenException, NotFoundUserException, PasswordMismatchException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException, PasswordMismatchException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
             raise NotFoundUserException(user_by="1", user_field="id")
 
         if command.password != command.repeat_password:
-            raise PasswordMismatchException()
+            raise PasswordMismatchException
 
         user.password_reset(self.hash_service.hash_password(command.password))
         await self.token_repository.invalidate_token(token=command.token)

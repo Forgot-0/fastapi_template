@@ -1,15 +1,14 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import NotFoundOrInactiveSessionException, InvalidTokenException
+from app.auth.exceptions import InvalidTokenException, NotFoundOrInactiveSessionException
 from app.auth.repositories.session import SessionRepository
-from app.auth.schemas.token import TokenGroup, TokenType
+from app.auth.schemas.tokens import TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +35,8 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
             device_id=refresh_data.did,
         )
 
-        if not session or session.is_active == False:
-            raise NotFoundOrInactiveSessionException()
+        if not session or not session.is_active:
+            raise NotFoundOrInactiveSessionException
 
         session.online()
         token_group = await self.jwt_manager.refresh_tokens(

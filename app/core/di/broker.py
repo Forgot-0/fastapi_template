@@ -4,9 +4,6 @@ from dishka import Provider, Scope, provide
 from app.core.configs.app import app_config
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.message_brokers.kafka import KafkaMessageBroker
-# from app.core.message_brokers.redis import RedisMessageBroker
-
-
 
 
 class BrokerProvider(Provider):

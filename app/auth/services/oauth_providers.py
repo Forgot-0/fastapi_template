@@ -6,8 +6,7 @@ from urllib.parse import urlencode
 
 import httpx
 
-from app.auth.schemas.token import OAuthToken, OAuthData
-
+from app.auth.schemas.tokens import OAuthData, OAuthToken
 
 
 @dataclass
@@ -37,11 +36,11 @@ class OAuthProvider(ABC):
             response.raise_for_status()
             token_data = response.json()
             return OAuthToken(
-                access_token=token_data['access_token'],
-                token_type=token_data.get('token_type', 'Bearer'),
-                expires_in=token_data.get('expires_in'),
-                refresh_token=token_data.get('refresh_token'),
-                scope=token_data.get('scope')
+                access_token=token_data["access_token"],
+                token_type=token_data.get("token_type", "Bearer"),
+                expires_in=token_data.get("expires_in"),
+                refresh_token=token_data.get("refresh_token"),
+                scope=token_data.get("scope")
             )
 
     @abstractmethod
@@ -180,11 +179,11 @@ class OAuthGithub(OAuthProvider):
                 headers=headers
             )
             response.raise_for_status()
-            email_data = response.json()
+            emails_data = response.json()
 
-            for email_data in email_data:
+            for email_data in emails_data:
                 if email_data.get("primary"):
                     return email_data.get("email")
 
-            return email_data[0].get("email")
+            return emails_data[0].get("email")
 

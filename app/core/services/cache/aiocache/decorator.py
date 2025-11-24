@@ -1,8 +1,9 @@
-from dataclasses import dataclass
 import hashlib
 import json
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import wraps
+from typing import Any
 
 from aiocache import BaseCache
 
@@ -14,7 +15,7 @@ class AioCachedDecorator:
     def __call__(self, ttl: int, key_builder: Callable | None = None) -> Callable:
         def decorator(func: Callable):
             @wraps(func)
-            async def wrapper(*args, **kwargs):
+            async def wrapper(*args: Any, **kwargs: Any) -> Any:
                 cache_key = (
                     key_builder(func, *args, **kwargs) if key_builder else self._build_key(func, *args, **kwargs)
                 )
@@ -31,10 +32,10 @@ class AioCachedDecorator:
 
         return decorator
 
-    def _build_key(self, func: Callable, *args, **kwargs) -> str:
-        key_data = {'func': func.__name__, 'args': args, 'kwargs': kwargs}
+    def _build_key(self, func: Callable, *args: Any, **kwargs: Any) -> str:
+        key_data = {"func": func.__name__, "args": args, "kwargs": kwargs}
 
         json_str = json.dumps(key_data, sort_keys=True)
-        hash_str = hashlib.md5(json_str.encode()).hexdigest()
+        hash_str = hashlib.sha256(json_str.encode()).hexdigest()
 
-        return f'{func.__name__}:{hash_str}'
+        return f"{func.__name__}:{hash_str}"

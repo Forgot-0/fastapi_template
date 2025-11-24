@@ -1,11 +1,10 @@
 from dishka import Provider, Scope, provide
 
-
 from app.core.configs.app import app_config
 from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.service import AioSmtpLibMailService
 from app.core.services.mail.service import BaseMailService
-from app.core.services.queue.service import QueueServiceInterface
+from app.core.services.queues.service import QueueServiceInterface
 
 
 class MailProvider(Provider):

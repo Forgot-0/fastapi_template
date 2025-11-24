@@ -1,17 +1,16 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.exceptions import WrongLoginDataException
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.token import TokenGroup
+from app.auth.schemas.tokens import TokenGroup
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 

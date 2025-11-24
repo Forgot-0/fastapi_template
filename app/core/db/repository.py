@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from sqlalchemy import Select, func, select
-from sqlalchemy.orm import joinedload, selectinload, subqueryload
+from sqlalchemy import Column, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload, subqueryload
 
 from app.core.api.schemas import ListParams, PaginatedResult, Pagination, SortOrder
 from app.core.db.base_model import BaseModel
@@ -17,22 +17,22 @@ class BaseRepositoryMixin:
         self,
         model: type[BaseModel],
         params: ListParams,
-        relations: dict[Literal['select', 'joined', 'subquery'], list[str]] | None = None,
+        relations: dict[Literal["select", "joined", "subquery"], list[str]] | None = None,
     )  -> PaginatedResult[BaseModel]:
         query = select(model)
         if params.filters:
-            for item in params.filters:
-                if isinstance(item.value, list):
-                    query = query.where(getattr(model, item.field).in_(item.value))
+            for filter_params in params.filters:
+                if isinstance(filter_params.value, list):
+                    query = query.where(getattr(model, filter_params.field).in_(filter_params.value))
                 else:
-                    query = query.where(getattr(model, item.field) == item.value)
+                    query = query.where(getattr(model, filter_params.field) == filter_params.value)
 
         query = self._load_relations(query=query, relations=relations, model=model)
 
         if params.sort:
-            for item in params.sort:
-                column = getattr(model, item.field)
-                query = query.order_by(column.desc() if item.order == SortOrder.desc else column)
+            for sort_params in params.sort:
+                column: Column = getattr(model, sort_params.field)
+                query = query.order_by(column.desc() if sort_params.order == SortOrder.DESC else column)
 
         total = await self.session.scalar(select(func.count()).select_from(query.subquery()))
         if total is None:
@@ -50,22 +50,22 @@ class BaseRepositoryMixin:
         self,
         query: Select,
         model: type[BaseModel],
-        relations: dict[Literal['select', 'joined', 'subquery'], list[str]] | None = None,
+        relations: dict[Literal["select", "joined", "subquery"], list[str]] | None = None,
     ) -> Select:
 
         if not relations:
             return query
 
         loader_map = {
-            'select': selectinload,
-            'joined': joinedload,
-            'subquery': subqueryload,
+            "select": selectinload,
+            "joined": joinedload,
+            "subquery": subqueryload,
         }
 
         loader_method_name = {
-            'select': 'selectinload',
-            'joined': 'joinedload',
-            'subquery': 'subqueryload',
+            "select": "selectinload",
+            "joined": "joinedload",
+            "subquery": "subqueryload",
         }
 
         for strategy, rels in relations.items():
@@ -73,7 +73,7 @@ class BaseRepositoryMixin:
                 raise ValueError(f"Unknown loading strategy: {strategy}")
 
             for relation_path in rels:
-                parts = relation_path.split('.')
+                parts = relation_path.split(".")
                 current_model = model
                 loader = None
 
@@ -89,8 +89,8 @@ class BaseRepositoryMixin:
                         method = getattr(loader, loader_method_name[strategy])
                         loader = method(attr)
 
-                    prop = getattr(attr, 'property', None)
-                    if prop is None or not hasattr(prop, 'mapper'):
+                    prop = getattr(attr, "property", None)
+                    if prop is None or not hasattr(prop, "mapper"):
                         if i < len(parts) - 1:
                             raise ValueError(f"Attribute '{part}' of {current_model.__name__} is not a relationship "
                                                 f"but path has more parts: '{relation_path}'")

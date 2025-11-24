@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
-
 class SessionDTO(BaseModel):
     id: int
     user_id: int
@@ -17,11 +16,11 @@ class SessionDTO(BaseModel):
 
 
 class SessionSortParam(SortParam):
-    field: Literal['id', 'last_activity', 'created_at']
+    field: Literal["id", "last_activity", "created_at"]
 
 
 class SessionFilterParam(FilterParam):
-    field: Literal['id', 'user_id', 'device_id', 'is_active']
+    field: Literal["id", "user_id", "device_id", "is_active"]
 
 
 class SessionListParams(ListParams):

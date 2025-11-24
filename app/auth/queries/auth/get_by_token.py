@@ -1,12 +1,11 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
+from app.auth.exceptions import InvalidTokenException, NotFoundUserException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.services.jwt import JWTManager
 from app.core.queries import BaseQuery, BaseQueryHandler
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException
-
 
 logger = logging.getLogger(__name__)
 

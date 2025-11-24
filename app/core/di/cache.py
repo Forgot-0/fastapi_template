@@ -1,11 +1,9 @@
-from aiocache import caches, BaseCache
+from aiocache import BaseCache, caches
 from dishka import Provider, Scope, provide
 
 from app.core.configs.app import app_config
 from app.core.services.cache.aiocache.service import AioCacheService
 from app.core.services.cache.base import CacheServiceInterface
-
-
 
 
 class CacheProvider(Provider):
@@ -15,16 +13,16 @@ class CacheProvider(Provider):
     async def inti_aiocache(self) -> BaseCache:
         caches.set_config(
             {
-                'default': {
-                    'cache': 'aiocache.RedisCache',
-                    'endpoint': app_config.REDIS_HOST,
-                    'port': app_config.REDIS_PORT,
-                    'timeout': 1,
-                    'serializer': {'class': 'aiocache.serializers.PickleSerializer'},
+                "default": {
+                    "cache": "aiocache.RedisCache",
+                    "endpoint": app_config.REDIS_HOST,
+                    "port": app_config.REDIS_PORT,
+                    "timeout": 1,
+                    "serializer": {"class": "aiocache.serializers.PickleSerializer"},
                 }
             }
         )
-        cache_provider: BaseCache = caches.get('default') # type: ignore
+        cache_provider: BaseCache = caches.get("default") # type: ignore
         return cache_provider
 
     @provide

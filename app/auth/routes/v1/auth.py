@@ -1,6 +1,7 @@
 # app/auth/routes/v1/auth.py
 
 from typing import Annotated
+
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
@@ -10,12 +11,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.auth.commands.auth.auth_url import CreateOAuthAuthorizeUrlCommand
 from app.auth.commands.auth.login import LoginCommand
 from app.auth.commands.auth.logout import LogoutCommand
+from app.auth.commands.auth.oauth import (
+    ProcessOAuthCallbackCommand,
+)
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand
 from app.auth.commands.users.reset_password import ResetPasswordCommand
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
-from app.auth.deps import CurrentUserJWTData
+from app.auth.deps import CurrentUserJWTData, CurrentUserModel
 from app.auth.exceptions import (
     ExpiredTokenException,
     InvalidTokenException,
@@ -25,36 +29,30 @@ from app.auth.exceptions import (
     NotFoundUserException,
     OAuthStateNotFoundException,
     PasswordMismatchException,
-    WrongLoginDataException
+    WrongLoginDataException,
 )
 from app.auth.schemas.auth.requests import (
+    OAuthCallbackQuery,
     ResetPasswordRequest,
     SendResetPasswordCodeRequest,
     SendVerifyCodeRequest,
-    VerifyEmailRequest
+    VerifyEmailRequest,
 )
 from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
 )
-from app.auth.schemas.token import TokenGroup
+from app.auth.schemas.tokens import TokenGroup
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
-from app.auth.commands.auth.oauth import (
-    ProcessOAuthCallbackCommand,
-)
-from app.auth.deps import CurrentUserModel
-
-
 
 router = APIRouter(route_class=DishkaRoute)
 
 
 @router.post(
     "/login",
-    summary="Вход пользователя",
-    description="Аутентифицирует пользователя и возвращает пару токенов: access и refresh.",
-    response_model=AccessTokenResponse,
+    summary="User login",
+    description="Authenticates the user and returns a pair of tokens: access and refresh.",
     status_code=status.HTTP_200_OK,
     responses={
         400: create_response(WrongLoginDataException(username="aboba"))
@@ -85,9 +83,8 @@ async def login(
 
 @router.post(
     "/refresh",
-    summary="Обновление access токена",
-    description="Обновляет access токен, используя refresh токен.",
-    response_model=AccessTokenResponse,
+    summary="Refreshing the access token",
+    description="Refreshes the access token using the refresh token.",
     status_code=status.HTTP_200_OK,
     responses={
         400: create_response([InvalidTokenException(), ExpiredTokenException()]),
@@ -99,7 +96,7 @@ async def refresh(
     mediator: FromDishka[BaseMediator],
     response: Response,
     user_jwt_data: CurrentUserJWTData,
-    refresh_token: str | None = Cookie(default=None),
+    refresh_token: Annotated[str | None, Cookie()] = None ,
 ) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
@@ -120,8 +117,8 @@ async def refresh(
 
 @router.post(
     "/logout",
-    summary="Выход пользователя",
-    description="Аннулирует refresh токен для выхода пользователя.",
+    summary="User logout",
+    description="Invalidates the user's refresh token to log out.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         400: create_response(InvalidTokenException())
@@ -130,15 +127,15 @@ async def refresh(
 async def logout(
     mediator: FromDishka[BaseMediator],
     response: Response,
-    refresh_token: str | None = Cookie(default=None)
+    refresh_token: Annotated[str | None, Cookie()] = None
 ) -> None:
     await mediator.handle_command(LogoutCommand(refresh_token=refresh_token))
     response.delete_cookie("refresh_token", samesite="strict", path="/")
 
 @router.post(
     "/verifications/email",
-    summary="Отправка кода верификации",
-    description="Отправляет код для верификации email. Ограничение: 3 запроса в час.",
+    summary="Sending a verification code",
+    description="Sends an email verification code. Limit: 3 requests per hour.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
@@ -155,8 +152,8 @@ async def send_verify_code(
 
 @router.post(
     "/password-resets",
-    summary="Отправка кода сброса пароля",
-    description="Отправляет код для сброса пароля. Ограничение: 3 запроса в час.",
+    summary="Sending a password reset code",
+    description="Sends a password reset code. Limit: 3 requests per hour.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
@@ -173,9 +170,9 @@ async def send_reset_password_code(
 
 
 @router.post(
-    '/verifications/email/verify',
-    summary="Подтверждение email",
-    description="Подтверждает email, используя переданный токен.",
+    "/verifications/email/verify",
+    summary="Email confirmation",
+    description="Confirms the email using the passed token.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         400: create_response(InvalidTokenException()),
@@ -191,9 +188,9 @@ async def verify_email(
 
 
 @router.post(
-    '/password-resets/confirm',
-    summary="Сброс пароля",
-    description="Сбрасывает пароль, используя токен и новые данные пароля.",
+    "/password-resets/confirm",
+    summary="Reset password",
+    description="Resets the password using the token and new password data.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         400: create_response([InvalidTokenException(), PasswordMismatchException()]),
@@ -215,8 +212,8 @@ async def reset_password(
 
 
 @router.get(
-    '/oauth/{provider}/authorize',
-    summary='Получить URL для OAuth авторизации',
+    "/oauth/{provider}/authorize",
+    summary="Get URL for OAuth authorization",
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     responses={
         400: create_response(NotExistProviderOAuthException(provider="test"))
@@ -226,16 +223,17 @@ async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
     provider: str,
 ) -> RedirectResponse:
+    url: str
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=None)
     )
-    
+
     return RedirectResponse(url=url)
 
 
 @router.get(
-    '/oauth/{provider}/authorize/connect',
-    summary='Получить URL для подключения OAuth к существующему пользователю',
+    "/oauth/{provider}/authorize/connect",
+    summary="Get the OAuth connection URL for an existing user",
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     responses={
         400: create_response(NotExistProviderOAuthException(provider="test"))
@@ -246,6 +244,7 @@ async def oauth_authorize_connect(
     provider: str,
     current_user: CurrentUserModel,
 ) -> RedirectResponse:
+    url: str
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=current_user.id)
     )
@@ -253,9 +252,8 @@ async def oauth_authorize_connect(
 
 
 @router.get(
-    '/oauth/{provider}/callback',
-    summary='Callback для OAuth провайдера',
-    response_model=AccessTokenResponse,
+    "/oauth/{provider}/callback",
+    summary="Callback for OAuth provider",
     status_code=status.HTTP_200_OK,
     responses={
         400: create_response(NotExistProviderOAuthException(provider="string")),
@@ -270,23 +268,22 @@ async def oauth_authorize_connect(
 )
 async def oauth_callback(
     mediator: FromDishka[BaseMediator],
-    provider: str,
-    code: str,
-    state: str,
+    oauth_callback_query: OAuthCallbackQuery,
     request: Request,
     response: Response,
 ) -> AccessTokenResponse:
+    token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
         ProcessOAuthCallbackCommand(
-            provider=provider,
-            code=code,
-            state=state,
-            user_agent=request.headers.get('user-agent', ''),
+            provider=oauth_callback_query.provider,
+            code=oauth_callback_query.code,
+            state=oauth_callback_query.state,
+            user_agent=request.headers.get("user-agent", ""),
         )
     )
 
     response.set_cookie(
-        'refresh_token', token_group.refresh_token, samesite='strict', httponly=True, secure=True, path='/'
+        "refresh_token", token_group.refresh_token, samesite="strict", httponly=True, secure=True, path="/"
     )
     return AccessTokenResponse(access_token=token_group.access_token)
 

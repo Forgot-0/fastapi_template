@@ -3,12 +3,12 @@ from typing import Any
 
 from taskiq import AsyncBroker, AsyncTaskiqTask, TaskiqResult
 
-from app.core.services.queue.service import (
+from app.core.services.queues.service import (
     QueueResult,
     QueueResultStatus,
     QueueServiceInterface,
 )
-from app.core.services.queue.task import BaseTask
+from app.core.services.queues.task import BaseTask
 
 
 @dataclass

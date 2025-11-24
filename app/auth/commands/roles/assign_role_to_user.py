@@ -1,18 +1,16 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundUserException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
-from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundUserException
 from app.core.commands import BaseCommand, BaseCommandHandler
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +32,9 @@ class AssignRoleCommandHandler(BaseCommandHandler[AssignRoleCommand, None]):
     token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: AssignRoleCommand) -> None:
-        if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:assign", }):
+        if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:assign" }):
             raise AccessDeniedException(
-                need_permissions={"role:assign", } - set(command.user_jwt_data.permissions)
+                need_permissions={"role:assign" } - set(command.user_jwt_data.permissions)
             )
         role = await self.role_repository.get_by_name(command.role_name)
         if role is None:

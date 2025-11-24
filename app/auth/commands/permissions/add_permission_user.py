@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +10,6 @@ from app.auth.repositories.user import UserRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 

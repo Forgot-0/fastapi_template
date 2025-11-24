@@ -1,17 +1,16 @@
-from dataclasses import dataclass
-from datetime import timedelta
 import hashlib
 import logging
 import secrets
+from dataclasses import dataclass
+from datetime import timedelta
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
+from app.auth.exceptions import NotFoundUserException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.exceptions import NotFoundUserException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.mail.service import BaseMailService, EmailData
-
 
 logger = logging.getLogger(__name__)
 

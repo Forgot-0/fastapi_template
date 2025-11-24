@@ -1,11 +1,10 @@
-from dataclasses import dataclass
 import logging
 import secrets
+from dataclasses import dataclass
 
 from app.auth.repositories.oauth import OAuthCodeRepository
 from app.auth.services.oauth_manager import OAuthManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 

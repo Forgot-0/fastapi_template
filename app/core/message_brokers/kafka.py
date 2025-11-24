@@ -1,5 +1,6 @@
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, AsyncIterator
+from typing import Any
 
 import orjson
 from aiokafka import AIOKafkaConsumer
@@ -7,11 +8,7 @@ from aiokafka.producer import AIOKafkaProducer
 
 from app.core.events.event import BaseEvent
 from app.core.message_brokers.base import BaseMessageBroker
-from app.core.message_brokers.converters import (
-    convert_dict_to_broker_message,
-    convert_event_to_broker_message
-)
-
+from app.core.message_brokers.converters import convert_dict_to_broker_message, convert_event_to_broker_message
 
 
 @dataclass
@@ -23,7 +20,7 @@ class KafkaMessageBroker(BaseMessageBroker):
         await self.producer.send(topic=topic, key=key, value=value)
 
     async def send_data(self, key: str, topic: str, data: dict[str, Any]) -> None:
-        data['key'] = key
+        data["key"] = key
         value = convert_dict_to_broker_message(data)
         await self.producer.send(topic=topic, key=key.encode(), value=value)
 
@@ -35,7 +32,7 @@ class KafkaMessageBroker(BaseMessageBroker):
             value=value,
         )
 
-    async def start_consuming(self, topic: list[str]) -> AsyncIterator[dict]:
+    async def start_consuming(self, topic: list[str]) -> AsyncGenerator[dict[str, Any], None]:
         self.consumer.subscribe(topics=topic)
 
         async for message in self.consumer:

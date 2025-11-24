@@ -4,9 +4,8 @@ from pathlib import Path
 import structlog
 from structlog.processors import CallsiteParameter, CallsiteParameterAdder
 
-from app.core.log.processors import get_render_processor
 from app.core.configs.app import app_config
-
+from app.core.log.processors import get_render_processor
 
 
 def configure_logging() -> None:
@@ -81,4 +80,4 @@ def configure_logging() -> None:
         "aiohttp",
         "taskiq"
     ):
-        logging.getLogger(logger_name).setLevel(logging.WARN)
+        logging.getLogger(logger_name).setLevel(logging.WARNING)

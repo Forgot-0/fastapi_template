@@ -28,5 +28,5 @@ class OAuthAccount(BaseModel, DateMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="cascade", onupdate="cascade"))
-    user: Mapped['User'] = relationship("User", back_populates='oauth_accounts')
+    user: Mapped["User"] = relationship("User", back_populates="oauth_accounts")
 

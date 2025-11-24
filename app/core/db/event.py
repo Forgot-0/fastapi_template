@@ -1,11 +1,10 @@
 from uuid import UUID
 
 from sqlalchemy import UUID as SAUUID
-from sqlalchemy.orm import Mapped,  mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db.base_model import BaseModel, DateMixin
-
 
 
 class EventLog(BaseModel, DateMixin):

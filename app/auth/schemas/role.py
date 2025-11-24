@@ -1,10 +1,10 @@
 
 from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.auth.schemas.permissions import PermissionDTO
 from app.core.api.schemas import FilterParam, ListParams, SortParam
-
 
 
 class BaseRole(BaseModel):
@@ -19,11 +19,11 @@ class RoleDTO(BaseRole):
 
 
 class RoleSortParam(SortParam):
-    field: Literal['id', 'security_level']
+    field: Literal["id", "security_level"]
 
 
 class RoleFilterParam(FilterParam):
-    field: Literal['name', 'description', 'permissions', "security_level"]
+    field: Literal["name", "description", "permissions", "security_level"]
 
 
 class RoleListParams(ListParams):

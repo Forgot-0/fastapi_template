@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-
+from typing import BinaryIO
 
 
 @dataclass
@@ -17,7 +17,7 @@ class BaseStorageService(ABC):
     async def upload_file(
         self,
         bucket_name: str,
-        file_content: bytes,
+        file_content: BinaryIO,
         file_key: str,
         content_type: str | None = None,
         metadata: dict[str, str] | None = None

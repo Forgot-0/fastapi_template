@@ -1,10 +1,10 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
+
 from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 
 from app.core.db.session import create_async_marker, create_engine
-
 
 
 class DBProvider(Provider):
@@ -14,7 +14,7 @@ class DBProvider(Provider):
     async def get_engine(self) -> AsyncIterable[AsyncEngine]:
         engine = create_engine()
         yield engine
-        await engine.dispose(True)
+        await engine.dispose(close=True)
 
     @provide(scope=Scope.APP)
     async def get_marker(self, engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

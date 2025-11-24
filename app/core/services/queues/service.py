@@ -1,10 +1,9 @@
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from app.core.services.queue.task import BaseTask
-
+from app.core.services.queues.task import BaseTask
 
 
 class QueueResultStatus(Enum):
@@ -34,5 +33,4 @@ class QueueServiceInterface(ABC):
     @abstractmethod
     async def wait_result(
         self, task_id: str, check_interval: float | None = None, timeout: float | None = None
-    ) -> QueueResult:
-        ...
+    ) -> QueueResult: ...

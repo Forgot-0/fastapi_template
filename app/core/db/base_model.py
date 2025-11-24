@@ -2,8 +2,8 @@ import copy
 from datetime import datetime
 from typing import Any, Self
 
-from sqlalchemy import DateTime, inspect, select
-from sqlalchemy.orm import DeclarativeBase, reconstructor, Mapped, declared_attr, mapped_column
+from sqlalchemy import DateTime, Select, inspect, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column, reconstructor
 from sqlalchemy.orm.state import InstanceState
 from sqlalchemy.sql import func
 
@@ -12,10 +12,10 @@ from app.core.utils import now_utc
 
 
 class BaseModel(DeclarativeBase):
-    def __init__(self, **kw: Any):
+    def __init__(self, **kw: Any) -> None:
         for key, value in kw.items():
             setattr(self, key, value)
-        self.events = list()
+        self.events: list[BaseEvent] = []
 
     @reconstructor
     def init_on_load(self) -> None:
@@ -41,7 +41,7 @@ class BaseModel(DeclarativeBase):
         for rel in mapper.relationships:
             key = rel.key
 
-            if key in state.dict:  
+            if key in state.dict:
                 value = getattr(self, key)
 
                 if value is None:
@@ -83,7 +83,7 @@ class SoftDeleteMixin:
         return mapped_column(DateTime, nullable=True)
 
     @classmethod
-    def select_not_deleted(cls):
+    def select_not_deleted(cls) -> Select[tuple[Self]]:
         return select(cls).where(cls.deleted_at.is_(None))
 
     def soft_delete(self) -> None:

@@ -11,11 +11,11 @@ class PermissionDTO(BaseModel):
     name: str
 
 class PermissionSortParam(SortParam):
-    field: Literal['id', 'name']
+    field: Literal["id", "name"]
 
 
 class PermissionFilterParam(FilterParam):
-    field: Literal['name']
+    field: Literal["name"]
 
 
 class PermissionListParams(ListParams):

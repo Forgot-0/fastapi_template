@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +8,6 @@ from app.auth.repositories.permission import PermissionInvalidateRepository, Per
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +26,10 @@ class DeletePermissionCommandHandler(BaseCommandHandler[DeletePermissionCommand,
     permission_blacklist: PermissionInvalidateRepository
 
     async def handle(self, command: DeletePermissionCommand) -> None:
-        if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:create",}):
+        if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:create"}):
             raise AccessDeniedException(
-                need_permissions={"permission:create",} - set(command.user_jwt_data.permissions)
-            ) 
+                need_permissions={"permission:create"} - set(command.user_jwt_data.permissions)
+            )
 
         self.rbac_manager.validate_permissions(command.user_jwt_data, command.name)
 
@@ -39,7 +38,7 @@ class DeletePermissionCommandHandler(BaseCommandHandler[DeletePermissionCommand,
 
         permission = await self.permission_repository.get_permission_by_name(command.name)
         if permission is None:
-            raise NotFoundPermissionsException(missing={command.name, })
+            raise NotFoundPermissionsException(missing={command.name })
 
         await self.permission_repository.delete(permission)
         await self.permission_blacklist.invalidate_permission(permission.name)

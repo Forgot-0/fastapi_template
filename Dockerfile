@@ -21,11 +21,11 @@ RUN apt-get update \
 WORKDIR $PYSETUP_PATH
 
 COPY ./pyproject.toml ./poetry.lock ./
-RUN pip install --no-cache-dir --upgrade pip==24.0 \
+RUN pip install --no-cache-dir --upgrade pip==25.1.1 \
  && pip install --no-cache-dir setuptools==69.5.1 wheel==0.43.0 \
- && pip install --no-cache-dir poetry==2.1.3
+ && pip install --no-cache-dir poetry==2.2.1
 
-RUN poetry install --without dev --no-root --no-ansi
+RUN poetry install --without dev,test,lint --no-root --no-ansi
 
 FROM python-base AS production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH

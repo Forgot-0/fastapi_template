@@ -1,18 +1,17 @@
-from dataclasses import dataclass
-from datetime import timedelta
 import hashlib
 import logging
 import secrets
+from dataclasses import dataclass
+from datetime import timedelta
 
-from app.auth.exceptions import NotFoundUserException
-from app.auth.repositories.session import TokenBlacklistRepository
-from app.core.configs.app import app_config
 from app.auth.config import auth_config
 from app.auth.emails.templates import ResetTokenTemplate
+from app.auth.exceptions import NotFoundUserException
+from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
+from app.core.configs.app import app_config
 from app.core.services.mail.service import BaseMailService, EmailData
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
     async def handle(self, command: SendResetPasswordCommand) -> None:
         user = await self.user_repository.get_by_email(email=command.email)
         if not user:
-            raise NotFoundUserException(user_by=command.email, user_field="email") 
+            raise NotFoundUserException(user_by=command.email, user_field="email")
 
         reset_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(reset_token.encode()).hexdigest()
@@ -41,10 +40,10 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
             expiration=timedelta(minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES)
         )
 
-        email_data = EmailData(subject="Код для сброса пароля", recipient=user.email)
+        email_data = EmailData(subject="Password reset code", recipient=user.email)
         template = ResetTokenTemplate(
             username=user.username,
-            link=f'{app_config.app_url}/reset_password?token={hashed_token}',
+            link=f"{app_config.app_url}/reset_password?token={hashed_token}",
             token=hashed_token,
             valid_minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES,
         )

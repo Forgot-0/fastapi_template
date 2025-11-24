@@ -1,6 +1,6 @@
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +11,6 @@ from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 

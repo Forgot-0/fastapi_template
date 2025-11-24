@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.db.base_model import BaseModel, DateMixin
 from app.auth.models.permission import Permission
+from app.core.db.base_model import BaseModel, DateMixin
 
 if TYPE_CHECKING:
     from app.auth.models.user import User
@@ -51,18 +51,3 @@ class Role(BaseModel, DateMixin):
             return
 
         self.permissions.remove(permission)
-
-    def update(
-        self,
-        name: str | None=None,
-        description: str | None=None,
-        security_level: int | None=None
-    ) -> None:
-        if name is not None:
-            self.name = name
-
-        if description is not None:
-            self.description = description
-
-        if security_level is not None:
-            self.security_level = security_level

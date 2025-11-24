@@ -6,12 +6,10 @@ from uuid import uuid4
 from jose import ExpiredSignatureError, JWTError, jwt
 
 from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
-
 from app.auth.repositories.session import TokenBlacklistRepository
-from app.auth.schemas.token import Token, TokenGroup, TokenType
+from app.auth.schemas.tokens import Token, TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
 from app.core.utils import now_utc
-
 
 
 @dataclass
@@ -29,10 +27,10 @@ class JWTManager:
     def decode(self, token: str) -> dict[str, Any]:
         try:
             data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
-        except ExpiredSignatureError:
-            raise ExpiredTokenException(token=token)
-        except JWTError:
-            raise InvalidTokenException(token=token)
+        except ExpiredSignatureError as err:
+            raise ExpiredTokenException(token=token) from err
+        except JWTError as err:
+            raise InvalidTokenException(token=token) from err
         return data
 
     def generate_payload(self, user_data: UserJWTData, token_type: TokenType) -> dict[str, Any]:
@@ -51,8 +49,8 @@ class JWTManager:
             "iat": now.timestamp(),
         }
         if token_type == TokenType.ACCESS:
-            payload['roles'] = user_data.roles
-            payload['permissions'] = user_data.permissions
+            payload["roles"] = user_data.roles
+            payload["permissions"] = user_data.permissions
 
         return payload
 

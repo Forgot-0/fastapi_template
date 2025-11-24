@@ -1,14 +1,14 @@
 import enum
 import json
-from typing import Any, Literal, Union, overload
+from typing import Any, Literal, overload
 
 
 class Policy(enum.Enum):
-    none = "NONE"
-    get = "GET_ONLY"
-    read = "READ_ONLY"
-    write = "WRITE_ONLY"
-    read_write = "READ_WRITE"
+    NONE = "NONE"
+    GET = "GET_ONLY"
+    READ = "READ_ONLY"
+    WRITE = "WRITE_ONLY"
+    READ_WRITE = "READ_WRITE"
 
     @overload
     def bucket(
@@ -22,13 +22,13 @@ class Policy(enum.Enum):
 
     def bucket(
         self, bucket_name: str, *, json_encode: bool = True
-    ) -> Union[str, dict[str, Any]]:
+    ) -> str | dict[str, Any]:
         policies = {
-            Policy.get: _get,
-            Policy.read: _read,
-            Policy.write: _write,
-            Policy.read_write: _read_write,
-            Policy.none: _none,
+            Policy.GET: _get,
+            Policy.READ: _read,
+            Policy.WRITE: _write,
+            Policy.READ_WRITE: _read_write,
+            Policy.NONE: _none,
         }
 
         pol = policies[self](bucket_name)

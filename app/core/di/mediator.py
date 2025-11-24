@@ -1,10 +1,9 @@
 from dishka import AsyncContainer, Provider, Scope, provide
 
+from app.core.mediators.base import BaseMediator
 from app.core.mediators.command import CommandRegisty
 from app.core.mediators.imediator import DishkaMediator
-from app.core.mediators.base import BaseMediator
 from app.core.mediators.query import QueryRegistry
-
 
 
 class MediatorProvider(Provider):

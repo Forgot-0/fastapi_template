@@ -1,7 +1,7 @@
 from dataclasses import dataclass
+from typing import Any
 
 from app.core.exceptions import ApplicationException
-
 
 
 @dataclass(kw_only=True)
@@ -13,11 +13,11 @@ class NotFoundUserException(ApplicationException):
     status: int = 404
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "User not found"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"user_by": self.user_by, "user_field": self.user_field}
 
 
@@ -29,11 +29,11 @@ class WrongLoginDataException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Wrong login data"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"username": self.username}
 
 
@@ -45,11 +45,11 @@ class OAuthStateNotFoundException(ApplicationException):
     status: int = 404
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "This state not found"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"state": self.state}
 
 
@@ -61,11 +61,11 @@ class LinkedAnotherUserOAuthException(ApplicationException):
     status: int = 409
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "This provider was linked to another user"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"provider": self.provider}
 
 
@@ -77,11 +77,11 @@ class NotFoundRoleException(ApplicationException):
     status: int = 404
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Role not found"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"name": self.name}
 
 
@@ -93,11 +93,11 @@ class InvalidRoleNameException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Invalid role name"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"name": self.name}
 
 
@@ -107,11 +107,11 @@ class NotFoundOrInactiveSessionException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Session not found or inactive"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {}
 
 
@@ -123,11 +123,11 @@ class AccessDeniedException(ApplicationException):
     status: int = 403
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Access denied"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"permissions": list(self.need_permissions)}
 
 
@@ -139,11 +139,11 @@ class NotFoundPermissionsException(ApplicationException):
     status: int = 404
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Permissions not found"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"permissions": list(self.missing)}
 
 
@@ -155,11 +155,11 @@ class ProtectedPermissionException(ApplicationException):
     status: int = 409
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Permission is protected and cannot be modified"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"permission": self.name}
 
 
@@ -172,11 +172,11 @@ class DuplicateUserException(ApplicationException):
     status: int = 409
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "User already exists"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"field": self.field, "value": self.value}
 
 
@@ -188,11 +188,11 @@ class DuplicateRoleException(ApplicationException):
     status: int = 409
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Role already exists"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"name": self.name}
 
 
@@ -202,11 +202,11 @@ class PasswordMismatchException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Passwords do not match"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {}
 
 
@@ -218,11 +218,11 @@ class InvalidTokenException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Invalid token"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"token": self.token}
 
 
@@ -234,11 +234,11 @@ class ExpiredTokenException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Token has expired"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"token": self.token}
 
 
@@ -250,11 +250,11 @@ class EmailNotConfirmedException(ApplicationException):
     status: int = 403
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "Email not confirmed"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"email": self.email}
 
 
@@ -266,9 +266,9 @@ class NotExistProviderOAuthException(ApplicationException):
     status: int = 400
 
     @property
-    def message(self):
+    def message(self) -> str:
         return "NOT_EXIST_PROVIDER_OAUTH"
 
     @property
-    def detail(self):
+    def detail(self) -> dict[str, Any]:
         return {"provider": self.provider}

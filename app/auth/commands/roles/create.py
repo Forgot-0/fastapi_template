@@ -1,16 +1,15 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import AccessDeniedException, DuplicateRoleException, NotFoundPermissionsException
 from app.auth.models.role import Role
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
-from app.auth.exceptions import AccessDeniedException, DuplicateRoleException, NotFoundPermissionsException
 from app.core.commands import BaseCommand, BaseCommandHandler
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +30,9 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
     rbac_manager: RBACManager
 
     async def handle(self, command: CreateRoleCommand) -> None:
-        if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create", }):
+        if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create" }):
             raise AccessDeniedException(
-                need_permissions={"role:create", } - set(command.user_jwt_data.permissions)
+                need_permissions={"role:create" } - set(command.user_jwt_data.permissions)
             )
 
         self.rbac_manager.validate_role_name(command.user_jwt_data, command.role_name)
@@ -54,7 +53,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
             permission = await self.permission_repository.get_permission_by_name(name)
 
             if permission is None:
-                raise NotFoundPermissionsException(missing={name,})
+                raise NotFoundPermissionsException(missing={name})
 
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)
             role.add_permission(permission)

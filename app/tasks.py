@@ -6,8 +6,7 @@ from taskiq_redis import RedisScheduleSource
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
 from app.core.message_brokers.base import BaseMessageBroker
-from app.core.services.queue.taskiq.init import broker
-
+from app.core.services.queues.taskiq.init import broker
 
 container = create_container(TaskiqProvider())
 
@@ -33,4 +32,3 @@ scheduler = TaskiqScheduler(
     broker=broker,
     sources=[redis_schedule_source, LabelScheduleSource(broker=broker)],
 )
-

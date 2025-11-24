@@ -1,22 +1,22 @@
 import logging
 import time
 
-from fastapi import Request
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 logger = logging.getLogger(__name__)
 
 class LoggingMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
         start_time = time.time()
 
         response = await call_next(request)
 
-        logger.info('request',
+        logger.info("request",
             extra={
                 "method":request.method,
                 "url": str(request.url),

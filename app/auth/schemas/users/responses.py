@@ -1,5 +1,6 @@
 
 from pydantic import ConfigDict
+
 from app.auth.schemas.user import BaseUser
 
 

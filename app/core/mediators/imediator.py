@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from dishka import AsyncContainer
 
-
 from app.core.commands import CR, BaseCommand
 from app.core.exceptions import NotHandlerRegisterException
 from app.core.mediators.base import BaseMediator

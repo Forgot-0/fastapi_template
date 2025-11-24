@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.auth.models.oauth import OAuthAccount
-from app.auth.models.permission import Permission
 from app.core.db.base_model import BaseModel, DateMixin, SoftDeleteMixin
 from app.core.events.event import BaseEvent
 
-
 if TYPE_CHECKING:
+    from app.auth.models.oauth import OAuthAccount
+    from app.auth.models.permission import Permission
     from app.auth.models.role import Role
     from app.auth.models.session import Session
 
@@ -48,13 +47,13 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    sessions: Mapped[list['Session']] = relationship(
-        back_populates='user',
+    sessions: Mapped[list["Session"]] = relationship(
+        back_populates="user",
         cascade="all, delete-orphan"
     )
     oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
         "OAuthAccount",
-        back_populates='user',
+        back_populates="user",
         cascade="all, delete-orphan"
     )
 
@@ -68,7 +67,7 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     )
 
     @classmethod
-    def create(cls, email: str, username: str, password_hash: str, roles: set['Role']) -> "User":
+    def create(cls, email: str, username: str, password_hash: str, roles: set["Role"]) -> "User":
         user = User(
             email=email,
             username=username,
@@ -88,7 +87,7 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         return user
 
     @classmethod
-    def create_oauth(cls, email: str, username: str, roles: set['Role']) -> "User":
+    def create_oauth(cls, email: str, username: str, roles: set["Role"]) -> "User":
         user = User(
             email=email,
             username=username,
@@ -101,16 +100,16 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
         return user
 
 
-    def add_role(self, role: 'Role') -> None:
+    def add_role(self, role: "Role") -> None:
         self.roles.add(role)
 
-    def delete_role(self, role: 'Role') -> None:
+    def delete_role(self, role: "Role") -> None:
         self.roles.remove(role)
 
-    def add_permission(self, permission: 'Permission') -> None:
+    def add_permission(self, permission: "Permission") -> None:
         self.permissions.add(permission)
 
-    def delete_permission(self, permission: 'Permission') -> None:
+    def delete_permission(self, permission: "Permission") -> None:
         self.permissions.remove(permission)
 
     def password_reset(self, password_hash: str) -> None:

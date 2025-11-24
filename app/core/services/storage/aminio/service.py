@@ -1,21 +1,18 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
 import logging
-from dataclasses import dataclass, field
 import mimetypes
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import BinaryIO
 
-from minio import Minio
+from minio import Minio, S3Error
 from minio.datatypes import PostPolicy
 from minio.sse import SseS3
-
 
 from app.core.services.storage.aminio.policy import Policy
 from app.core.services.storage.service import BaseStorageService
 from app.core.utils import now_utc
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +21,8 @@ logger = logging.getLogger(__name__)
 class MinioStorageService(BaseStorageService):
     client: Minio
     bucket_policy: dict[str, Policy]
-    allowed_image_types: set[str] = field(default_factory=lambda: {'.jpg', '.jpeg', '.png', '.gif', '.webp'})
-    allowed_document_types: set[str] = field(default_factory=lambda: {'.pdf', '.doc', '.docx', '.txt'})
+    allowed_image_types: set[str] = field(default_factory=lambda: {".jpg", ".jpeg", ".png", ".gif", ".webp"})
+    allowed_document_types: set[str] = field(default_factory=lambda: {".pdf", ".doc", ".docx", ".txt"})
     max_file_size: int = field(default=10*1024*1024)
     max_image_size: int = field(default=5*1024*1024)
 
@@ -46,8 +43,8 @@ class MinioStorageService(BaseStorageService):
 
                 self.client.set_bucket_policy(bucket, policy.bucket(bucket))
                 logger.info("Policy set for bucket", extra={"bucket_name": bucket})
-            except Exception as e:
-                logger.error(f"Failed to create bucket and policy: {str(e)}")
+            except S3Error as e:
+                logger.exception("Failed to create bucket and policy", extra={"bucket": bucket, "error": e})
 
     async def upload_put_url(self, bucket_name: str, file_key: str, expires: int) -> str:
         loop = asyncio.get_running_loop()
@@ -62,7 +59,7 @@ class MinioStorageService(BaseStorageService):
         return url
 
     async def upload_post_file(self, bucket_name: str, file_name: str, expires: int) -> dict[str, str]:
-        file_ext = '.' + file_name.lower().split('.')[-1]
+        file_ext = "." + file_name.lower().split(".")[-1]
         if file_ext not in self.allowed_image_types:
             raise ValueError(f"File type {file_ext} not allowed")
 
@@ -94,9 +91,9 @@ class MinioStorageService(BaseStorageService):
         file_key: str,
         content_type: str | None = None,
         metadata: dict[str, str] | None = None
-    ) -> str | None:
-        if not bucket_name in self.bucket_policy:
-            raise
+    ) -> str:
+        if bucket_name not in self.bucket_policy:
+            raise ValueError("No exist bucket")
 
         if not content_type:
             content_type, _ = mimetypes.guess_type(file_key)
@@ -123,17 +120,15 @@ class MinioStorageService(BaseStorageService):
                 length=file_size,
                 content_type=content_type,
                 metadata=s3_metadata, # type: ignore
-                sse=SseS3() if self.bucket_policy[bucket_name] == Policy.none else None
+                sse=SseS3() if self.bucket_policy[bucket_name] == Policy.NONE else None
             )
         )
         file_url = f"{self.client._base_url.host}/{file_key}"
 
-        logger.info(f"File uploaded successfully", extra={"file_key": file_key, "bucket_name": bucket_name})
-        return file_key if self.bucket_policy[bucket_name] == Policy.none else file_url
+        logger.info("File uploaded successfully", extra={"file_key": file_key, "bucket_name": bucket_name})
+        return file_key if self.bucket_policy[bucket_name] == Policy.NONE else file_url
 
     async def delete_file(self, bucket_name: str, file_key: str) -> bool:
-        file_key = file_key.replace(f"{self.client._base_url}/", "")
-
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             self.thread_executor,
@@ -143,7 +138,7 @@ class MinioStorageService(BaseStorageService):
             )
         )
 
-        logger.info(f"File deleted successfully", extra={"file_key": file_key})
+        logger.info("File deleted successfully", extra={"file_key": file_key})
         return True
 
     async def generate_presigned_url(self, bucket_name: str, file_key: str, expires: int = 3600) -> str:

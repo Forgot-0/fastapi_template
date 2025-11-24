@@ -1,5 +1,6 @@
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator
+from typing import Any
 
 import orjson
 from redis.asyncio import Redis
@@ -9,13 +10,12 @@ from app.core.message_brokers.base import BaseMessageBroker
 from app.core.message_brokers.converters import convert_dict_to_broker_message
 
 
-
 @dataclass
 class RedisMessageBroker(BaseMessageBroker):
     producer: Redis
     consumer: PubSub
 
-    async def send_message(self, key: str, topic: str, value: bytes):
+    async def send_message(self, key: bytes, topic: str, value: bytes) -> None:
         data = {"key": key, "data": value.decode()}
         await self.producer.publish(
             channel=topic,

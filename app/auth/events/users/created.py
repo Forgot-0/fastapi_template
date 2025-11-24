@@ -1,14 +1,14 @@
-from dataclasses import dataclass
-from datetime import timedelta
 import hashlib
 import secrets
+from dataclasses import dataclass
+from datetime import timedelta
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
+from app.auth.exceptions import NotFoundUserException
 from app.auth.models.user import CreatedUserEvent
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.exceptions import NotFoundUserException
 from app.core.events.event import BaseEventHandler
 from app.core.services.mail.service import BaseMailService, EmailData
 

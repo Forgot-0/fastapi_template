@@ -7,7 +7,6 @@ from app.core.events.event import BaseEvent
 from app.core.events.service import BaseEventBus
 
 
-
 @dataclass(eq=False)
 class MediatorEventBus(BaseEventBus):
     container: AsyncContainer

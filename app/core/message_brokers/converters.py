@@ -6,7 +6,6 @@ import orjson
 from app.core.events.event import BaseEvent
 
 
-
 def convert_event_to_broker_message(event: BaseEvent) -> bytes:
     return orjson.dumps(event)
 

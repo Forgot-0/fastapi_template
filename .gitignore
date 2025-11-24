@@ -70,6 +70,8 @@ cython_debug/
 # PyCharm settings
 .idea/
 
+# ruff
+.ruff_cache/
 # Configuration files (be careful with this, you might want to version control some configs)
 # *.ini
 # *.conf

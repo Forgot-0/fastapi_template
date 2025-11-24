@@ -6,7 +6,6 @@ from app.auth.models.role_permission import RolesEnum
 from app.core.db.session import get_session
 
 
-
 async def create_first_data(db: AsyncSession) -> None:
     roles = RolesEnum.get_all_roles()
     for base_role in roles:
@@ -20,5 +19,3 @@ async def create_first_data(db: AsyncSession) -> None:
 async def init_data() -> None:
     async for db in get_session():
         await create_first_data(db)
-        break
-

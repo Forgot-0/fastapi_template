@@ -1,14 +1,13 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.exceptions import InvalidTokenException, NotFoundUserException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
-
 
 logger = logging.getLogger(__name__)
 

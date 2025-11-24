@@ -12,7 +12,7 @@ class BaseTemplate(ABC):
     def env(self) -> Environment:
         if self.__class__._env is None:
             self.__class__._env = Environment(
-                loader=FileSystemLoader(self._get_dir()), autoescape=select_autoescape(['html'])
+                loader=FileSystemLoader(self._get_dir()), autoescape=select_autoescape(["html"])
             )
         return self.__class__._env
 
@@ -23,10 +23,10 @@ class BaseTemplate(ABC):
     def _get_name(self) -> str: ...
 
     def _get_data(self) -> dict[str, Any]:
-        return {k: v for k, v in vars(self).items() if not k.startswith('_') and not k.startswith('__')}
+        return {k: v for k, v in vars(self).items() if k.startswith("_") and not k.startswith("__")}
 
     def render(self) -> str:
         try:
             return self.env.get_template(self._get_name()).render(self._get_data())
-        except Exception as e:
-            raise RuntimeError(f"")
+        except Exception as exc:
+            raise exc

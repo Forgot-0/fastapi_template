@@ -2,26 +2,23 @@ from dishka import Provider, Scope, decorate, provide
 from passlib.context import CryptContext
 from redis.asyncio import Redis
 
-from app.auth.commands.auth.auth_url import (
-    CreateOAuthAuthorizeUrlCommand,
-    CreateOAuthAuthorizeUrlCommandHandler
-)
+from app.auth.commands.auth.auth_url import CreateOAuthAuthorizeUrlCommand, CreateOAuthAuthorizeUrlCommandHandler
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
+from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.oauth import (
     ProcessOAuthCallbackCommand,
     ProcessOAuthCallbackCommandHandler,
 )
-from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
 from app.auth.commands.permissions.add_permission_user import (
     AddPermissionToUserCommand,
-    AddPermissionToUserCommandHandler
+    AddPermissionToUserCommandHandler,
 )
 from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
 from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
 from app.auth.commands.permissions.remove_permission_user import (
     DeletePermissionToUserCommand,
-    DeletePermissionToUserCommandHandler
+    DeletePermissionToUserCommandHandler,
 )
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand, AddPermissionRoleCommandHandler
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
@@ -31,7 +28,7 @@ from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRo
 from app.auth.commands.roles.update import RoleUpdateCommand, RoleUpdateCommandHandler
 from app.auth.commands.sessions.deactivate_session import (
     UserDeactivateSessionCommand,
-    UserDeactivateSessionCommandHandler
+    UserDeactivateSessionCommandHandler,
 )
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
@@ -42,14 +39,14 @@ from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
 from app.auth.models.user import CreatedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
-from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
 from app.auth.queries.auth.oauth import GetUserOAuthAccountsQuery, GetUserOAuthAccountsQueryHandler
+from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
 from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
 from app.auth.queries.sessions.get_list import GetListSessionQuery, GetListSessionQueryHandler
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
 from app.auth.queries.users.get_list import GetListUserQuery, GetListUserQueryHandler
-from app.auth.repositories.oauth import OAuthCodeRepository, OauthAccountRepository
+from app.auth.repositories.oauth import OauthAccountRepository, OAuthCodeRepository
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository

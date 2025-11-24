@@ -6,56 +6,40 @@ from app.auth.schemas.base import PasswordMixinSchema
 
 
 class LoginRequest(BaseModel):
-    """
-    Схема запроса для входа пользователя.
-    """
-    username: str = Field(..., description="Имя пользователя")
-    password: str = Field(..., description="Пароль пользователя")
-    device_id: str = Field(default_factory=lambda: str(uuid4()), description="Идентификатор устройства")
+    username: str = Field(..., description="Username")
+    password: str = Field(..., description="Password")
+    device_id: str = Field(default_factory=lambda: str(uuid4()), description="Device ID")
 
 
 class RefreshTokenRequest(BaseModel):
-    """
-    Схема запроса для обновления access токена.
-    """
-    refresh_token: str = Field(..., description="Refresh токен пользователя")
+    refresh_token: str = Field(..., description="Refresh token for user")
 
 
 class LogoutRequest(BaseModel):
-    """
-    Схема запроса для выхода пользователя.
-    """
-    refresh_token: str = Field(..., description="Refresh токен пользователя для выхода")
+    refresh_token: str = Field(..., description="Refresh token for logout")
 
 
 class SendVerifyCodeRequest(BaseModel):
-    """
-    Схема запроса для отправки кода верификации email.
-    """
-    email: EmailStr = Field(..., description="Email для верификации")
+    email: EmailStr = Field(..., description="Email for verification")
 
 
 class SendResetPasswordCodeRequest(BaseModel):
-    """
-    Схема запроса для отправки кода сброса пароля.
-    """
-    email: EmailStr = Field(..., description="Email для сброса пароля")
+    email: EmailStr = Field(..., description="Email for reset password")
 
 
 class VerifyEmailRequest(BaseModel):
-    """
-    Схема запроса для подтверждения email.
-    """
-    token: str = Field(..., description="Токен верификации email")
+    token: str = Field(..., description="Токен verification email")
 
 
 class ResetPasswordRequest(PasswordMixinSchema):
-    """
-    Схема запроса для сброса пароля.
-    """
-    token: str = Field(..., description="Токен сброса пароля")
+    token: str = Field(..., description="Token for reset password")
 
 
 class CallbackRequest(BaseModel):
+    code: str
+    state: str
+
+class OAuthCallbackQuery(BaseModel):
+    provider: str
     code: str
     state: str

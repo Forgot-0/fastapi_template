@@ -1,23 +1,26 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import LinkedAnotherUserOAuthException, NotFoundRoleException, NotFoundUserException, OAuthStateNotFoundException
+from app.auth.exceptions import (
+    LinkedAnotherUserOAuthException,
+    NotFoundRoleException,
+    NotFoundUserException,
+    OAuthStateNotFoundException,
+)
 from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
 from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
-from app.auth.repositories.oauth import OAuthCodeRepository, OauthAccountRepository
+from app.auth.repositories.oauth import OauthAccountRepository, OAuthCodeRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.schemas.tokens import TokenGroup
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
+from app.auth.services.oauth_manager import OAuthManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.auth.services.oauth_manager import OAuthManager
-from app.auth.schemas.token import TokenGroup
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -69,38 +72,37 @@ class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallback
                 if not user:
                     raise NotFoundUserException(user_by=user_id, user_field="id")
 
+            elif oauth_account:
+                user = await self.user_repository.get_user_with_permission_by_id(oauth_account.user_id)
+
+                if not user:
+                    raise NotFoundUserException(user_by=user_id, user_field="id")
+
+                user_id = oauth_account.user_id
+
             else:
-                if oauth_account:
-                    user = await self.user_repository.get_user_with_permission_by_id(oauth_account.user_id)
+                role = await self.role_repository.get_with_permission_by_name(
+                    RolesEnum.STANDARD_USER.value.name
+                )
+                if not role:
+                    raise NotFoundRoleException(name=RolesEnum.STANDARD_USER.value.name)
 
-                    if not user:
-                        raise NotFoundUserException(user_by=user_id, user_field="id")
+                user = User.create_oauth(
+                    email=oauth_data.email,
+                    username=oauth_data.email,
+                    roles={role }
+                )
+                await self.user_repository.create(user)
+                await self.session.commit()
 
-                    user_id = oauth_account.user_id
-
-                else:
-                    role = await self.role_repository.get_with_permission_by_name(
-                        RolesEnum.STANDARD_USER.value.name
-                    )
-                    if not role:
-                        raise NotFoundRoleException(name=RolesEnum.STANDARD_USER.value.name)
-
-                    user = User.create_oauth(
-                        email=oauth_data.email,
-                        username=oauth_data.email,
-                        roles={role, }
-                    )
-                    await self.user_repository.create(user)
-                    await self.session.commit()
-
-                    user_id = user.id
-                    oauth_account = OAuthAccount(
-                        provider=OAuthProviderEnum(command.provider),
-                        provider_email=oauth_data.email,
-                        provider_user_id=oauth_data.provider_user_id,
-                        user_id=user_id
-                    )
-                    await self.oauth_repository.create(oauth_account)
+                user_id = user.id
+                oauth_account = OAuthAccount(
+                    provider=OAuthProviderEnum(command.provider),
+                    provider_email=oauth_data.email,
+                    provider_user_id=oauth_data.provider_user_id,
+                    user_id=user_id
+                )
+                await self.oauth_repository.create(oauth_account)
 
             session = await self.session_manager.get_or_create_session(
                 user_id=user_id, user_agent=command.user_agent

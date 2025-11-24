@@ -1,7 +1,6 @@
 import ast
-from dataclasses import dataclass
-from datetime import datetime
 import re
+from dataclasses import dataclass
 from typing import Any, Union
 from uuid import uuid4
 
@@ -15,9 +14,10 @@ from app.core.api.schemas import (
     ListParams,
     ListParamsWithoutPagination,
     SortOrder,
-    SortParam
+    SortParam,
 )
 from app.core.exceptions import ApplicationException
+from app.core.utils import now_utc
 
 
 @dataclass(frozen=True)
@@ -29,29 +29,29 @@ class BuilderFilters:
             return None
 
         try:
-            items = re.split(r',(?![^\[]*])', value)
+            items = re.split(r",(?![^\[]*])", value)
             items = [item.strip() for item in items if item.strip()]
         except Exception:
-            raise ValidationError('invalid_filter_format')
+            raise ValidationError("invalid_filter_format")
 
         return [self._parse_filter_item(item) for item in items]
 
     def _parse_filter_item(self, item: str) -> FilterParam:
-        if ':' not in item:
-            raise ValidationError('invalid_filter_field_format')
+        if ":" not in item:
+            raise ValidationError("invalid_filter_field_format")
 
-        field, value = item.split(':', 1)
+        field, value = item.split(":", 1)
         return self.filter_param(field=field, value=self._convert_filter_value(value))
 
     def _convert_filter_value(self, value: str) -> str | int | list:
-        if value.startswith('[') and value.endswith(']'):
+        if value.startswith("[") and value.endswith("]"):
             try:
                 list_value = ast.literal_eval(value)
                 if not isinstance(list_value, list):
                     raise ValueError
                 return [self._convert_single_value(v) for v in list_value]
             except Exception:
-                raise ValidationError('invalid_filter_list_value_format')
+                raise ValidationError("invalid_filter_list_value_format")
         else:
             return self._convert_single_value(value)
 
@@ -71,13 +71,13 @@ class BuilderSort:
             return None
 
         try:
-            items = [item.strip() for item in value.split(',') if item.strip()]
+            items = [item.strip() for item in value.split(",") if item.strip()]
         except Exception:
-            raise ValidationError('invalid_format')
+            raise ValidationError("invalid_format")
 
         return [
             self.sort_param(
-                field=item.split(':')[0], order=SortOrder(item.split(':')[1]) if ':' in item else SortOrder.asc
+                field=item.split(":")[0], order=SortOrder(item.split(":")[1]) if ":" in item else SortOrder.ASC
             )
             if isinstance(item, str)
             else item
@@ -91,10 +91,10 @@ class ListParamsBuilder(BuilderFilters, BuilderSort):
 
     def __call__(
         self,
-        sort: str | None = Query(None, description='Sort parameters (e.g., field1:asc,field2:desc)'),
-        filters: str | None = Query(None, description='Filter parameters (e.g., field1:value1,field2:[value1,value2])'),
-        page: int = Query(1, ge=1, description='Page number'),
-        page_size: int = Query(10, ge=1, le=100, description='Items per page'),
+        sort: str | None = Query(None, description="Sort parameters (e.g., field1:asc,field2:desc)"),
+        filters: str | None = Query(None, description="Filter parameters (e.g., field1:value1,field2:[value1,value2])"),
+        page: int = Query(1, ge=1, description="Page number"),
+        page_size: int = Query(10, ge=1, le=100, description="Items per page"),
     ) -> ListParams:
         return self.list_params(
             sort=self._build_sort(sort), filters=self._build_filters(filters), page=page, page_size=page_size
@@ -107,8 +107,8 @@ class ListWithoutPaginationParamsBuilder(BuilderFilters, BuilderSort):
 
     def __call__(
         self,
-        sort: str | None = Query(None, description='Sort parameters (e.g., field1:asc,field2:desc)'),
-        filters: str | None = Query(None, description='Filter parameters (e.g., field1:value1,field2:[value1,value2])'),
+        sort: str | None = Query(None, description="Sort parameters (e.g., field1:asc,field2:desc)"),
+        filters: str | None = Query(None, description="Filter parameters (e.g., field1:value1,field2:[value1,value2])"),
     ) -> ListParamsWithoutPagination:
         return self.list_params(
             sort=self._build_sort(sort), filters=self._build_filters(filters)
@@ -131,42 +131,43 @@ def create_response(
 
         model_name = f"ErrorResponse_{exc.__class__.__name__}"
 
-        example_payload = {
+        example_payload: dict[str, Any] = {
             "code": exc.code,
             "message": exc.message,
-            "detail": exc.detail or None,
+            "detail": exc.detail,
         }
 
-        ErrorModel = create_model(model_name, __base__=ErrorDetail)
+        error_model = create_model(
+            model_name, __base__=ErrorDetail,
+            __config__=ConfigDict(json_schema_extra={"example": example_payload})
+        )
 
-        ErrorModel.model_config = ConfigDict(json_schema_extra={"example": example_payload})
-
-        models.append(ErrorModel)
+        models.append(error_model)
         examples[exc.__class__.__name__] = {
             "summary": exc.__class__.__name__,
             "value": {
-                "error": example_payload, 
+                "error": example_payload,
                 "status": exc.status,
                 "request_id": uuid4().hex,
-                "timestamp": datetime.now().timestamp(),
+                "timestamp": now_utc().timestamp(),
             },
         }
 
     if len(models) == 1:
-        param_model = ErrorResponse[models[0]]
+        param_model = ErrorResponse[next(iter(models))]
         param_model.model_config = ConfigDict(
-            json_schema_extra={"schema_extra": {"example": list(examples.values())[0]["value"]}}
+            json_schema_extra={"schema_extra": {"example": next(iter(examples.values()))["value"]}}
         )
 
         content = {
             "application/json": {
-                "example": list(examples.values())[0]["value"],
+                "example": next(iter(examples.values()))["value"],
             }
         }
     else:
-        union_type = Union[tuple(models)]
-        param_model = ErrorResponse[union_type] # type: ignore
-        first_example = list(examples.values())[0]["value"]
+        union_type = Union[*models]
+        param_model = ErrorResponse[union_type]
+        first_example = next(iter(examples.values()))["value"]
         param_model.model_config = ConfigDict(
             json_schema_extra={
                 "schema_extra": {

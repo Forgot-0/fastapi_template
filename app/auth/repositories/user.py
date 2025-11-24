@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.auth.models.role import Role
 from app.auth.models.user import User
 from app.core.db.repository import BaseRepositoryMixin
-
 
 
 @dataclass

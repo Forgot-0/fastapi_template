@@ -1,24 +1,23 @@
-from enum import Enum
 import logging
+from enum import Enum
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
-from fastapi.responses import ORJSONResponse as _ORJSONResponse
 import orjson
+from fastapi.responses import ORJSONResponse as _ORJSONResponse
 from pydantic import BaseModel, ConfigDict, Field
-
 
 logger = logging.getLogger(__name__)
 
 
 class SortOrder(str, Enum):
-    asc = 'asc'
-    desc = 'desc'
+    ASC = "asc"
+    DESC = "desc"
 
 
 class SortParam(BaseModel):
     field: str
-    order: SortOrder = SortOrder.asc
+    order: SortOrder = SortOrder.ASC
 
 
 class FilterParam(BaseModel):
@@ -42,7 +41,7 @@ class Pagination(BaseModel):
     page_size: int
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PaginatedResult(BaseModel, Generic[T]):
@@ -55,7 +54,7 @@ class PaginatedResult(BaseModel, Generic[T]):
 class ErrorDetail(BaseModel):
     code: str
     message: str
-    detail: dict[str, Any] | None = None
+    detail: dict[str, Any] | list | None = None
 
 
 ER = TypeVar("ER", bound=ErrorDetail)

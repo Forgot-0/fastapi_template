@@ -8,10 +8,9 @@ from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
 from app.core.db.repository import BaseRepositoryMixin
 
 
-
 @dataclass
 class OauthAccountRepository(BaseRepositoryMixin):
-    async def create(self, oauth_account: OAuthAccount):
+    async def create(self, oauth_account: OAuthAccount) -> None:
         self.session.add(oauth_account)
 
     async def get_by_id(self, account_id: int) -> OAuthAccount | None:
