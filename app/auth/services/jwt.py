@@ -9,7 +9,7 @@ from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.schemas.tokens import Token, TokenGroup, TokenType
 from app.auth.schemas.user import UserJWTData
-from app.core.utils import now_utc
+from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
@@ -80,8 +80,8 @@ class JWTManager:
         return token_data
 
     async def refresh_tokens(self, refresh_token: str, security_user: UserJWTData) -> TokenGroup:
-        token = await self.validate_token(refresh_token)
-        token_date = datetime.fromtimestamp(token.iat)
+        token = await self.validate_token(refresh_token, token_type=TokenType.REFRESH)
+        token_date = fromtimestamp(token.iat)
 
         date = await self.token_blacklist.get_token_backlist(token.jti)
         if date > token_date:
@@ -100,8 +100,8 @@ class JWTManager:
         token_data: Token = Token(**self.decode(token))
 
         current_time = now_utc()
-        token_exp_dt = datetime.fromtimestamp(token_data.exp)
+        token_exp_dt = fromtimestamp(token_data.exp)
 
-        seconds_until_expiry = token_exp_dt - current_time + timedelta(days=1)
+        seconds_until_expiry = token_exp_dt - (current_time + timedelta(days=1))
         await self.token_blacklist.add_jwt_token(token_data.jti, seconds_until_expiry)
 

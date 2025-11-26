@@ -23,7 +23,9 @@ class SessionManager:
             device_id=device_data.device_id,
             device_info=device_data.device_info,
             user_agent=device_data.user_agent,
+            is_active=True
         )
+        session.online()
 
         await self.session_repository.create(session=session)
 

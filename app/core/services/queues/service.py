@@ -19,7 +19,7 @@ class QueueResult:
 
 class QueueServiceInterface(ABC):
     @abstractmethod
-    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> QueueResult | None:
+    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> str:
         ...
 
     @abstractmethod

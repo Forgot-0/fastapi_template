@@ -51,6 +51,7 @@ from app.auth.repositories.permission import PermissionInvalidateRepository, Per
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.services.cookie_manager import IRefreshTokenCookieManager, RefreshTokenCookieManager
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
@@ -98,6 +99,10 @@ class AuthModuleProvider(Provider):
         )
 
     #services
+    @provide(scope=Scope.APP)
+    def cookie_manager(self) -> RefreshTokenCookieManager:
+        return IRefreshTokenCookieManager()
+
     @provide(scope=Scope.APP)
     def hash_service(self) -> HashService:
         return HashService(

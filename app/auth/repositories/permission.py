@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.auth.models.permission import Permission
 from app.core.db.repository import BaseRepositoryMixin
-from app.core.utils import now_utc
+from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
@@ -49,7 +49,7 @@ class PermissionInvalidateRepository:
         keys = [f"invalid_permission:{permission_name}" for permission_name in permission_names]
         values = await self.client.mget(*keys)
         if not values:
-            return datetime.fromtimestamp(0.00)
-        max_date = max(values, key=lambda x: datetime.fromtimestamp(float(x)))
-        return datetime.fromtimestamp(float(max_date))
+            return fromtimestamp(0.00)
+        max_date = max(values, key=lambda x: fromtimestamp(float(x)))
+        return fromtimestamp(float(max_date))
 

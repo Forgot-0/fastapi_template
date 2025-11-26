@@ -42,6 +42,7 @@ from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
 )
 from app.auth.schemas.tokens import TokenGroup
+from app.auth.services.cookie_manager import RefreshTokenCookieManager
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
@@ -60,6 +61,7 @@ router = APIRouter(route_class=DishkaRoute)
 )
 async def login(
     mediator: FromDishka[BaseMediator],
+    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
     request: Request,
     response: Response
@@ -72,11 +74,7 @@ async def login(
             user_agent=request.headers.get("user-agent", "")
         )
     )
-    response.set_cookie(
-        "refresh_token",
-        token_group.refresh_token, samesite="strict",
-        httponly=True, secure=True, path="/"
-    )
+    refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
     return AccessTokenResponse(
         access_token=token_group.access_token
     )
@@ -94,6 +92,7 @@ async def login(
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
+    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     response: Response,
     user_jwt_data: CurrentUserJWTData,
     refresh_token: Annotated[str | None, Cookie()] = None ,
@@ -105,11 +104,7 @@ async def refresh(
             user_jwt_data=user_jwt_data
         )
     )
-    response.set_cookie(
-        "refresh_token",
-        token_group.refresh_token, samesite="strict",
-        httponly=True, secure=True, path="/"
-    )
+    refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
 
     return AccessTokenResponse(
         access_token=token_group.access_token,
@@ -126,11 +121,12 @@ async def refresh(
 )
 async def logout(
     mediator: FromDishka[BaseMediator],
+    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None
 ) -> None:
     await mediator.handle_command(LogoutCommand(refresh_token=refresh_token))
-    response.delete_cookie("refresh_token", samesite="strict", path="/")
+    refresh_cookie_manager.delete_refresh_token(response)
 
 @router.post(
     "/verifications/email",
@@ -268,6 +264,7 @@ async def oauth_authorize_connect(
 )
 async def oauth_callback(
     mediator: FromDishka[BaseMediator],
+    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     oauth_callback_query: OAuthCallbackQuery,
     request: Request,
     response: Response,
@@ -281,9 +278,6 @@ async def oauth_callback(
             user_agent=request.headers.get("user-agent", ""),
         )
     )
-
-    response.set_cookie(
-        "refresh_token", token_group.refresh_token, samesite="strict", httponly=True, secure=True, path="/"
-    )
+    refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
     return AccessTokenResponse(access_token=token_group.access_token)
 

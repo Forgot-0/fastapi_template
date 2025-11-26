@@ -53,7 +53,7 @@ class TokenBlacklistRepository:
 
     async def get_token_backlist(self, jti: str) -> datetime:
         time_str = await self.client.get(f"revoked:{jti}") or "0"
-        return datetime.fromtimestamp(float(time_str))
+        return fromtimestamp(float(time_str))
 
     async def add_user(self, user_id: int, expiration: timedelta | None=None) -> None:
         if expiration is None:
@@ -65,7 +65,7 @@ class TokenBlacklistRepository:
 
     async def get_user_backlist(self, user_id: int)  -> datetime:
         time_str = await self.client.get(f"user:{user_id}") or "0"
-        return datetime.fromtimestamp(float(time_str))
+        return fromtimestamp(float(time_str))
 
     async def add_token(self, token: str, user_id: int, expiration: timedelta) -> None:
         await self.client.set(

@@ -52,6 +52,6 @@ class RoleInvalidateRepository:
         keys = [f"invalid_role:{permission_name}" for permission_name in role_names]
         values = await self.client.mget(*keys)
         if not values:
-            return datetime.fromtimestamp(0.00)
-        max_date = max(values, key=lambda x: datetime.fromtimestamp(float(x)))
-        return datetime.fromtimestamp(float(max_date))
+            return fromtimestamp(0.00)
+        max_date = max(values, key=lambda x: fromtimestamp(float(x)))
+        return fromtimestamp(float(max_date))

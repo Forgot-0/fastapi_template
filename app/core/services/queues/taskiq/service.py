@@ -15,7 +15,7 @@ from app.core.services.queues.task import BaseTask
 class TaskiqQueueService(QueueServiceInterface):
     broker: AsyncBroker
 
-    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> Any:
+    async def push(self, task: type[BaseTask], data: dict[str, Any]) -> str:
         task_instance = await self.broker.find_task(task.get_name()).kiq(**data)  # type: ignore[union-attr]
 
         return task_instance.task_id

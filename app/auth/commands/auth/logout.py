@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.config import auth_config
 from app.auth.exceptions import InvalidTokenException
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
+from app.auth.schemas.tokens import TokenType
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
@@ -31,7 +32,7 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
         if command.refresh_token is None:
             raise InvalidTokenException(token=None)
 
-        refresh_data = await self.jwt_manager.validate_token(command.refresh_token)
+        refresh_data = await self.jwt_manager.validate_token(command.refresh_token, token_type=TokenType.REFRESH)
         await self.jwt_manager.revoke_token(command.refresh_token)
         user = UserJWTData.create_from_token(refresh_data)
 

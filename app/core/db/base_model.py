@@ -47,8 +47,9 @@ class BaseModel(DeclarativeBase):
                 if value is None:
                     data[key] = None
                 elif rel.uselist:
-                    data[key] = [item.to_dict() if hasattr(item, "to_dict") else repr(item)
-                                 for item in value]
+                    data[key] = [
+                        item.to_dict() if hasattr(item, "to_dict") else repr(item) for item in value
+                        ]
                 else:
                     data[key] = (value.to_dict()
                                  if hasattr(value, "to_dict")
