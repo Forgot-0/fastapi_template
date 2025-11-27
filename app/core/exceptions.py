@@ -12,7 +12,7 @@ class ApplicationException(Exception):
         return ""
 
     @property
-    def detail(self) -> dict[str, Any]:
+    def detail(self) -> dict[str, Any] | list[dict[str, Any]]:
         return {}
 
 
@@ -43,3 +43,21 @@ class FieldRequiredException(ApplicationException):
     @property
     def detail(self) -> dict[str, Any]:
         return {}
+
+
+@dataclass(kw_only=True)
+class ValidationException(ApplicationException):
+    code: str = "VALIDATION_EXCEPTION"
+    status: int = 422
+
+    @property
+    def message(self) -> str:
+        return "Validation exception"
+
+    @property
+    def detail(self) -> list[dict[str, Any]]:
+        return [{
+            "loc": ["string", 0],
+            "msg": "string",
+            "type": "string"
+        }]

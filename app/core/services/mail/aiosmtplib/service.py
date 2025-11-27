@@ -28,7 +28,7 @@ class AioSmtpLibMailService(BaseMailService):
 
         await aiosmtplib.send(message, **self.smtp_config)
 
-    async def queue(self, template: BaseTemplate, email_data: EmailData) -> QueueResult | None:
+    async def queue(self, template: BaseTemplate, email_data: EmailData)  -> str:
         return await self.queue_service.push(
             task=SendEmail,
             data={"content": template.render(), "email_data": email_data},
@@ -47,7 +47,7 @@ class AioSmtpLibMailService(BaseMailService):
 
         await aiosmtplib.send(message, **self.smtp_config)
 
-    async def queue_plain(self, subject: str, recipient: str, body: str) -> QueueResult | None:
+    async def queue_plain(self, subject: str, recipient: str, body: str) -> str:
         """Ставим задачу в очередь на отправку письма без шаблона."""
         email_data = {
             "subject": subject,

@@ -75,27 +75,27 @@ class AuthModuleProvider(Provider):
     oauth_repository = provide(OauthAccountRepository)
 
     @provide(scope=Scope.APP)
-    def token_blacklist(self) -> TokenBlacklistRepository:
+    def token_blacklist(self, redis: Redis) -> TokenBlacklistRepository:
         return TokenBlacklistRepository(
-            Redis.from_url(app_config.redis_url)
+            client=redis
         )
 
     @provide(scope=Scope.APP)
-    def role_blacklist(self) -> RoleInvalidateRepository:
+    def role_blacklist(self, redis: Redis) -> RoleInvalidateRepository:
         return RoleInvalidateRepository(
-            Redis.from_url(app_config.redis_url)
+            client=redis
         )
 
     @provide(scope=Scope.APP)
-    def permission_blacklist(self) -> PermissionInvalidateRepository:
+    def permission_blacklist(self, redis: Redis) -> PermissionInvalidateRepository:
         return PermissionInvalidateRepository(
-            Redis.from_url(app_config.redis_url)
+            client=redis
         )
 
     @provide(scope=Scope.APP)
-    def oauth_code_repository(self) -> OAuthCodeRepository:
+    def oauth_code_repository(self, redis: Redis) -> OAuthCodeRepository:
         return OAuthCodeRepository(
-            Redis.from_url(app_config.redis_url)
+            client=redis
         )
 
     #services

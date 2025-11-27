@@ -19,7 +19,7 @@ class BaseMailService(ABC):
         ...
 
     @abstractmethod
-    async def queue(self, template: BaseTemplate, email_data: EmailData) -> QueueResult | None:
+    async def queue(self, template: BaseTemplate, email_data: EmailData) -> str:
         ...
 
     @abstractmethod
@@ -27,5 +27,5 @@ class BaseMailService(ABC):
         ...
 
     @abstractmethod
-    async def queue_plain(self, subject: str, recipient: str, body: str) -> QueueResult | None:
+    async def queue_plain(self, subject: str, recipient: str, body: str) -> str:
         ...

@@ -1,20 +1,22 @@
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 
 import redis.asyncio as redis
-from dishka import AsyncContainer
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from fastapi.openapi.utils import get_openapi
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
 
 from app.auth.routers import router_v1 as auth_router_v1
+from app.core.api.builder import create_response
 from app.core.api.schemas import ErrorDetail, ErrorResponse, ORJSONResponse
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
-from app.core.exceptions import ApplicationException
+from app.core.exceptions import ApplicationException, ValidationException
 from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
@@ -22,6 +24,7 @@ from app.core.middlewares.log import LoggingMiddleware
 from app.core.utils import now_utc
 from app.init_data import init_data
 from app.pre_start import pre_start
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +66,7 @@ def handle_application_exeption(request: Request, exc: ApplicationException) -> 
     logger.error(
         "Application exception",
         exc_info=exc,
-        extra={"status": exc.status, "message": exc.message, "detail": exc.detail, "code": exc.code}
+        extra={"status": exc.status, "title": exc.message, "detail": exc.detail, "code": exc.code}
     )
     return ORJSONResponse(
         status_code=exc.status,
@@ -118,10 +121,70 @@ def handle_uncown_exception(request: Request, exc: Exception) -> ORJSONResponse:
         ),
     )
 
+def custom_openapi(app: FastAPI) -> dict[str, Any]:
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    response_def = create_response(ValidationException(), description="Validation error")
+
+    components = openapi_schema.setdefault("components", {})
+    responses = components.setdefault("responses", {})
+
+    responses["HTTPValidationError"] = {
+        "description": response_def.get("description", "Validation Error"),
+        "content": response_def.get("content", {"application/json": {"example": {}}}),
+    }
+
+    model = response_def.get("model")
+    if model is not None:
+
+        model_schema = model.model_json_schema(ref_template="#/components/schemas/{model}")
+        components_schemas = components.setdefault("schemas", {})
+        model_name = getattr(model, "__name__", None) or model.__class__.__name__
+        if isinstance(model_schema, dict):
+            defs = (
+                model_schema.get("$defs") or
+                model_schema.get("definitions") or model_schema.get("components", {}).get("schemas")
+            )
+            if defs and isinstance(defs, dict):
+                for k, v in defs.items():
+                    components_schemas.setdefault(k, v)
+            if "$ref" not in model_schema:
+                components_schemas.setdefault(model_name, model_schema)
+                schema_ref = {"$ref": f"#/components/schemas/{model_name}"}
+            else:
+                schema_ref = model_schema
+            content = responses["HTTPValidationError"].setdefault("content", {})
+            app_json = content.setdefault("application/json", {})
+            app_json["schema"] = schema_ref
+
+    for path, path_item in openapi_schema.get("paths", {}).items():
+        for method, operation in path_item.items():
+            if not isinstance(operation, dict):
+                continue
+            responses_obj = operation.get("responses", {})
+            if "422" in responses_obj:
+                responses_obj["422"] = {"$ref": "#/components/responses/HTTPValidationError"}
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
 def init_app() -> FastAPI:
 
     app = FastAPI(
-        openapi_url=f"{app_config.API_V1_STR}/openapi.json" if app_config.ENVIRONMENT in ["local", "staging"] else None,
+        openapi_url=(
+            f"{app_config.API_V1_STR}/openapi.json"
+            if app_config.ENVIRONMENT in ["local", "testing"]
+            else None
+        ),
         lifespan=lifespan,
     )
 
@@ -135,4 +198,6 @@ def init_app() -> FastAPI:
     app.add_exception_handler(Exception, handle_uncown_exception)
     app.add_exception_handler(ApplicationException, handle_application_exeption) # type: ignore
     app.add_exception_handler(RequestValidationError, handle_validation_exeption) # type: ignore
+    app.openapi = lambda: custom_openapi(app)
     return app
+

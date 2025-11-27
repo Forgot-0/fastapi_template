@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.auth.models.role import Role
 from app.core.db.repository import BaseRepositoryMixin
-from app.core.utils import now_utc
+from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass

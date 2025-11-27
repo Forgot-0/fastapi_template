@@ -24,11 +24,19 @@ async def shutdown(state: TaskiqState) -> None:
     await message_broker.close()
 
 
-redis_schedule_source = RedisScheduleSource(
-    url=app_config.QUEUE_REDIS_BROKER_URL,
-)
+
+if app_config.ENVIRONMENT == "testing":
+    sources = [LabelScheduleSource(broker=broker)]
+
+else:
+    redis_schedule_source = RedisScheduleSource(
+        url=app_config.QUEUE_REDIS_BROKER_URL,
+    )
+    sources = [redis_schedule_source, LabelScheduleSource(broker=broker)]
+
+
 
 scheduler = TaskiqScheduler(
     broker=broker,
-    sources=[redis_schedule_source, LabelScheduleSource(broker=broker)],
+    sources=sources, # type: ignore
 )

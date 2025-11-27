@@ -65,7 +65,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = []
+dev = [
+    "pre-commit==4.2.0",
+    { include-group = "test" },
+]
 test = [
     "pytest==8.3.*",
     "pytest-asyncio>=0.26.0",
