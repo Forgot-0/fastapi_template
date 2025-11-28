@@ -101,7 +101,11 @@ class AuthModuleProvider(Provider):
     #services
     @provide(scope=Scope.APP)
     def cookie_manager(self) -> RefreshTokenCookieManager:
-        return IRefreshTokenCookieManager()
+        return IRefreshTokenCookieManager(
+            SAMESITE="strict",
+            HTTPONLY=True,
+            SECURE=True
+        )
 
     @provide(scope=Scope.APP)
     def hash_service(self) -> HashService:

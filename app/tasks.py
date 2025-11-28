@@ -24,7 +24,6 @@ async def shutdown(state: TaskiqState) -> None:
     await message_broker.close()
 
 
-
 if app_config.ENVIRONMENT == "testing":
     sources = [LabelScheduleSource(broker=broker)]
 

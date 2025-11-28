@@ -22,7 +22,7 @@ class TestRegisterCommand:
         role_repository: RoleRepository,
         hash_service: HashService,
         mock_event_bus: MockEventBus,
-    ):
+    ) -> None:
         handler = RegisterCommandHandler(
             session=db_session,
             event_bus=mock_event_bus,
@@ -62,7 +62,7 @@ class TestRegisterCommand:
         role_repository: RoleRepository,
         hash_service: HashService,
         standard_user: User,
-    ):
+    ) -> None:
 
         handler = RegisterCommandHandler(
             session=db_session,
@@ -94,7 +94,7 @@ class TestRegisterCommand:
         role_repository: RoleRepository,
         hash_service: HashService,
         standard_user,
-    ):
+    ) -> None:
 
         handler = RegisterCommandHandler(
             session=db_session,
@@ -125,7 +125,7 @@ class TestRegisterCommand:
         role_repository: RoleRepository,
         hash_service: HashService,
         mock_event_bus: MockEventBus,
-    ):
+    ) -> None:
 
         handler = RegisterCommandHandler(
             session=db_session,
@@ -153,7 +153,7 @@ class TestRegisterCommand:
         role_repository: RoleRepository,
         hash_service: HashService,
         mock_event_bus: MockEventBus,
-    ):
+    ) -> None:
 
         handler = RegisterCommandHandler(
             session=db_session,
@@ -182,7 +182,7 @@ class TestRegisterCommand:
         user_repository: UserRepository,
         role_repository: RoleRepository,
         hash_service: HashService,
-    ):
+    ) -> None:
 
         handler = RegisterCommandHandler(
             session=db_session,

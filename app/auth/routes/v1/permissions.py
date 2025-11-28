@@ -8,7 +8,7 @@ from app.auth.commands.permissions.delete import DeletePermissionCommand
 from app.auth.deps import CurrentUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, ProtectedPermissionException
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery
-from app.auth.schemas.permission.requests import PermissionCreateRequest, PermissionDeleteRequest
+from app.auth.schemas.permission.requests import PermissionCreateRequest
 from app.auth.schemas.permissions import PermissionDTO, PermissionFilterParam, PermissionListParams, PermissionSortParam
 from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
@@ -46,7 +46,7 @@ async def create_permission(
 
 
 @router.delete(
-    "/",
+    "/{name}",
     summary="Removing permission",
     description="Removes permission",
     response_model=None,
@@ -58,13 +58,13 @@ async def create_permission(
     }
 )
 async def delete_permission(
-    permission_request: PermissionDeleteRequest,
+    name: str,
     mediator: FromDishka[BaseMediator],
     user_jwt_data: CurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         DeletePermissionCommand(
-            name=permission_request.name,
+            name=name,
             user_jwt_data=user_jwt_data
         )
     )

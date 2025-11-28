@@ -24,8 +24,8 @@ class UserFactory:
     ) -> User:
         user = User(
             email=email or f"test_{uuid4().hex[:8]}@example.com",
-            username=username or f"user_{uuid4().hex[:8]}",
-            password_hash=password_hash or "$2b$12$default_hash",
+            username=username or f"user{uuid4().hex[:8]}",
+            password_hash=password_hash,
             is_active=is_active,
             is_verified=is_verified,
             roles=roles or set(),
@@ -166,7 +166,6 @@ class TokenFactory:
             "roles": roles or [],
             "permissions": permissions or [],
         }
-
 
     @staticmethod
     def create_refresh_token_payload(

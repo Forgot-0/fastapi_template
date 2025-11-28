@@ -76,7 +76,7 @@ class TokenBlacklistRepository:
 
     async def is_valid_token(self, token: str) -> int | None:
         user_id = await self.client.get(token)
-        return user_id
+        return int(user_id) if user_id is not None else None
 
     async def invalidate_token(self, token: str) -> None:
         await self.client.delete(token)

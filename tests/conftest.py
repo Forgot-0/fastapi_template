@@ -3,6 +3,9 @@ from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
+from fastapi import FastAPI
+from fastapi_limiter import FastAPILimiter
+from httpx import ASGITransport, AsyncClient
 import pytest
 import pytest_asyncio
 from dishka import AsyncContainer, Provider, Scope, provide
@@ -17,7 +20,10 @@ from app.core.db.base_model import BaseModel
 from app.core.di.container import create_container
 from app.core.events.event import BaseEvent, EventRegisty
 from app.core.events.service import BaseEventBus
+from app.core.services.mail.service import BaseMailService, EmailData
+from app.core.services.mail.template import BaseTemplate
 from app.init_data import create_first_data
+from app.main import init_app
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -114,6 +120,30 @@ async def redis_client(redis_container: AsyncRedisContainer) -> AsyncGenerator[R
     await client.flushall()
     await client.aclose()
 
+
+@dataclass
+class MockMailService(BaseMailService):
+    sent_emails: list
+
+    async def send(self, template: BaseTemplate, email_data: EmailData) -> None:
+        self.sent_emails.append({"template": template, "data": email_data})
+
+    async def queue(self, template: BaseTemplate, email_data: EmailData) -> str:
+        self.sent_emails.append({"template": template, "data": email_data})
+        return "task_id"
+
+    async def send_plain(self, subject: str, recipient: str, body: str) -> None:
+        ...
+
+    async def queue_plain(self, subject: str, recipient: str, body: str) -> str:
+        return "task_id"
+
+
+@pytest.fixture
+def mock_mail_service() -> MockMailService:
+    return MockMailService([])
+
+
 @dataclass
 class MockEventBus(BaseEventBus):
     published_events: list[BaseEvent] = field(default_factory=list)
@@ -121,10 +151,10 @@ class MockEventBus(BaseEventBus):
     async def publish(self, events: Iterable[BaseEvent]) -> None:
         self.published_events.extend(events)
 
+
 @pytest.fixture
 def mock_event_bus() -> BaseEventBus:
     return MockEventBus(event_registy=EventRegisty())
-
 
 @pytest_asyncio.fixture
 async def di_container(
@@ -151,6 +181,21 @@ async def di_container(
     yield container
 
     await container.close()
+
+
+@pytest.fixture
+async def app(di_container: AsyncContainer) -> FastAPI:
+    app = init_app()
+    app.state.dishka_container = di_container
+    return app
+
+
+@pytest.fixture
+async def client(app: FastAPI, redis_client: Redis) -> AsyncGenerator[AsyncClient, None]:
+    await FastAPILimiter.init(redis_client)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 

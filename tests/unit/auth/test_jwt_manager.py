@@ -89,7 +89,7 @@ class TestJWTManager:
 
         with pytest.raises(InvalidTokenException):
             await jwt_manager.validate_token(invalid_token, TokenType.ACCESS)
-    
+
     @pytest.mark.asyncio
     async def test_validate_expired_token(self, jwt_manager: JWTManager):
         payload = TokenFactory.create_access_token_payload(
@@ -104,7 +104,7 @@ class TestJWTManager:
 
         with pytest.raises(ExpiredTokenException):
             await jwt_manager.validate_token(expired_token, TokenType.ACCESS)
-    
+
     def test_generate_payload_access_token(self, jwt_manager: JWTManager):
         user_data = UserJWTData(
             id="123",
@@ -125,7 +125,7 @@ class TestJWTManager:
         assert "iat" in payload
         assert payload["roles"] == ["admin"]
         assert payload["permissions"] == ["user:create", "user:delete"]
-    
+
     def test_generate_payload_refresh_token(self, jwt_manager: JWTManager):
         user_data = UserJWTData(
             id="456",

@@ -19,9 +19,9 @@ class RefreshTokenCookieManager(ABC):
 class IRefreshTokenCookieManager(RefreshTokenCookieManager):
     COOKIE_NAME: str = "refresh_token"
     PATH: str = "/"
-    SAMESITE: Literal["lax", "strict", "none"] = "strict"
-    HTTPONLY: bool = True
-    SECURE: bool = True
+    SAMESITE: Literal["lax", "strict", "none"] = "none"
+    HTTPONLY: bool = False
+    SECURE: bool = False
 
     def set_refresh_token(self, response: Response, refresh_token: str) -> None:
         response.set_cookie(
