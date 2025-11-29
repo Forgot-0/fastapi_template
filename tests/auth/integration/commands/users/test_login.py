@@ -10,7 +10,7 @@ from app.auth.services.device import generate_device_info
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
-from tests.integration.auth.factories import CommandFactory, UserFactory
+from tests.auth.integration.factories import CommandFactory, UserFactory
 
 
 @pytest.mark.integration

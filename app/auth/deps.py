@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING, Annotated
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
-from app.auth.exceptions import AccessDeniedException
+from app.auth.exceptions import AccessDeniedException, NotAuthenticatedException
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.auth.queries.auth.verify import VerifyTokenQuery
 from app.auth.schemas.user import UserDTO, UserJWTData
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.auth.models.user import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", refreshUrl="/api/v1/auth/refresh")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", refreshUrl="/api/v1/auth/refresh", auto_error=False)
 
 
 class CurrentUserGetter:
@@ -24,6 +24,9 @@ class CurrentUserGetter:
         mediator: FromDishka[BaseMediator],
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> UserDTO:
+        if token is None:
+            raise NotAuthenticatedException
+
         user: User = await mediator.handle_query(
             GetByAccessTokenQuery(token=token)
         )
@@ -49,6 +52,9 @@ class UserJWTDataGetter:
         mediator: FromDishka[BaseMediator],
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> UserJWTData:
+        if token is None:
+            raise NotAuthenticatedException
+
         user_jwt_data: UserJWTData
         user_jwt_data = await mediator.handle_query(
             VerifyTokenQuery(token=token)

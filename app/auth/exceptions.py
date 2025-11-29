@@ -272,3 +272,17 @@ class NotExistProviderOAuthException(ApplicationException):
     @property
     def detail(self) -> dict[str, Any]:
         return {"provider": self.provider}
+
+
+@dataclass
+class NotAuthenticatedException(ApplicationException):
+    code: str = "NOT_AUTHNTICATED"
+    status: int = 401
+
+    @property
+    def message(self) -> str:
+        return "Not authenticated"
+
+    @property
+    def detail(self) -> dict[str, Any]:
+        return {}

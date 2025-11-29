@@ -1,6 +1,5 @@
 import pytest
 from dataclasses import dataclass
-from typing import Any
 
 from app.core.commands import BaseCommand, BaseCommandHandler
 

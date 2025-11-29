@@ -11,7 +11,7 @@ from app.auth.schemas.tokens import TokenType
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
-from tests.integration.auth.factories import CommandFactory
+from tests.auth.integration.factories import CommandFactory
 
 
 @pytest.mark.integration

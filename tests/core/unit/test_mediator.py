@@ -2,7 +2,6 @@ import pytest
 from dataclasses import dataclass
 
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.exceptions import NotHandlerRegisterException
 from app.core.mediators.command import CommandRegisty
 from app.core.mediators.query import QueryRegistry
 from app.core.queries import BaseQuery, BaseQueryHandler

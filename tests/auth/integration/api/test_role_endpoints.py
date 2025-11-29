@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.user import User
-from tests.integration.auth.factories import RoleFactory
+from tests.auth.integration.factories import RoleFactory
 
 
 @pytest.mark.integration

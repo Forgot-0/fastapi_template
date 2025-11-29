@@ -1,4 +1,3 @@
-# tests/unit/auth/test_rbac_manager.py
 import pytest
 
 from app.auth.exceptions import AccessDeniedException, InvalidRoleNameException, ProtectedPermissionException

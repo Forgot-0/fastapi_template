@@ -7,8 +7,8 @@ from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
+from tests.auth.integration.factories import CommandFactory
 from tests.conftest import MockEventBus
-from tests.integration.auth.factories import CommandFactory
 
 
 @pytest.mark.integration

@@ -4,6 +4,7 @@ import pytest_asyncio
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.config import auth_config
 from app.auth.repositories.oauth import OAuthCodeRepository
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
@@ -67,10 +68,10 @@ def hash_service() -> HashService:
 @pytest.fixture
 def jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> JWTManager:
     return JWTManager(
-        jwt_secret="test_secret_key_for_testing_only",
-        jwt_algorithm="HS256",
-        access_token_expire_minutes=30,
-        refresh_token_expire_days=7,
+        jwt_secret=auth_config.JWT_SECRET_KEY,
+        jwt_algorithm=auth_config.JWT_ALGORITHM,
+        access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
+        refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
         token_blacklist=token_blacklist_repository
     )
 
@@ -82,23 +83,3 @@ def rbac_manager() -> RBACManager:
 def session_manager(session_repository: SessionRepository) -> SessionManager:
     return SessionManager(session_repository)
 
-
-@pytest.fixture
-def regular_user_jwt() -> UserJWTData:
-    return UserJWTData(
-        id="1",
-        roles=["user"],
-        permissions=["user:view"],
-        security_level=1,
-        device_id="device_1"
-    )
-
-@pytest.fixture
-def admin_user_jwt() -> UserJWTData:
-    return UserJWTData(
-        id="2",
-        roles=["super_admin"],
-        permissions=["user:create", "user:delete", "role:create"],
-        security_level=10,
-        device_id="device_2"
-    )

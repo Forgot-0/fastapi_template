@@ -61,12 +61,12 @@ dependencies = [
     "tenacity (>=9.1.2,<10.0.0)",
     "user-agents (>=2.2.0,<3.0.0)",
     "minio (>=7.2.18,<8.0.0)",
-    "httpx (>=0.28.1,<0.29.0)"
+    "httpx (>=0.28.1,<0.29.0)",
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit==4.2.0",
+    "pre-commit==4.5.0",
     { include-group = "test" },
 ]
 test = [

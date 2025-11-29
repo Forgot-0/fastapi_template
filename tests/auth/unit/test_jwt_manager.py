@@ -5,7 +5,7 @@ from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
 from app.auth.schemas.tokens import TokenType
 from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
-from tests.integration.auth.factories import TokenFactory
+from tests.auth.integration.factories import TokenFactory
 
 
 @pytest.mark.unit
