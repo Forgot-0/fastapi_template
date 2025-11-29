@@ -157,3 +157,32 @@ class TestCreatePermissionCommand:
         with pytest.raises(ProtectedPermissionException):
             await handler.handle(command)
 
+    @pytest.mark.asyncio
+    async def test_delete_permission_insufficient_permissions(
+        self,
+        db_session: AsyncSession,
+        standard_user: User,
+        permission_repository: PermissionRepository,
+        rbac_manager: RBACManager,
+        permission_blacklist: PermissionInvalidateRepository
+    ) -> None:
+        perm = Permission(name="deletable:perm")
+        db_session.add(perm)
+        await db_session.commit()
+
+        handler = DeletePermissionCommandHandler(
+            session=db_session,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            permission_blacklist=permission_blacklist,
+        )
+
+        user_jwt = UserJWTData.create_from_user(standard_user)
+
+        command = DeletePermissionCommand(
+            name="deletable:perm",
+            user_jwt_data=user_jwt,
+        )
+
+        with pytest.raises(AccessDeniedException):
+            await handler.handle(command)

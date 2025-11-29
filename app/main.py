@@ -12,6 +12,7 @@ from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
 
 from app.auth.routers import router_v1 as auth_router_v1
+from app.core.routers import router as core_router
 from app.core.api.builder import create_response
 from app.core.api.schemas import ErrorDetail, ErrorResponse, ORJSONResponse
 from app.core.configs.app import app_config
@@ -60,7 +61,9 @@ def setup_middleware(app: FastAPI) -> None:
 
 
 def setup_router(app: FastAPI) -> None:
+    app.include_router(core_router)
     app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
+
 
 def handle_application_exeption(request: Request, exc: ApplicationException) -> ORJSONResponse:
     logger.error(

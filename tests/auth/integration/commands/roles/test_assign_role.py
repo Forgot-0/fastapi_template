@@ -219,3 +219,177 @@ class TestAssignRoleCommand:
 
         role_names = {r.name for r in updated_user.roles}
         assert "removable_role" not in role_names
+
+    @pytest.mark.asyncio
+    async def test_assign_multiple_roles(
+        self,
+        db_session: AsyncSession,
+        rbac_manager: RBACManager,
+        role_repository: RoleRepository,
+        user_repository: UserRepository,
+        permission_repository: PermissionRepository,
+        token_blacklist_repository: TokenBlacklistRepository,
+        admin_user: User,
+        standard_user: User,
+    ) -> None:
+        role1 = RoleFactory.create(name="role_one", security_level=2)
+        role2 = RoleFactory.create(name="role_two", security_level=3)
+        db_session.add_all([role1, role2])
+        await db_session.commit()
+
+        handler = AssignRoleCommandHandler(
+            session=db_session,
+            role_repository=role_repository,
+            user_repository=user_repository,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            token_blacklist=token_blacklist_repository,
+        )
+
+        user_jwt = UserJWTData.create_from_user(admin_user)
+
+        command1 = AssignRoleCommand(
+            assign_to_user=standard_user.id,
+            role_name="role_one",
+            user_jwt_data=user_jwt,
+        )
+        await handler.handle(command1)
+        await db_session.commit()
+
+        command2 = AssignRoleCommand(
+            assign_to_user=standard_user.id,
+            role_name="role_two",
+            user_jwt_data=user_jwt,
+        )
+        await handler.handle(command2)
+        await db_session.commit()
+
+        updated_user = await user_repository.get_user_with_permission_by_id(standard_user.id)
+        assert updated_user is not None
+        role_names = {r.name for r in updated_user.roles}
+        assert "role_one" in role_names
+        assert "role_two" in role_names
+
+    @pytest.mark.asyncio
+    async def test_remove_role_user_without_role(
+        self,
+        db_session: AsyncSession,
+        rbac_manager: RBACManager,
+        role_repository: RoleRepository,
+        user_repository: UserRepository,
+        permission_repository: PermissionRepository,
+        token_blacklist_repository: TokenBlacklistRepository,
+        admin_user: User,
+        standard_user: User,
+    ) -> None:
+        test_role = RoleFactory.create(name="nonexistent_on_user", security_level=2)
+        db_session.add(test_role)
+        await db_session.commit()
+
+        handler = RemoveRoleCommandHandler(
+            session=db_session,
+            user_repository=user_repository,
+            role_repository=role_repository,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            token_blacklist=token_blacklist_repository,
+        )
+
+        user_jwt = UserJWTData.create_from_user(admin_user)
+
+        command = RemoveRoleCommand(
+            remove_from_user=standard_user.id,
+            role_name="nonexistent_on_user",
+            user_jwt_data=user_jwt,
+        )
+
+        with pytest.raises(Exception):
+            await handler.handle(command)
+
+    @pytest.mark.asyncio
+    async def test_assign_role_same_role_twice(
+        self,
+        db_session: AsyncSession,
+        rbac_manager: RBACManager,
+        role_repository: RoleRepository,
+        user_repository: UserRepository,
+        permission_repository: PermissionRepository,
+        token_blacklist_repository: TokenBlacklistRepository,
+        admin_user: User,
+        standard_user: User,
+    ) -> None:
+        test_role = RoleFactory.create(name="duplicate_assign", security_level=2)
+        db_session.add(test_role)
+        await db_session.commit()
+
+        handler = AssignRoleCommandHandler(
+            session=db_session,
+            role_repository=role_repository,
+            user_repository=user_repository,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            token_blacklist=token_blacklist_repository,
+        )
+
+        user_jwt = UserJWTData.create_from_user(admin_user)
+
+        command = AssignRoleCommand(
+            assign_to_user=standard_user.id,
+            role_name="duplicate_assign",
+            user_jwt_data=user_jwt,
+        )
+
+        await handler.handle(command)
+        await db_session.commit()
+
+        await handler.handle(command)
+        await db_session.commit()
+
+        updated_user = await user_repository.get_user_with_permission_by_id(standard_user.id)
+        assert updated_user is not None
+
+        role_count = sum(1 for r in updated_user.roles if r.name == "duplicate_assign")
+        assert role_count == 1
+
+    @pytest.mark.asyncio
+    async def test_remove_role_insufficient_permissions(
+        self,
+        db_session: AsyncSession,
+        rbac_manager: RBACManager,
+        role_repository: RoleRepository,
+        user_repository: UserRepository,
+        permission_repository: PermissionRepository,
+        token_blacklist_repository: TokenBlacklistRepository,
+        standard_user: User,
+    ) -> None:
+        test_role = RoleFactory.create(name="removable_protected", security_level=2)
+        db_session.add(test_role)
+        await db_session.flush()
+
+        target_user = UserFactory.create_verified(
+            email="target@example.com",
+            username="targetuser",
+            roles={test_role}
+        )
+        db_session.add(target_user)
+        await db_session.commit()
+
+        handler = RemoveRoleCommandHandler(
+            session=db_session,
+            user_repository=user_repository,
+            role_repository=role_repository,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            token_blacklist=token_blacklist_repository,
+        )
+
+        user_jwt = UserJWTData.create_from_user(standard_user)
+
+        command = RemoveRoleCommand(
+            remove_from_user=target_user.id,
+            role_name="removable_protected",
+            user_jwt_data=user_jwt,
+        )
+
+        with pytest.raises(AccessDeniedException):
+            await handler.handle(command)
