@@ -75,8 +75,6 @@ services:
       - REDIS_ADDR=redis://redis:6379
     networks:
       - app-network
-    depends_on:
-      - redis
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
@@ -87,8 +85,6 @@ services:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
     networks:
       - app-network
-    depends_on:
-      - db
 
   kafka-exporter:
     image: danielqsj/kafka-exporter:v1.7.0
@@ -99,8 +95,7 @@ services:
       - '--kafka.server=kafka:9092'
     networks:
       - app-network
-    depends_on:
-      - kafka
+
 
 volumes:
   grafana.data:

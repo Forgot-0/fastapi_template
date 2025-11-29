@@ -9,3 +9,5 @@ router = APIRouter(tags=["core"])
 @router.get("/healcheck", status_code=status.HTTP_200_OK)
 async def healcheck() -> ORJSONResponse:
     return ORJSONResponse("OK")
+
+

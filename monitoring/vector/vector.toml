@@ -1,7 +1,7 @@
 [sources.docker]
 type = "docker_logs"
 docker_host = "/var/run/docker.sock"
-include_containers = ["app", "consumers", "queue_worker", "scheduler", "kafka", "db", "redis"]
+include_containers = ["app", "db", "redis", "queue_worker", "scheduler", "kafka"]
 
 [transforms.json]
 type = "remap"

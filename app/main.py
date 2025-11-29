@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
+from prometheus_fastapi_instrumentator import Instrumentator
 import redis.asyncio as redis
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
@@ -38,10 +39,10 @@ async def lifespan(app: FastAPI) :
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
     message_broker = await app.state.dishka_container.get(BaseMessageBroker)
-    await message_broker.start()
+    # await message_broker.start()
     yield
     await redis_client.aclose()
-    await message_broker.close()
+    # await message_broker.close()
     await app.state.dishka_container.close()
     logger.info("Shutting down FastAPI")
 
@@ -191,6 +192,7 @@ def init_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    Instrumentator().instrument(app).expose(app)
     configure_logging()
     container = create_container()
     setup_dishka(container=container, app=app)
