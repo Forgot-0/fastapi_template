@@ -32,6 +32,7 @@ class Session(BaseModel):
 
     def deactivate(self) -> None:
         self.is_active = False
+        self.last_activity = now_utc()
 
     def online(self) -> None:
         self.last_activity = now_utc()

@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
-from app.core.db.session import get_session
 
 MAX_TRIES = 60 * 1
 WAIT_SECOND = 5
@@ -26,8 +25,7 @@ async def init(db: AsyncSession) -> None:
         raise exc
 
 
-async def pre_start() -> None:
+async def pre_start(db: AsyncSession) -> None:
     logger.info("app_initialization_started")
-    async for db in get_session():
-        await init(db)
+    await init(db)
     logger.info("app_initialization_finished")

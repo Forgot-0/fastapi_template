@@ -43,7 +43,6 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
         email_data = EmailData(subject="Password reset code", recipient=user.email)
         template = ResetTokenTemplate(
             username=user.username,
-            link=f"{app_config.app_url}/reset_password?token={hashed_token}",
             token=hashed_token,
             valid_minutes=auth_config.EMAIL_RESET_TOKEN_EXPIRE_MINUTES,
         )

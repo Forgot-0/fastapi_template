@@ -24,9 +24,9 @@ class UserRegistration(AuthTemplate):
 
 
 class ResetTokenTemplate(AuthTemplate):
-    def __init__(self, username: str, link: str, token: str, valid_minutes: int) -> None:
+    def __init__(self, username: str, token: str, valid_minutes: int) -> None:
         self.username = username
-        self.link = link
+        self.link = f"{app_config.app_url}/reset_password?token={token}"
         self.token = token
         self.valid_minutes = valid_minutes
 

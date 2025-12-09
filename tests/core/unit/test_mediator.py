@@ -2,8 +2,7 @@ import pytest
 from dataclasses import dataclass
 
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.mediators.command import CommandRegisty
-from app.core.mediators.query import QueryRegistry
+from app.core.mediators.base import CommandRegisty, QueryRegistry
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 

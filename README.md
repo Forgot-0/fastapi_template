@@ -561,7 +561,7 @@ async def index(
            content_type=file.content_type
        )
        return {"file_key": file_key}
-   
+
    @router.get("/download/{file_key}")
    async def download_file(
        file_key: str,
@@ -612,7 +612,7 @@ async def index(
    from dishka import FromDishka
    from app.core.websockets.base import BaseConnectionManager
    from fastapi import WebSocket
-   
+
    @router.websocket("/ws/{room_id}")
    async def websocket_endpoint(
        websocket: WebSocket,
@@ -659,7 +659,7 @@ async def index(
    from dishka import FromDishka
    from app.core.message_brokers.base import BaseMessageBroker
    from app.core.events.event import BaseEvent
-   
+
    @router.post("/publish")
    async def publish_event(
        broker: FromDishka[BaseMessageBroker]
@@ -669,7 +669,7 @@ async def index(
            key="user_123",
            event=UserCreatedEvent(email="user@example.com")
        )
-       
+
        # Или отправка произвольных данных
        await broker.send_data(
            key="user_123",
@@ -794,7 +794,7 @@ logger.error('Error occurred', exc_info=True)
         await message_broker.close()
         await app.state.dishka_container.close()
         logger.info("Shutting down FastAPI")
-    
+
     def init_app() -> FastAPI:
         app = FastAPI(
             openapi_url=f"{app_config.API_V1_STR}/openapi.json" if app_config.ENVIRONMENT in ["local", "staging"] else None,
@@ -936,7 +936,7 @@ new_module/
 
     # В app/main.py
     from app.new_module.routers import router_v1 as new_module_router_v1
-    
+
     def setup_router(app: FastAPI) -> None:
         app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
         app.include_router(new_module_router_v1, prefix=app_config.API_V1_STR)

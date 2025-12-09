@@ -215,7 +215,7 @@ async def get_list_user(
     user_jwt_data: CurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
     params: Annotated[UserListParams, Depends(user_list_params_builder)],
-) -> PaginatedResult[ActiveUserModel]:
+) -> PaginatedResult[UserDTO]:
     list_user: PaginatedResult[UserDTO]
     list_user = await mediator.handle_query(
         GetListUserQuery(

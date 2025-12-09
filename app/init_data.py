@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
 from app.auth.models.role_permission import RolesEnum
-from app.core.db.session import get_session
 
 
 async def create_first_data(db: AsyncSession) -> None:
@@ -16,6 +15,5 @@ async def create_first_data(db: AsyncSession) -> None:
     await db.commit()
 
 
-async def init_data() -> None:
-    async for db in get_session():
-        await create_first_data(db)
+async def init_data(db: AsyncSession) -> None:
+    await create_first_data(db)

@@ -256,7 +256,7 @@ async def oauth_authorize_connect(
         404: create_response(
             [
                 OAuthStateNotFoundException(state="string"),
-                NotFoundUserException(user_by=1,user_field="id"),
+                NotFoundUserException(user_by=1, user_field="id"),
             ]
         ),
         409: create_response(LinkedAnotherUserOAuthException(provider="string"))

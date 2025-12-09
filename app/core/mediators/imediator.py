@@ -1,20 +1,21 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
 
 from dishka import AsyncContainer
 
-from app.core.commands import CR, BaseCommand
+from app.core.commands import BaseCommand
 from app.core.exceptions import NotHandlerRegisterException
 from app.core.mediators.base import BaseMediator
-from app.core.queries import QR, BaseQuery
+from app.core.queries import BaseQuery
 
 
 @dataclass(eq=False)
 class DishkaMediator(BaseMediator):
     container: AsyncContainer
 
-    async def handle_command(self, command: BaseCommand) -> Iterable[CR]:
+    async def handle_command(self, command: BaseCommand) -> Iterable[Any]:
         result = []
 
         handler_registy = self.command_registy.get_handler_types(command)
@@ -28,7 +29,7 @@ class DishkaMediator(BaseMediator):
 
         return result
 
-    async def handle_query(self, query: BaseQuery) -> QR:
+    async def handle_query(self, query: BaseQuery) -> Any:
         handler_registy = self.query_registy.get_handler_types(query)
         if handler_registy is None:
             raise NotHandlerRegisterException(classes=[query.__class__.__name__])

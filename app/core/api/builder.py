@@ -2,7 +2,6 @@ import ast
 import re
 from dataclasses import dataclass
 from typing import Any, Union
-from uuid import uuid4
 
 from fastapi import Query
 from pydantic import ConfigDict, ValidationError, create_model
@@ -17,7 +16,7 @@ from app.core.api.schemas import (
     SortParam,
 )
 from app.core.exceptions import ApplicationException
-from app.core.utils import now_utc
+
 
 
 @dataclass(frozen=True)
@@ -148,8 +147,8 @@ def create_response(
             "value": {
                 "error": example_payload,
                 "status": exc.status,
-                "request_id": uuid4().hex,
-                "timestamp": now_utc().timestamp(),
+                "request_id": "<uuid>",
+                "timestamp": "<timestamp>",
             },
         }
 

@@ -17,7 +17,7 @@ class MediatorEventBus(BaseEventBus):
             if not type_handlers:
                 continue
 
-            for type_handler in type_handlers:
-                async with self.container() as requests_container:
-                    handler = await requests_container.get(type_handler)
-                    await handler(event)
+            async with self.container() as requests_container:
+                for type_handler in type_handlers:
+                        handler = await requests_container.get(type_handler)
+                        await handler(event)

@@ -44,10 +44,11 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
             user_id=user.id, user_agent=command.user_agent
         )
 
-        await self.session.commit()
         token_group = self.jwt_manager.create_token_pair(
             UserJWTData.create_from_user(user, device_id=session.device_id)
         )
+
+        await self.session.commit()
 
         logger.info("Logining user", extra={"user_id": user.id, "device_id": session.device_id})
         return token_group

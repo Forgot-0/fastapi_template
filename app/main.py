@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routers import router_v1 as auth_router_v1
 from app.core.routers import router as core_router
@@ -34,8 +35,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) :
     logger.info("Starting FastAPI")
-    await pre_start()
-    await init_data()
+    async with app.state.dishka_container() as request_container:
+        session = await request_container.get(AsyncSession)
+        await pre_start(session)
+        await init_data(session)
+
     redis_client = redis.from_url(app_config.redis_url)
     await FastAPILimiter.init(redis_client)
     message_broker: BaseMessageBroker = await app.state.dishka_container.get(BaseMessageBroker)
@@ -196,6 +200,7 @@ def init_app() -> FastAPI:
         app,
         latency_lowr_buckets=(0.1, 0.5, 1, 1.5, 2, 2.5, 3)
     ).expose(app, should_gzip=True, tags=["core"])
+
     configure_logging()
     container = create_container()
     setup_dishka(container=container, app=app)

@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 from app.core.db.session import create_async_marker, create_engine
 from app.core.configs.app import app_config
 
+
+
 class DBProvider(Provider):
     scope = Scope.APP
 

@@ -58,10 +58,9 @@ from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
 from app.auth.services.oauth_providers import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.services.rbac import RBACManager
 from app.auth.services.session import SessionManager
-from app.core.configs.app import app_config
 from app.core.events.event import EventRegisty
-from app.core.mediators.command import CommandRegisty
-from app.core.mediators.query import QueryRegistry
+from app.core.mediators.base import CommandRegisty, QueryRegistry
+
 
 
 class AuthModuleProvider(Provider):

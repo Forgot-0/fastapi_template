@@ -5,7 +5,6 @@ from app.core.di import get_core_providers
 
 
 def create_container(*app_providers: Provider) -> AsyncContainer:
-    """Create and configure the main DI container with all providers."""
     providers = [
         # Core providers
         *get_core_providers(),

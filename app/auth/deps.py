@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Annotated
 
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from app.auth.exceptions import AccessDeniedException, NotAuthenticatedException
@@ -14,7 +14,11 @@ if TYPE_CHECKING:
     from app.auth.models.user import User
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", refreshUrl="/api/v1/auth/refresh", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login",
+    refreshUrl="/api/v1/auth/refresh",
+    auto_error=False
+)
 
 
 class CurrentUserGetter:
@@ -63,3 +67,4 @@ class UserJWTDataGetter:
 
 
 CurrentUserJWTData = Annotated[UserJWTData, Depends(UserJWTDataGetter())]
+
