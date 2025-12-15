@@ -59,6 +59,7 @@ class AppConfig(BaseConfig):
     STORAGE_PORT: int = 9000
     STORAGE_ACCESS_KEY: str = ""
     STORAGE_SECRET_KEY: str = ""
+    STORAGE_PUBLIC_URL: str = ""
 
     @computed_field
     @property

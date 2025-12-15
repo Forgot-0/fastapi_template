@@ -22,7 +22,8 @@ class CoreProvider(Provider):
         return Minio(
             endpoint=app_config.storage_url,
             access_key=app_config.STORAGE_ACCESS_KEY,
-            secret_key=app_config.STORAGE_SECRET_KEY
+            secret_key=app_config.STORAGE_SECRET_KEY,
+            secure=False if app_config.ENVIRONMENT == "testing" else True
         )
 
     @provide(scope=Scope.APP)

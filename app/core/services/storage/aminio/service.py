@@ -10,6 +10,7 @@ from minio import Minio, S3Error
 from minio.datatypes import PostPolicy
 from minio.sse import SseS3
 
+from app.core.configs.app import app_config
 from app.core.services.storage.aminio.policy import Policy
 from app.core.services.storage.service import BaseStorageService
 from app.core.utils import now_utc
@@ -21,10 +22,6 @@ logger = logging.getLogger(__name__)
 class MinioStorageService(BaseStorageService):
     client: Minio
     bucket_policy: dict[str, Policy]
-    allowed_image_types: set[str] = field(default_factory=lambda: {".jpg", ".jpeg", ".png", ".gif", ".webp"})
-    allowed_document_types: set[str] = field(default_factory=lambda: {".pdf", ".doc", ".docx", ".txt"})
-    max_file_size: int = field(default=10*1024*1024)
-    max_image_size: int = field(default=5*1024*1024)
 
     max_thread: int = field(default=20)
     thread_executor: ThreadPoolExecutor = field(init=False)
@@ -59,10 +56,6 @@ class MinioStorageService(BaseStorageService):
         return url
 
     async def upload_post_file(self, bucket_name: str, file_name: str, expires: int) -> dict[str, str]:
-        file_ext = "." + file_name.lower().split(".")[-1]
-        if file_ext not in self.allowed_image_types:
-            raise ValueError(f"File type {file_ext} not allowed")
-
         post_policy = PostPolicy(
             bucket_name=bucket_name,
             expiration=now_utc() + timedelta(seconds=expires)
@@ -73,7 +66,7 @@ class MinioStorageService(BaseStorageService):
 
         post_policy.add_equals_condition("key", file_name)
         post_policy.add_equals_condition("Content-Type", content_type)
-        post_policy.add_content_length_range_condition(1*1024*1024, self.max_file_size)
+        post_policy.add_content_length_range_condition(1*1024*1024, 1024**3)
 
         loop = asyncio.get_running_loop()
         data = await loop.run_in_executor(
@@ -106,10 +99,6 @@ class MinioStorageService(BaseStorageService):
         if metadata:
             s3_metadata.update({k: str(v) for k, v in metadata.items()})
 
-        file_content.seek(0, 2)
-        file_size = file_content.tell()
-        file_content.seek(0)
-
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(
             self.thread_executor,
@@ -117,13 +106,14 @@ class MinioStorageService(BaseStorageService):
                 bucket_name=bucket_name,
                 object_name=file_key,
                 data=file_content,
-                length=file_size,
+                length=-1,
                 content_type=content_type,
                 metadata=s3_metadata, # type: ignore
-                sse=SseS3() if self.bucket_policy[bucket_name] == Policy.NONE else None
+                sse=SseS3() if self.bucket_policy[bucket_name] == Policy.NONE else None,
+                part_size=5*1024*1024
             )
         )
-        file_url = f"{self.client._base_url.host}/{file_key}"
+        file_url = f"{app_config.STORAGE_PUBLIC_URL}/{file_key}"
 
         logger.info("File uploaded successfully", extra={"file_key": file_key, "bucket_name": bucket_name})
         return file_key if self.bucket_policy[bucket_name] == Policy.NONE else file_url
