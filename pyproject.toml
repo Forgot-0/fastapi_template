@@ -67,10 +67,6 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "pre-commit==4.5.0",
-    { include-group = "test" },
-]
 test = [
     "pytest==8.3.*",
     "pytest-asyncio>=0.26.0",
@@ -83,6 +79,11 @@ lint = [
     "ruff==0.9.*",
     "pylint==3.3.*",
 ]
+dev = [
+    { include-group = "test" },
+    "pre-commit==4.5.0",
+]
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -23,15 +23,19 @@ class CoreProvider(Provider):
             endpoint=app_config.storage_url,
             access_key=app_config.STORAGE_ACCESS_KEY,
             secret_key=app_config.STORAGE_SECRET_KEY,
-            secure=False if app_config.ENVIRONMENT == "testing" else True
+            secure=True if app_config.ENVIRONMENT == "production" else False
         )
 
     @provide(scope=Scope.APP)
-    async def storage_service(self, client: Minio) -> BaseStorageService:
+    def bucket_policy(self) -> dict[str, Policy]:
+        return {
+            "base": Policy.NONE
+        }
+
+    @provide(scope=Scope.APP)
+    async def storage_service(self, client: Minio, bucket_policy: dict[str, Policy]) -> BaseStorageService:
         return MinioStorageService(
             client=client,
-            bucket_policy={
-                "base": Policy.NONE
-            }
+            bucket_policy=bucket_policy
         )
 

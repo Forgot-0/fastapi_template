@@ -28,8 +28,9 @@ class MinioStorageService(BaseStorageService):
 
     def __post_init__(self) -> None:
         self.thread_executor = ThreadPoolExecutor(max_workers=self.max_thread, thread_name_prefix="storage-worker")
+        self.create_bucket()
 
-    async def create_bucket(self) -> None:
+    def create_bucket(self) -> None:
         for bucket in self.bucket_policy:
             try:
                 policy = self.bucket_policy[bucket]
@@ -66,7 +67,6 @@ class MinioStorageService(BaseStorageService):
 
         post_policy.add_equals_condition("key", file_name)
         post_policy.add_equals_condition("Content-Type", content_type)
-        post_policy.add_content_length_range_condition(1*1024*1024, 1024**3)
 
         loop = asyncio.get_running_loop()
         data = await loop.run_in_executor(
@@ -82,6 +82,7 @@ class MinioStorageService(BaseStorageService):
         bucket_name: str,
         file_content: BinaryIO,
         file_key: str,
+        size: int,
         content_type: str | None = None,
         metadata: dict[str, str] | None = None
     ) -> str:
@@ -106,17 +107,19 @@ class MinioStorageService(BaseStorageService):
                 bucket_name=bucket_name,
                 object_name=file_key,
                 data=file_content,
-                length=-1,
+                length=size,
                 content_type=content_type,
                 metadata=s3_metadata, # type: ignore
                 sse=SseS3() if self.bucket_policy[bucket_name] == Policy.NONE else None,
-                part_size=5*1024*1024
             )
         )
-        file_url = f"{app_config.STORAGE_PUBLIC_URL}/{file_key}"
 
         logger.info("File uploaded successfully", extra={"file_key": file_key, "bucket_name": bucket_name})
-        return file_key if self.bucket_policy[bucket_name] == Policy.NONE else file_url
+        return (
+            file_key 
+            if self.bucket_policy[bucket_name] == Policy.NONE
+            else self.get_public_url(bucket_name, file_key)
+        )
 
     async def delete_file(self, bucket_name: str, file_key: str) -> bool:
         loop = asyncio.get_running_loop()
@@ -159,3 +162,6 @@ class MinioStorageService(BaseStorageService):
         finally:
             response.close()
             response.release_conn()
+
+    def get_public_url(self, bucket: str, file_key: str) -> str:
+        return f"{app_config.STORAGE_PUBLIC_URL}/{bucket}/{file_key}"

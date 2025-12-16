@@ -19,6 +19,7 @@ class BaseStorageService(ABC):
         bucket_name: str,
         file_content: BinaryIO,
         file_key: str,
+        size: int,
         content_type: str | None = None,
         metadata: dict[str, str] | None = None
     ) -> str:
@@ -44,3 +45,6 @@ class BaseStorageService(ABC):
     @abstractmethod
     async def download(self, bucket_name: str, file_key: str) -> bytes:
         ...
+
+    @abstractmethod
+    def get_public_url(self, bucket: str, file_key: str) -> str: ...
