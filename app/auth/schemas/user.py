@@ -66,7 +66,6 @@ class UserCreate(BaseUser, PasswordMixinSchema):
     """Schema for user creation request."""
 
 
-
 class UserDTO(BaseUser):
     id: int
 

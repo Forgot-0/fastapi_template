@@ -23,7 +23,7 @@ class RoleSortParam(SortParam):
 
 
 class RoleFilterParam(FilterParam):
-    field: Literal["name", "description", "permissions", "security_level"]
+    field: Literal["id", "name", "description", "permissions", "security_level"]
 
 
 class RoleListParams(ListParams):

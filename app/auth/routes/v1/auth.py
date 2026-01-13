@@ -94,14 +94,12 @@ async def refresh(
     mediator: FromDishka[BaseMediator],
     refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     response: Response,
-    user_jwt_data: CurrentUserJWTData,
-    refresh_token: Annotated[str | None, Cookie()] = None ,
+    refresh_token: Annotated[str | None, Cookie()] = None,
 ) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
         RefreshTokenCommand(
             refresh_token=refresh_token,
-            user_jwt_data=user_jwt_data
         )
     )
     refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
