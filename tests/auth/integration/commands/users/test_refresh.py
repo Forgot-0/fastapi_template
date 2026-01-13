@@ -8,7 +8,6 @@ from app.auth.models.user import User
 from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.schemas.tokens import TokenType
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
@@ -46,18 +45,15 @@ class TestRefreshTokenCommand:
         old_tokens = await login_handler.handle(login_command)
         await db_session.commit()
 
-        old_token_data = await jwt_manager.validate_token(old_tokens.access_token)
-        user_jwt_data = UserJWTData.create_from_token(old_token_data)
-
         refresh_handler = RefreshTokenCommandHandler(
             session=db_session,
             jwt_manager=jwt_manager,
             session_repository=session_repository,
+            user_repository=user_repository
         )
 
         refresh_command = RefreshTokenCommand(
             refresh_token=old_tokens.refresh_token,
-            user_jwt_data=user_jwt_data
         )
         new_tokens = await refresh_handler.handle(refresh_command)
 
@@ -71,6 +67,7 @@ class TestRefreshTokenCommand:
     async def test_refresh_token_invalid_token(
         self,
         db_session: AsyncSession,
+        user_repository: UserRepository,
         jwt_manager: JWTManager,
         session_repository: SessionRepository,
         standard_user: User,
@@ -79,19 +76,11 @@ class TestRefreshTokenCommand:
             session=db_session,
             jwt_manager=jwt_manager,
             session_repository=session_repository,
-        )
-
-        user_jwt_data = UserJWTData(
-            id=str(standard_user.id),
-            roles=["user"],
-            permissions=[],
-            security_level=1,
-            device_id="test_device"
+            user_repository=user_repository
         )
 
         refresh_command = RefreshTokenCommand(
             refresh_token="invalid_token",
-            user_jwt_data=user_jwt_data
         )
 
         with pytest.raises(InvalidTokenException):
@@ -132,16 +121,15 @@ class TestRefreshTokenCommand:
         )
         await db_session.commit()
 
-        user_jwt_data = UserJWTData.create_from_token(token_data)
         refresh_handler = RefreshTokenCommandHandler(
             session=db_session,
             jwt_manager=jwt_manager,
             session_repository=session_repository,
+            user_repository=user_repository
         )
 
         refresh_command = RefreshTokenCommand(
             refresh_token=tokens.refresh_token,
-            user_jwt_data=user_jwt_data
         )
 
         with pytest.raises(NotFoundOrInactiveSessionException):
@@ -186,16 +174,15 @@ class TestRefreshTokenCommand:
         import asyncio
         await asyncio.sleep(0.1)
 
-        user_jwt_data = UserJWTData.create_from_token(token_data)
         refresh_handler = RefreshTokenCommandHandler(
             session=db_session,
             jwt_manager=jwt_manager,
             session_repository=session_repo,
+            user_repository=user_repository
         )
 
         refresh_command = RefreshTokenCommand(
             refresh_token=tokens.refresh_token,
-            user_jwt_data=user_jwt_data
         )
         await refresh_handler.handle(refresh_command)
         await db_session.commit()

@@ -5,23 +5,23 @@ from app.core.commands import BaseCommand, BaseCommandHandler
 
 
 @dataclass(frozen=True)
-class TestCommand(BaseCommand):
+class MockCommand(BaseCommand):
     value: str
     number: int = 0
 
 
 @dataclass(frozen=True)
-class TestCommandResult:
+class MockCommandResult:
     processed_value: str
     doubled_number: int
 
 
 @dataclass(frozen=True)
-class TestCommandHandler(BaseCommandHandler[TestCommand, TestCommandResult]):
+class MockCommandHandler(BaseCommandHandler[MockCommand, MockCommandResult]):
     prefix: str = "processed_"
 
-    async def handle(self, command: TestCommand) -> TestCommandResult:
-        return TestCommandResult(
+    async def handle(self, command: MockCommand) -> MockCommandResult:
+        return MockCommandResult(
             processed_value=f"{self.prefix}{command.value}",
             doubled_number=command.number * 2
         )
@@ -32,22 +32,22 @@ class TestCommands:
     
     @pytest.mark.asyncio
     async def test_command_creation(self):
-        command = TestCommand(value="test", number=42)
+        command = MockCommand(value="test", number=42)
 
         assert command.value == "test"
         assert command.number == 42
 
     @pytest.mark.asyncio
     async def test_command_is_frozen(self):
-        command = TestCommand(value="test", number=42)
+        command = MockCommand(value="test", number=42)
 
         with pytest.raises(Exception):
             command.value = "new_value"  # type: ignore
 
     @pytest.mark.asyncio
     async def test_command_handler_execution(self):
-        handler = TestCommandHandler(prefix="custom_")
-        command = TestCommand(value="test", number=10)
+        handler = MockCommandHandler(prefix="custom_")
+        command = MockCommand(value="test", number=10)
 
         result = await handler.handle(command)
 
@@ -56,12 +56,12 @@ class TestCommands:
 
     @pytest.mark.asyncio
     async def test_multiple_commands(self):
-        handler = TestCommandHandler()
+        handler = MockCommandHandler()
 
         commands = [
-            TestCommand(value="first", number=1),
-            TestCommand(value="second", number=2),
-            TestCommand(value="third", number=3),
+            MockCommand(value="first", number=1),
+            MockCommand(value="second", number=2),
+            MockCommand(value="third", number=3),
         ]
 
         results = [await handler.handle(cmd) for cmd in commands]
@@ -73,11 +73,11 @@ class TestCommands:
 
     @pytest.mark.asyncio
     async def test_command_with_defaults(self):
-        command = TestCommand(value="test")
+        command = MockCommand(value="test")
 
         assert command.number == 0
 
-        handler = TestCommandHandler()
+        handler = MockCommandHandler()
         result = await handler.handle(command)
 
         assert result.doubled_number == 0

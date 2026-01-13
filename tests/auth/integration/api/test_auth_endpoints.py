@@ -138,11 +138,11 @@ class TestAuthEndpoints:
         cookies = login_response.cookies
         refresh_token = cookies.get("refresh_token")
         assert refresh_token is not None
+        client.cookies.set("refresh_token", refresh_token)
 
         headers = auth_headers(standard_user)
         response = await client.post(
             "/api/v1/auth/refresh",
-            cookies={"refresh_token": refresh_token},
             headers=headers
         )
 
@@ -169,17 +169,16 @@ class TestAuthEndpoints:
         cookies = login_response.cookies
         refresh_token = cookies.get("refresh_token")
         assert refresh_token is not None
+        client.cookies.set("refresh_token", refresh_token)
 
         response = await client.post(
             "/api/v1/auth/logout",
-            cookies={"refresh_token": refresh_token},
         )
 
         assert response.status_code == 204
 
         refresh_response = await client.post(
             "/api/v1/auth/refresh",
-            cookies=cookies
         )
 
         assert refresh_response.status_code in [400, 401]
