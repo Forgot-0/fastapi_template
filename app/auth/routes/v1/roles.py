@@ -7,6 +7,7 @@ from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand
 from app.auth.commands.roles.create import CreateRoleCommand
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.dtos.role import RoleDTO, RoleFilterParam, RoleListParams, RoleSortParam
 from app.auth.exceptions import (
     AccessDeniedException,
     DuplicateRoleException,
@@ -16,7 +17,6 @@ from app.auth.exceptions import (
     ProtectedPermissionException,
 )
 from app.auth.queries.roles.get_list import GetListRolesQuery
-from app.auth.schemas.role import RoleDTO, RoleFilterParam, RoleListParams, RoleSortParam
 from app.auth.schemas.roles.requests import RoleCreateRequest, RolePermissionRequest
 from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult

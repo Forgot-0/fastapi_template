@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, status
 from app.auth.commands.permissions.create import CreatePermissionCommand
 from app.auth.commands.permissions.delete import DeletePermissionCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.dtos.permissions import PermissionDTO, PermissionFilterParam, PermissionListParams, PermissionSortParam
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, ProtectedPermissionException
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery
 from app.auth.schemas.permission.requests import PermissionCreateRequest
-from app.auth.schemas.permissions import PermissionDTO, PermissionFilterParam, PermissionListParams, PermissionSortParam
 from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator

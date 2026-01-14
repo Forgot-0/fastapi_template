@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routers import router_v1 as auth_router_v1
@@ -53,6 +54,7 @@ async def lifespan(app: FastAPI) :
 
 def setup_middleware(app: FastAPI) -> None:
     app.add_middleware(LoggingMiddleware)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     if app_config.BACKEND_CORS_ORIGINS:
         app.add_middleware(
@@ -85,7 +87,7 @@ def handle_application_exeption(request: Request, exc: ApplicationException) -> 
                 detail=exc.detail
             ),
             status=exc.status,
-            request_id=request.state.request_id.hex,
+            request_id=request.state.request_id,
             timestamp=now_utc().timestamp()
         ),
     )
@@ -105,7 +107,7 @@ def handle_validation_exeption(request: Request, exc: RequestValidationError) ->
                 detail=jsonable_encoder(exc.errors()),
             ),
             status=422,
-            request_id=request.state.request_id.hex,
+            request_id=request.state.request_id,
             timestamp=now_utc().timestamp()
         ),
     )
@@ -124,7 +126,7 @@ def handle_uncown_exception(request: Request, exc: Exception) -> ORJSONResponse:
                 message="Uncown exception",
             ),
             status=500,
-            request_id=request.state.request_id.hex,
+            request_id=request.state.request_id,
             timestamp=now_utc().timestamp()
         ),
     )

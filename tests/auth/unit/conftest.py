@@ -1,6 +1,7 @@
 import pytest
 
-from app.auth.schemas.user import UserJWTData
+from app.auth.dtos.user import UserJWTData
+
 
 
 

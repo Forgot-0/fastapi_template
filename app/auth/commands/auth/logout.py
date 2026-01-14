@@ -5,10 +5,10 @@ from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.config import auth_config
+from app.auth.dtos.tokens import TokenType
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import InvalidTokenException
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
-from app.auth.schemas.tokens import TokenType
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler

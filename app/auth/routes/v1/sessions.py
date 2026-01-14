@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, status
 
 from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand
 from app.auth.deps import CurrentUserJWTData
+from app.auth.dtos.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
 from app.auth.exceptions import AccessDeniedException, NotFoundOrInactiveSessionException
 from app.auth.queries.sessions.get_list import GetListSessionQuery
-from app.auth.schemas.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
 from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator

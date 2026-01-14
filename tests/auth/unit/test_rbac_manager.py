@@ -1,7 +1,7 @@
 import pytest
 
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException, InvalidRoleNameException, ProtectedPermissionException
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 
 

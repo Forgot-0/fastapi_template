@@ -3,11 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
+from app.auth.dtos.tokens import TokenType
 from app.auth.exceptions import InvalidTokenException
 from app.auth.models.user import User
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.tokens import TokenType
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.session import SessionManager

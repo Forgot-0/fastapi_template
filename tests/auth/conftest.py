@@ -10,7 +10,6 @@ from app.auth.repositories.permission import PermissionInvalidateRepository, Per
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from app.auth.services.rbac import RBACManager

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.auth.schemas.user import UserJWTData
+from app.auth.dtos.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.core.queries import BaseQuery, BaseQueryHandler
 

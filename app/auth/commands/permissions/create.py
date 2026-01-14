@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException
 from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 

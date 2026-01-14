@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from app.auth.exceptions import AccessDeniedException, NotAuthenticatedException
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.auth.queries.auth.verify import VerifyTokenQuery
-from app.auth.schemas.user import UserDTO, UserJWTData
+from app.auth.dtos.user import UserDTO, UserJWTData
 from app.core.mediators.base import BaseMediator
 
 if TYPE_CHECKING:

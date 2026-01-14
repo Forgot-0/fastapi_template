@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
+from app.auth.dtos.tokens import OAuthData
 from app.auth.exceptions import NotExistProviderOAuthException
-from app.auth.schemas.tokens import OAuthData
 from app.auth.services.oauth_providers import OAuthProvider
 
 

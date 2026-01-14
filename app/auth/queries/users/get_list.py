@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
+from app.auth.dtos.user import UserDTO, UserJWTData, UserListParams
 from app.auth.exceptions import AccessDeniedException
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserDTO, UserJWTData, UserListParams
 from app.auth.services.rbac import RBACManager
 from app.core.api.schemas import PaginatedResult
 from app.core.queries import BaseQuery, BaseQueryHandler

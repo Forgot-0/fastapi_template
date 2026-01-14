@@ -3,14 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundUserException
-from app.auth.models.role import Role
 from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from tests.auth.integration.factories import RoleFactory, UserFactory
 

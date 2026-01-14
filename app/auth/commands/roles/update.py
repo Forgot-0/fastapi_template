@@ -3,13 +3,14 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundRoleException
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class RoleUpdateCommand(BaseCommand):

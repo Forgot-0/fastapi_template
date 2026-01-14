@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
+from app.auth.dtos.permissions import PermissionDTO, PermissionListParams
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException
 from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
-from app.auth.schemas.permissions import PermissionDTO, PermissionListParams
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.api.schemas import PaginatedResult
 from app.core.queries import BaseQuery, BaseQueryHandler

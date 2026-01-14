@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dtos.tokens import TokenGroup, TokenType
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import InvalidTokenException, NotFoundOrInactiveSessionException, NotFoundUserException
 from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.tokens import TokenGroup, TokenType
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.jwt import JWTManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 

@@ -1,7 +1,8 @@
 
 from pydantic import ConfigDict
 
-from app.auth.schemas.user import BaseUser
+from app.auth.dtos.user import BaseUser
+
 
 
 class UserResponse(BaseUser):

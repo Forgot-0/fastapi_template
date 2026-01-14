@@ -2,10 +2,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dtos.user import UserJWTData
 from app.auth.models.user import User
 from app.auth.repositories.role import  RoleRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.hash import HashService
 from app.auth.services.jwt import JWTManager
 from tests.auth.integration.factories import UserFactory

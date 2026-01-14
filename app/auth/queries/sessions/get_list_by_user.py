@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
+from app.auth.dtos.sessions import SessionDTO
+from app.auth.dtos.user import UserJWTData
 from app.auth.repositories.session import SessionRepository
-from app.auth.schemas.sessions import SessionDTO
-from app.auth.schemas.user import UserJWTData
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 

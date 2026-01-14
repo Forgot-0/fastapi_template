@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
+from app.auth.dtos.role import RoleDTO, RoleListParams
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import AccessDeniedException
 from app.auth.models.role import Role
 from app.auth.repositories.role import RoleRepository
-from app.auth.schemas.role import RoleDTO, RoleListParams
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 from app.core.api.schemas import PaginatedResult
 from app.core.queries import BaseQuery, BaseQueryHandler

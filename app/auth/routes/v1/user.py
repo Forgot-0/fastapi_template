@@ -12,6 +12,8 @@ from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.commands.users.register import RegisterCommand
 from app.auth.deps import ActiveUserModel, CurrentUserJWTData
+from app.auth.dtos.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
+from app.auth.dtos.user import UserDTO, UserFilterParam, UserListParams, UserSortParam
 from app.auth.exceptions import (
     AccessDeniedException,
     DuplicateUserException,
@@ -24,8 +26,6 @@ from app.auth.exceptions import (
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery
 from app.auth.queries.users.get_list import GetListUserQuery
 from app.auth.schemas.roles.requests import RoleAssignRequest
-from app.auth.schemas.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
-from app.auth.schemas.user import UserDTO, UserFilterParam, UserListParams, UserSortParam
 from app.auth.schemas.users.requests import UserCreateRequest, UserPermissionRequest
 from app.auth.schemas.users.responses import UserResponse
 from app.core.api.builder import ListParamsBuilder, create_response

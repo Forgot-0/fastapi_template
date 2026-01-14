@@ -5,6 +5,7 @@ from app.auth.commands.permissions.add_permission_user import (
     AddPermissionToUserCommand,
     AddPermissionToUserCommandHandler,
 )
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import (
     AccessDeniedException,
     NotFoundPermissionsException,
@@ -15,7 +16,6 @@ from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 
 

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
 from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import (
     AccessDeniedException,
     NotFoundPermissionsException,
@@ -11,7 +12,6 @@ from app.auth.exceptions import (
 from app.auth.models.permission import Permission
 from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
-from app.auth.schemas.user import UserJWTData
 from app.auth.services.rbac import RBACManager
 
 

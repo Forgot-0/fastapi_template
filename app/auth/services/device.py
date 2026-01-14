@@ -3,7 +3,8 @@ import hashlib
 import orjson
 from user_agents import parse
 
-from app.auth.schemas.tokens import DeviceInformation
+from app.auth.dtos.tokens import DeviceInformation
+
 
 
 def generate_device_info(user_agent: str) -> DeviceInformation:

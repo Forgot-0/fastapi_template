@@ -19,7 +19,8 @@ from app.auth.commands.users.reset_password import ResetPasswordCommand
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand
 from app.auth.commands.users.send_verify import SendVerifyCommand
 from app.auth.commands.users.verify import VerifyCommand
-from app.auth.deps import CurrentUserJWTData, CurrentUserModel
+from app.auth.deps import CurrentUserModel
+from app.auth.dtos.tokens import TokenGroup
 from app.auth.exceptions import (
     ExpiredTokenException,
     InvalidTokenException,
@@ -41,7 +42,6 @@ from app.auth.schemas.auth.requests import (
 from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
 )
-from app.auth.schemas.tokens import TokenGroup
 from app.auth.services.cookie_manager import RefreshTokenCookieManager
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter

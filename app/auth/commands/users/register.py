@@ -3,12 +3,12 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.dtos.user import UserDTO
 from app.auth.exceptions import DuplicateUserException, NotFoundRoleException, PasswordMismatchException
 from app.auth.models.role_permission import RolesEnum
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.schemas.user import UserDTO
 from app.auth.services.hash import HashService
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus

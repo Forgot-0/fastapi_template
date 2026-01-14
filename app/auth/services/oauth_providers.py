@@ -6,7 +6,8 @@ from urllib.parse import urlencode
 
 import httpx
 
-from app.auth.schemas.tokens import OAuthData, OAuthToken
+from app.auth.dtos.tokens import OAuthData, OAuthToken
+
 
 
 @dataclass

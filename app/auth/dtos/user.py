@@ -2,11 +2,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.auth.dtos.permissions import PermissionDTO
+from app.auth.dtos.role import RoleDTO
+from app.auth.dtos.tokens import Token
 from app.auth.models.user import User
-from app.auth.schemas.base import PasswordMixinSchema
-from app.auth.schemas.permissions import PermissionDTO
-from app.auth.schemas.role import RoleDTO
-from app.auth.schemas.tokens import Token
 from app.core.api.schemas import FilterParam, ListParams, SortParam
 
 
@@ -18,6 +17,7 @@ class BaseUser(BaseModel):
         pattern=r"^[a-zA-Z0-9 ,.\'-]+$",
     )
     email: EmailStr
+
 
 class UserJWTData(BaseModel):
     id: str
@@ -60,10 +60,6 @@ class UserJWTData(BaseModel):
             device_id=token_dto.did,
             security_level=token_dto.lvl,
         )
-
-
-class UserCreate(BaseUser, PasswordMixinSchema):
-    """Schema for user creation request."""
 
 
 class UserDTO(BaseUser):

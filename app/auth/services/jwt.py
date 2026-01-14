@@ -5,10 +5,10 @@ from uuid import uuid4
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
+from app.auth.dtos.tokens import Token, TokenGroup, TokenType
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
 from app.auth.repositories.session import TokenBlacklistRepository
-from app.auth.schemas.tokens import Token, TokenGroup, TokenType
-from app.auth.schemas.user import UserJWTData
 from app.core.utils import fromtimestamp, now_utc
 
 

@@ -1,12 +1,12 @@
 from dataclasses import dataclass, field
 
+from app.auth.dtos.user import UserJWTData
 from app.auth.exceptions import (
     AccessDeniedException,
     InvalidRoleNameException,
     ProtectedPermissionException,
 )
 from app.auth.models.role_permission import PermissionEnum, RolesEnum
-from app.auth.schemas.user import UserJWTData
 
 
 @dataclass

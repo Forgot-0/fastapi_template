@@ -63,7 +63,7 @@ ER = TypeVar("ER", bound=ErrorDetail)
 class ErrorResponse(BaseModel, Generic[ER]):
     error: ER
     status: int
-    request_id: str
+    request_id: UUID
     timestamp: float
 
 
