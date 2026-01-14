@@ -4,13 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.dtos.tokens import TokenType
-from app.auth.exceptions import InvalidTokenException, NotFoundOrInactiveSessionException
+from app.auth.exceptions import NotFoundOrInactiveSessionException
 from app.auth.models.user import User
 from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
+from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.exceptions import InvalidTokenException
 from tests.auth.integration.factories import CommandFactory
 
 
@@ -25,7 +27,7 @@ class TestRefreshTokenCommand:
         user_repository: UserRepository,
         session_repository: SessionRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -68,7 +70,7 @@ class TestRefreshTokenCommand:
         self,
         db_session: AsyncSession,
         user_repository: UserRepository,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         session_repository: SessionRepository,
         standard_user: User,
     ) -> None:
@@ -92,7 +94,7 @@ class TestRefreshTokenCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         session_repository: SessionRepository,
         standard_user: User,
@@ -114,7 +116,7 @@ class TestRefreshTokenCommand:
         tokens = await login_handler.handle(login_command)
         await db_session.commit()
 
-        token_data = await jwt_manager.validate_token(tokens.refresh_token, token_type=TokenType.REFRESH)
+        token_data = await jwt_manager.validate_token(tokens.refresh_token, token_type=JwtTokenType.REFRESH)
         await session_repository.deactivate_user_session(
             user_id=int(token_data.sub),
             device_id=token_data.did
@@ -141,7 +143,7 @@ class TestRefreshTokenCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -162,7 +164,7 @@ class TestRefreshTokenCommand:
         await db_session.commit()
 
         session_repo = SessionRepository(session=db_session)
-        token_data = await jwt_manager.validate_token(tokens.refresh_token, token_type=TokenType.REFRESH)
+        token_data = await jwt_manager.validate_token(tokens.refresh_token, token_type=JwtTokenType.REFRESH)
         old_session = await session_repo.get_active_by_device(
             user_id=int(token_data.sub),
             device_id=token_data.did

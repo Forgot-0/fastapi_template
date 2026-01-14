@@ -11,9 +11,10 @@ from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
-from app.auth.services.rbac import RBACManager
+from app.auth.services.jwt import AuthJWTManager
+from app.auth.services.rbac import AuthRBACManager
 from app.auth.services.session import SessionManager
+from app.core.configs.app import app_config
 
 
 
@@ -65,18 +66,18 @@ def hash_service() -> HashService:
 
 
 @pytest.fixture
-def jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> JWTManager:
-    return JWTManager(
-        jwt_secret=auth_config.JWT_SECRET_KEY,
-        jwt_algorithm=auth_config.JWT_ALGORITHM,
+def jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> AuthJWTManager:
+    return AuthJWTManager(
+        jwt_secret=app_config.JWT_SECRET_KEY,
+        jwt_algorithm=app_config.JWT_ALGORITHM,
         access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
         refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
         token_blacklist=token_blacklist_repository
     )
 
 @pytest.fixture
-def rbac_manager() -> RBACManager:
-    return RBACManager()
+def rbac_manager() -> AuthRBACManager:
+    return AuthRBACManager()
 
 @pytest.fixture
 def session_manager(session_repository: SessionRepository) -> SessionManager:

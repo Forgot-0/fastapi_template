@@ -5,13 +5,13 @@ from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.config import auth_config
-from app.auth.dtos.tokens import TokenType
-from app.auth.dtos.user import UserJWTData
-from app.auth.exceptions import InvalidTokenException
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
+from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.exceptions import InvalidTokenException
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class LogoutCommand(BaseCommand):
 class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
     session: AsyncSession
     session_manager: SessionManager
-    jwt_manager: JWTManager
+    jwt_manager: AuthJWTManager
     session_repository: SessionRepository
     token_blacklist: TokenBlacklistRepository
 
@@ -32,9 +32,9 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
         if command.refresh_token is None:
             raise InvalidTokenException(token=None)
 
-        refresh_data = await self.jwt_manager.validate_token(command.refresh_token, token_type=TokenType.REFRESH)
+        refresh_data = await self.jwt_manager.validate_token(command.refresh_token, token_type=JwtTokenType.REFRESH)
         await self.jwt_manager.revoke_token(command.refresh_token)
-        user = UserJWTData.create_from_token(refresh_data)
+        user = AuthUserJWTData.create_from_token(refresh_data)
 
         await self.session_repository.deactivate_user_session(
             user_id=int(user.id),

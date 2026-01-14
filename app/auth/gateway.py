@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from app.auth.schemas.user import UserDTO
+from app.auth.dtos.user import UserDTO
+
 
 
 class BaseAuthGateway(ABC):

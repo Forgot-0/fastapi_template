@@ -16,18 +16,6 @@ class TokenGroup(BaseModel):
     access_token: str
 
 
-class Token(BaseModel):
-    type: str
-    sub: str
-    lvl: int
-    jti: str
-    did: str
-    exp: float
-    iat: float
-    roles: list[str] = Field(default_factory=list)
-    permissions: list[str] = Field(default_factory=list)
-
-
 class DeviceInformation(BaseModel):
     user_agent: str
     device_id: str

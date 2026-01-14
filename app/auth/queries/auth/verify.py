@@ -1,19 +1,19 @@
 from dataclasses import dataclass
 
-from app.auth.dtos.user import UserJWTData
-from app.auth.services.jwt import JWTManager
+from app.auth.dtos.user import AuthUserJWTData
+from app.auth.services.jwt import AuthJWTManager
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 
 @dataclass(frozen=True)
 class VerifyTokenQuery(BaseQuery):
-    token: str
+    access_token: str
 
 
 @dataclass(frozen=True)
-class VerifyTokenQueryHandler(BaseQueryHandler[VerifyTokenQuery, UserJWTData]):
-    jwt_manager: JWTManager
+class VerifyTokenQueryHandler(BaseQueryHandler[VerifyTokenQuery, AuthUserJWTData]):
+    jwt_manager: AuthJWTManager
 
-    async def handle(self, query: VerifyTokenQuery) -> UserJWTData:
-        token_data = await self.jwt_manager.validate_token(token=query.token)
-        return UserJWTData.create_from_token(token_data)
+    async def handle(self, query: VerifyTokenQuery) -> AuthUserJWTData:
+        token_data = await self.jwt_manager.validate_token(token=query.access_token)
+        return AuthUserJWTData.create_from_token(token_data)

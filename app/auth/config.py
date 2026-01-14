@@ -8,9 +8,6 @@ class AuthConfig(BaseConfig):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 60
 
-    JWT_SECRET_KEY: str = ""
-    JWT_ALGORITHM: str = "HS256"
-
     # OAuth Google
     OAUTH_GOOGLE_CLIENT_ID: str = ""
     OAUTH_GOOGLE_CLIENT_SECRET: str = ""

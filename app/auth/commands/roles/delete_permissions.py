@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, NotFoundRoleException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class DeletePermissionRoleCommand(BaseCommand):
     role_name: str
     permissions: set[str]
-    user_jwt_data: UserJWTData
+    user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
     session: AsyncSession
     role_repository: RoleRepository
     permission_repository: PermissionRepository
-    rbac_manager: RBACManager
+    rbac_manager: AuthRBACManager
     role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: DeletePermissionRoleCommand) -> None:

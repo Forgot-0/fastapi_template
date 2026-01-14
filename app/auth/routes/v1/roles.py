@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand
 from app.auth.commands.roles.create import CreateRoleCommand
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand
-from app.auth.deps import CurrentUserJWTData
+from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.role import RoleDTO, RoleFilterParam, RoleListParams, RoleSortParam
 from app.auth.exceptions import (
     AccessDeniedException,
@@ -45,7 +45,7 @@ list_params_builder = ListParamsBuilder(RoleSortParam, RoleFilterParam, RoleList
 async def create_role(
     role_request: RoleCreateRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         CreateRoleCommand(
@@ -66,7 +66,7 @@ async def create_role(
     }
 )
 async def get_list_news(
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
     params: Annotated[RoleListParams, Depends(list_params_builder)],
 ) -> PaginatedResult[RoleDTO]:
@@ -97,7 +97,7 @@ async def add_permission_role(
     role_name: str,
     role_request: RolePermissionRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         AddPermissionRoleCommand(
@@ -125,7 +125,7 @@ async def delete_permission_role(
     role_name: str,
     role_request: RolePermissionRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         DeletePermissionRoleCommand(

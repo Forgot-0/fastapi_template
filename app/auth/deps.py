@@ -4,21 +4,15 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from app.auth.exceptions import AccessDeniedException, NotAuthenticatedException
+from app.auth.exceptions import AccessDeniedException
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
-from app.auth.queries.auth.verify import VerifyTokenQuery
-from app.auth.dtos.user import UserDTO, UserJWTData
+from app.auth.dtos.user import UserDTO, AuthUserJWTData
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.depends import UserJWTDataGetter, oauth2_scheme
+from app.core.services.auth.exceptions import NotAuthenticatedException
 
 if TYPE_CHECKING:
     from app.auth.models.user import User
-
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login",
-    refreshUrl="/api/v1/auth/refresh",
-    auto_error=False
-)
 
 
 class CurrentUserGetter:
@@ -26,7 +20,7 @@ class CurrentUserGetter:
     async def __call__(
         self,
         mediator: FromDishka[BaseMediator],
-        token: Annotated[str, Depends(oauth2_scheme)],
+        token: Annotated[str | None, Depends(oauth2_scheme)],
     ) -> UserDTO:
         if token is None:
             raise NotAuthenticatedException
@@ -49,22 +43,5 @@ CurrentUserModel = Annotated[UserDTO, Depends(CurrentUserGetter())]
 ActiveUserModel = Annotated[UserDTO, Depends(ActiveUserGetter())]
 
 
-class UserJWTDataGetter:
-    @inject
-    async def __call__(
-        self,
-        mediator: FromDishka[BaseMediator],
-        token: Annotated[str, Depends(oauth2_scheme)],
-    ) -> UserJWTData:
-        if token is None:
-            raise NotAuthenticatedException
-
-        user_jwt_data: UserJWTData
-        user_jwt_data = await mediator.handle_query(
-            VerifyTokenQuery(token=token)
-        )
-        return user_jwt_data
-
-
-CurrentUserJWTData = Annotated[UserJWTData, Depends(UserJWTDataGetter())]
+AuthCurrentUserJWTData = Annotated[AuthUserJWTData, Depends(UserJWTDataGetter())]
 

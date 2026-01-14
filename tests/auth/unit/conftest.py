@@ -1,14 +1,14 @@
 import pytest
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 
 
 
 
 
 @pytest.fixture
-def regular_user_jwt() -> UserJWTData:
-    return UserJWTData(
+def regular_user_jwt() -> AuthUserJWTData:
+    return AuthUserJWTData(
         id="1",
         roles=["user"],
         permissions=["user:view"],
@@ -17,8 +17,8 @@ def regular_user_jwt() -> UserJWTData:
     )
 
 @pytest.fixture
-def admin_user_jwt() -> UserJWTData:
-    return UserJWTData(
+def admin_user_jwt() -> AuthUserJWTData:
+    return AuthUserJWTData(
         id="2",
         roles=["super_admin"],
         permissions=["user:create", "user:delete", "role:create"],

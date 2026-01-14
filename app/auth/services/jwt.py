@@ -5,17 +5,17 @@ from uuid import uuid4
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from app.auth.dtos.tokens import Token, TokenGroup, TokenType
-from app.auth.dtos.user import UserJWTData
-from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.auth.dtos.tokens import TokenGroup, TokenType
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.repositories.session import TokenBlacklistRepository
+from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.core.services.auth.jwt_manager import JWTManager
 from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
-class JWTManager:
-    jwt_secret: str
-    jwt_algorithm: str
+class AuthJWTManager(JWTManager):
     access_token_expire_minutes: int
     refresh_token_expire_days: int
 
@@ -33,7 +33,7 @@ class JWTManager:
             raise InvalidTokenException(token=token) from err
         return data
 
-    def generate_payload(self, user_data: UserJWTData, token_type: TokenType) -> dict[str, Any]:
+    def generate_payload(self, user_data: AuthUserJWTData, token_type: TokenType) -> dict[str, Any]:
         now = now_utc()
         payload = {
             "type": token_type,
@@ -56,7 +56,7 @@ class JWTManager:
 
     def create_token_pair(
         self,
-        security_user: UserJWTData,
+        security_user: AuthUserJWTData,
     ) -> TokenGroup:
         access_payload = self.generate_payload(
             security_user, TokenType.ACCESS
@@ -70,17 +70,8 @@ class JWTManager:
 
         return TokenGroup(access_token=access_token, refresh_token=refresh_token)
 
-    async def validate_token(self, token: str, token_type: TokenType=TokenType.ACCESS) -> Token:
-        payload = self.decode(token)
-        token_data = Token(**payload)
-
-        if token_data.type != token_type:
-            raise InvalidTokenException(token=token)
-
-        return token_data
-
-    async def refresh_tokens(self, refresh_token: str, security_user: UserJWTData) -> TokenGroup:
-        token = await self.validate_token(refresh_token, token_type=TokenType.REFRESH)
+    async def refresh_tokens(self, refresh_token: str, security_user: AuthUserJWTData) -> TokenGroup:
+        token = await self.validate_token(refresh_token, token_type=JwtTokenType.REFRESH)
         token_date = fromtimestamp(token.iat)
 
         date = await self.token_blacklist.get_token_backlist(token.jti)
@@ -97,7 +88,7 @@ class JWTManager:
         return token_pair
 
     async def revoke_token(self, token: str) -> None:
-        token_data: Token = Token(**self.decode(token))
+        token_data = await self.validate_token(token, JwtTokenType.REFRESH)
 
         current_time = now_utc()
         token_exp_dt = fromtimestamp(token_data.exp)

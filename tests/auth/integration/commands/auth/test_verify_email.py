@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCommandHandler
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException
+from app.auth.exceptions import NotFoundUserException
 from app.auth.models.user import User
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.core.services.auth.exceptions import InvalidTokenException
 from tests.conftest import MockEventBus, MockMailService
 
 

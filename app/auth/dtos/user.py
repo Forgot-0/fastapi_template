@@ -4,9 +4,9 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.dtos.permissions import PermissionDTO
 from app.auth.dtos.role import RoleDTO
-from app.auth.dtos.tokens import Token
 from app.auth.models.user import User
 from app.core.api.schemas import FilterParam, ListParams, SortParam
+from app.core.services.auth.dto import UserJWTData
 
 
 class BaseUser(BaseModel):
@@ -19,15 +19,9 @@ class BaseUser(BaseModel):
     email: EmailStr
 
 
-class UserJWTData(BaseModel):
-    id: str
-    roles: list[str]
-    permissions: list[str]
-    security_level: int
-    device_id: str | None = Field(default=None)
-
+class AuthUserJWTData(UserJWTData):
     @classmethod
-    def create_from_user(cls, user: User, device_id: str | None=None) -> "UserJWTData":
+    def create_from_user(cls, user: User, device_id: str | None=None) -> "AuthUserJWTData":
         security_lvl = 0
         permissions = set()
         roles = set()
@@ -49,16 +43,6 @@ class UserJWTData(BaseModel):
             roles=list(roles),
             permissions=list(permissions),
             device_id=device_id
-        )
-
-    @classmethod
-    def create_from_token(cls, token_dto: Token) -> "UserJWTData":
-        return cls(
-            id=token_dto.sub,
-            roles=token_dto.roles,
-            permissions=token_dto.permissions,
-            device_id=token_dto.did,
-            security_level=token_dto.lvl,
         )
 
 

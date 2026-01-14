@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundRoleException
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
@@ -18,14 +18,14 @@ class RoleUpdateCommand(BaseCommand):
     name: str | None
     description: str | None
     security_level: int | None
-    user_jwt_data: UserJWTData
+    user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)
 class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
     session: AsyncSession
     role_repository: RoleRepository
-    rbac_manager: RBACManager
+    rbac_manager: AuthRBACManager
     role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: RoleUpdateCommand) -> None:

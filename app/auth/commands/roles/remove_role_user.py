@@ -3,13 +3,13 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundUserException
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class RemoveRoleCommand(BaseCommand):
     remove_from_user: int
     role_name: str
-    user_jwt_data: UserJWTData
+    user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
     user_repository: UserRepository
     role_repository: RoleRepository
     permission_repository: PermissionRepository
-    rbac_manager: RBACManager
+    rbac_manager: AuthRBACManager
     token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: RemoveRoleCommand) -> None:

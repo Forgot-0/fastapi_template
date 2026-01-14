@@ -3,10 +3,10 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, ProtectedPermissionException
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class DeletePermissionCommand(BaseCommand):
     name: str
-    user_jwt_data: UserJWTData
+    user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)
 class DeletePermissionCommandHandler(BaseCommandHandler[DeletePermissionCommand, None]):
     session: AsyncSession
     permission_repository: PermissionRepository
-    rbac_manager: RBACManager
+    rbac_manager: AuthRBACManager
     permission_blacklist: PermissionInvalidateRepository
 
     async def handle(self, command: DeletePermissionCommand) -> None:

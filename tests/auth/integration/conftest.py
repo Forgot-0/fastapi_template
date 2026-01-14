@@ -2,12 +2,12 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.models.user import User
 from app.auth.repositories.role import  RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from tests.auth.integration.factories import UserFactory
 
 
@@ -80,10 +80,10 @@ async def unverified_user(
     return user
 
 @pytest.fixture
-def create_access_token(jwt_manager: JWTManager):
+def create_access_token(jwt_manager: AuthJWTManager):
 
     def _create(user: User, device_id: str | None = None) -> str:
-        user_jwt_data = UserJWTData.create_from_user(user, device_id=device_id or "Chrome/100.0")
+        user_jwt_data = AuthUserJWTData.create_from_user(user, device_id=device_id or "Chrome/100.0")
         token_group = jwt_manager.create_token_pair(user_jwt_data)
         return token_group.access_token
 

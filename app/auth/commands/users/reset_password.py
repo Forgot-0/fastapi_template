@@ -3,12 +3,13 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException, PasswordMismatchException
+from app.auth.exceptions import NotFoundUserException, PasswordMismatchException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.events.service import BaseEventBus
+from app.core.services.auth.exceptions import InvalidTokenException
 
 logger = logging.getLogger(__name__)
 

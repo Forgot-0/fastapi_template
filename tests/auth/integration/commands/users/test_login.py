@@ -8,7 +8,7 @@ from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.device import generate_device_info
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
 from tests.auth.integration.factories import CommandFactory, UserFactory
 
@@ -23,7 +23,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -52,7 +52,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -81,7 +81,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -110,7 +110,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
     ) -> None:
         handler = LoginCommandHandler(
@@ -137,7 +137,7 @@ class TestLoginCommand:
         user_repository: UserRepository,
         session_repository: SessionRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -172,7 +172,7 @@ class TestLoginCommand:
         user_repository: UserRepository,
         session_repository: SessionRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:
@@ -211,7 +211,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         role_repository,
     ) -> None:
@@ -249,7 +249,7 @@ class TestLoginCommand:
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ) -> None:

@@ -5,7 +5,7 @@ from app.auth.commands.permissions.add_permission_user import (
     AddPermissionToUserCommand,
     AddPermissionToUserCommandHandler,
 )
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import (
     AccessDeniedException,
     NotFoundPermissionsException,
@@ -16,7 +16,7 @@ from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 
 
 @pytest.mark.integration
@@ -32,7 +32,7 @@ class TestAddPermissionToUserCommand:
         admin_user: User,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         perm = Permission(name="custom:action")
@@ -47,7 +47,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,
@@ -73,7 +73,7 @@ class TestAddPermissionToUserCommand:
         admin_user: User,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         handler = AddPermissionToUserCommandHandler(
@@ -84,7 +84,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,
@@ -103,7 +103,7 @@ class TestAddPermissionToUserCommand:
         permission_repository: PermissionRepository,
         admin_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         perm = Permission(name="test:perm")
@@ -118,7 +118,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,
@@ -138,7 +138,7 @@ class TestAddPermissionToUserCommand:
         admin_user: User,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         perm1 = Permission(name="action:create")
@@ -155,7 +155,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,
@@ -182,7 +182,7 @@ class TestAddPermissionToUserCommand:
         permission_repository: PermissionRepository,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         perm = Permission(name="test:perm")
@@ -197,7 +197,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(standard_user)
+        user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,
@@ -217,7 +217,7 @@ class TestAddPermissionToUserCommand:
         admin_user: User,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
 
         perm = Permission(name="duplicate:perm")
@@ -232,7 +232,7 @@ class TestAddPermissionToUserCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AddPermissionToUserCommand(
             user_jwt_data=user_jwt,

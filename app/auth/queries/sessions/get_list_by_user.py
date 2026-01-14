@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from app.auth.dtos.sessions import SessionDTO
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.repositories.session import SessionRepository
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 
 @dataclass(frozen=True)
 class GetListSessionsUserQuery(BaseQuery):
-    user_jwt_data: UserJWTData
+    user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)

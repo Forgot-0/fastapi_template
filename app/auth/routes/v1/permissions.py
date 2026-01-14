@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.auth.commands.permissions.create import CreatePermissionCommand
 from app.auth.commands.permissions.delete import DeletePermissionCommand
-from app.auth.deps import CurrentUserJWTData
+from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.permissions import PermissionDTO, PermissionFilterParam, PermissionListParams, PermissionSortParam
 from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, ProtectedPermissionException
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery
@@ -35,7 +35,7 @@ list_params_builder = ListParamsBuilder(PermissionSortParam, PermissionFilterPar
 async def create_permission(
     permission_request: PermissionCreateRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         CreatePermissionCommand(
@@ -60,7 +60,7 @@ async def create_permission(
 async def delete_permission(
     name: str,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         DeletePermissionCommand(
@@ -79,7 +79,7 @@ async def delete_permission(
     }
 )
 async def get_list_news(
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
     params: Annotated[PermissionListParams, Depends(list_params_builder)],
 ) -> PaginatedResult[PermissionDTO]:

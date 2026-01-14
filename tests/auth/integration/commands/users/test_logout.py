@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
-from app.auth.dtos.tokens import TokenType
-from app.auth.exceptions import InvalidTokenException
 from app.auth.models.user import User
 from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
+from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.exceptions import InvalidTokenException
 from tests.auth.integration.factories import CommandFactory
 
 
@@ -25,7 +25,7 @@ class TestLogoutCommand:
         redis_client,
         user_repository: UserRepository,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
     ):
@@ -60,7 +60,7 @@ class TestLogoutCommand:
         await logout_handler.handle(logout_command)
         await db_session.commit()
 
-        token_data = await jwt_manager.validate_token(token_group.refresh_token, token_type=TokenType.REFRESH)
+        token_data = await jwt_manager.validate_token(token_group.refresh_token, token_type=JwtTokenType.REFRESH)
         sessions = await session_repo.get_active_by_user(standard_user.id)
         active_sessions = [s for s in sessions if s.is_active]
 
@@ -72,7 +72,7 @@ class TestLogoutCommand:
         db_session: AsyncSession,
         redis_client,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
     ) -> None:
         session_repo = SessionRepository(session=db_session)
         token_blacklist = TokenBlacklistRepository(client=redis_client)
@@ -96,7 +96,7 @@ class TestLogoutCommand:
         db_session: AsyncSession,
         redis_client,
         session_manager: SessionManager,
-        jwt_manager: JWTManager,
+        jwt_manager: AuthJWTManager,
     ) -> None:
         session_repo = SessionRepository(session=db_session)
         token_blacklist = TokenBlacklistRepository(client=redis_client)

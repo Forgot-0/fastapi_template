@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
 from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import (
     AccessDeniedException,
     NotFoundPermissionsException,
@@ -12,7 +12,7 @@ from app.auth.exceptions import (
 from app.auth.models.permission import Permission
 from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 
 
 @pytest.mark.integration
@@ -24,7 +24,7 @@ class TestCreatePermissionCommand:
         self,
         db_session: AsyncSession,
         permission_repository: PermissionRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         admin_user: User,
     ) -> None:
         handler = CreatePermissionCommandHandler(
@@ -33,7 +33,7 @@ class TestCreatePermissionCommand:
             rbac_manager=rbac_manager,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = CreatePermissionCommand(
             name="post:publish",
@@ -51,7 +51,7 @@ class TestCreatePermissionCommand:
         self,
         db_session: AsyncSession,
         permission_repository: PermissionRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         admin_user: User,
     ) -> None:
         perm = Permission(name="duplicate:perm")
@@ -64,7 +64,7 @@ class TestCreatePermissionCommand:
             rbac_manager=rbac_manager,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = CreatePermissionCommand(
             name="duplicate:perm",
@@ -79,7 +79,7 @@ class TestCreatePermissionCommand:
         self,
         db_session: AsyncSession,
         permission_repository: PermissionRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         standard_user: User,
     ) -> None:
         handler = CreatePermissionCommandHandler(
@@ -88,7 +88,7 @@ class TestCreatePermissionCommand:
             rbac_manager=rbac_manager,
         )
 
-        user_jwt = UserJWTData.create_from_user(standard_user)
+        user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = CreatePermissionCommand(
             name="new:permission",
@@ -105,7 +105,7 @@ class TestCreatePermissionCommand:
         permission_repository: PermissionRepository,
         admin_user: User,
         permission_blacklist: PermissionInvalidateRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
     ) -> None:
         perm = Permission(name="deletable:perm")
         db_session.add(perm)
@@ -118,7 +118,7 @@ class TestCreatePermissionCommand:
             permission_blacklist=permission_blacklist,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = DeletePermissionCommand(
             name="deletable:perm",
@@ -136,7 +136,7 @@ class TestCreatePermissionCommand:
         self,
         db_session: AsyncSession,
         admin_user: User,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         permission_repository: PermissionRepository,
         permission_blacklist: PermissionInvalidateRepository
     ) -> None:
@@ -147,7 +147,7 @@ class TestCreatePermissionCommand:
             permission_blacklist=permission_blacklist,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = DeletePermissionCommand(
             name="role:create",
@@ -163,7 +163,7 @@ class TestCreatePermissionCommand:
         db_session: AsyncSession,
         standard_user: User,
         permission_repository: PermissionRepository,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         permission_blacklist: PermissionInvalidateRepository
     ) -> None:
         perm = Permission(name="deletable:perm")
@@ -177,7 +177,7 @@ class TestCreatePermissionCommand:
             permission_blacklist=permission_blacklist,
         )
 
-        user_jwt = UserJWTData.create_from_user(standard_user)
+        user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = DeletePermissionCommand(
             name="deletable:perm",

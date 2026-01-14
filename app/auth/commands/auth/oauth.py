@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.tokens import TokenGroup
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import (
     LinkedAnotherUserOAuthException,
     NotFoundRoleException,
@@ -17,7 +17,7 @@ from app.auth.models.user import User
 from app.auth.repositories.oauth import OauthAccountRepository, OAuthCodeRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.oauth_manager import OAuthManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -36,7 +36,7 @@ class ProcessOAuthCallbackCommand(BaseCommand):
 @dataclass(frozen=True)
 class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallbackCommand, TokenGroup]):
     session: AsyncSession
-    jwt_manager: JWTManager
+    jwt_manager: AuthJWTManager
     oauth_manager: OAuthManager
     user_repository: UserRepository
     role_repository: RoleRepository
@@ -110,7 +110,7 @@ class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallback
             await self.oauth_code_repository.delete(command.state)
             await self.session.commit()
             token_group = self.jwt_manager.create_token_pair(
-                UserJWTData.create_from_user(user, device_id=session.device_id)
+                AuthUserJWTData.create_from_user(user, device_id=session.device_id)
             )
 
             logger.info(

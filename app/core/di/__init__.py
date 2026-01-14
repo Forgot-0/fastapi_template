@@ -1,5 +1,6 @@
 from dishka import Provider
 
+from app.core.di.auth import AuthServicesProvider
 from app.core.di.broker import BrokerProvider
 from app.core.di.cache import CacheProvider
 from app.core.di.core import CoreProvider
@@ -20,4 +21,5 @@ def get_core_providers() -> list[Provider]:
         EventProvider(),
         QueueProvider(),
         MailProvider(),
+        AuthServicesProvider(),
     ]

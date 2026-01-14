@@ -53,11 +53,12 @@ from app.auth.repositories.session import SessionRepository, TokenBlacklistRepos
 from app.auth.repositories.user import UserRepository
 from app.auth.services.cookie_manager import IRefreshTokenCookieManager, RefreshTokenCookieManager
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
 from app.auth.services.oauth_providers import OAuthGithub, OAuthGoogle, OAuthYandex
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from app.auth.services.session import SessionManager
+from app.core.configs.app import app_config
 from app.core.events.event import EventRegisty
 from app.core.mediators.base import CommandRegisty, QueryRegistry
 
@@ -113,10 +114,10 @@ class AuthModuleProvider(Provider):
         )
 
     @provide(scope=Scope.APP)
-    def jwt_manager(self, token_blacklist: TokenBlacklistRepository) -> JWTManager:
-        return JWTManager(
-            jwt_secret=auth_config.JWT_SECRET_KEY,
-            jwt_algorithm=auth_config.JWT_ALGORITHM,
+    def jwt_manager(self, token_blacklist: TokenBlacklistRepository) -> AuthJWTManager:
+        return AuthJWTManager(
+            jwt_secret=app_config.JWT_SECRET_KEY,
+            jwt_algorithm=app_config.JWT_ALGORITHM,
             access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
             refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
             token_blacklist=token_blacklist
@@ -169,8 +170,8 @@ class AuthModuleProvider(Provider):
 
 
     @provide(scope=Scope.APP)
-    def rbac_manager(self) -> RBACManager:
-        return RBACManager()
+    def rbac_manager(self) -> AuthRBACManager:
+        return AuthRBACManager()
 
     session_manager = provide(SessionManager)
     oauth_manager = provide(OAuthManager)

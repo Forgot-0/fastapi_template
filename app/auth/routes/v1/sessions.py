@@ -4,7 +4,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Depends, status
 
 from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand
-from app.auth.deps import CurrentUserJWTData
+from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
 from app.auth.exceptions import AccessDeniedException, NotFoundOrInactiveSessionException
 from app.auth.queries.sessions.get_list import GetListSessionQuery
@@ -31,7 +31,7 @@ list_params_builder = ListParamsBuilder(SessionSortParam, SessionFilterParam, Se
 )
 async def user_session_delete(
     session_id: int,
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
 ) -> None:
     await mediator.handle_command(
@@ -51,7 +51,7 @@ async def user_session_delete(
     }
 )
 async def get_list_sessions(
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
     params: Annotated[SessionListParams, Depends(list_params_builder)],
 ) -> PaginatedResult[SessionDTO]:

@@ -22,8 +22,6 @@ from app.auth.commands.users.verify import VerifyCommand
 from app.auth.deps import CurrentUserModel
 from app.auth.dtos.tokens import TokenGroup
 from app.auth.exceptions import (
-    ExpiredTokenException,
-    InvalidTokenException,
     LinkedAnotherUserOAuthException,
     NotExistProviderOAuthException,
     NotFoundOrInactiveSessionException,
@@ -46,6 +44,7 @@ from app.auth.services.cookie_manager import RefreshTokenCookieManager
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
 
 router = APIRouter(route_class=DishkaRoute)
 

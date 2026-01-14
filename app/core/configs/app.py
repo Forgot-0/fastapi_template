@@ -90,4 +90,10 @@ class AppConfig(BaseConfig):
     ]] = ["stream"]
 
 
+    # Auth
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+
+
+
 app_config = AppConfig()

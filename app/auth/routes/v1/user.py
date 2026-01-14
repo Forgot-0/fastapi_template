@@ -11,13 +11,12 @@ from app.auth.commands.permissions.remove_permission_user import DeletePermissio
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand
 from app.auth.commands.users.register import RegisterCommand
-from app.auth.deps import ActiveUserModel, CurrentUserJWTData
+from app.auth.deps import ActiveUserModel, AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO, SessionFilterParam, SessionListParams, SessionSortParam
 from app.auth.dtos.user import UserDTO, UserFilterParam, UserListParams, UserSortParam
 from app.auth.exceptions import (
     AccessDeniedException,
     DuplicateUserException,
-    InvalidTokenException,
     NotFoundPermissionsException,
     NotFoundRoleException,
     NotFoundUserException,
@@ -31,6 +30,7 @@ from app.auth.schemas.users.responses import UserResponse
 from app.core.api.builder import ListParamsBuilder, create_response
 from app.core.api.schemas import PaginatedResult
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.exceptions import InvalidTokenException
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -103,7 +103,7 @@ async def assign_role(
     user_id: int,
     role_request: RoleAssignRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         AssignRoleCommand(
@@ -130,7 +130,7 @@ async def remove_role(
     user_id: int,
     role_name: str,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         RemoveRoleCommand(
@@ -160,7 +160,7 @@ async def add_permissions_to_user(
     user_id: int,
     permissions_request: UserPermissionRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         AddPermissionToUserCommand(
@@ -190,7 +190,7 @@ async def delete_permissions_to_user(
     user_id: int,
     permissions_request: UserPermissionRequest,
     mediator: FromDishka[BaseMediator],
-    user_jwt_data: CurrentUserJWTData
+    user_jwt_data: AuthCurrentUserJWTData
 ) -> None:
     await mediator.handle_command(
         DeletePermissionToUserCommand(
@@ -212,7 +212,7 @@ async def delete_permissions_to_user(
     }
 )
 async def get_list_user(
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
     params: Annotated[UserListParams, Depends(user_list_params_builder)],
 ) -> PaginatedResult[UserDTO]:
@@ -236,7 +236,7 @@ async def get_list_user(
     }
 )
 async def get_list_user_session(
-    user_jwt_data: CurrentUserJWTData,
+    user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
 ) -> list[SessionDTO]:
     return await mediator.handle_query(

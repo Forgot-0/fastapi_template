@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import AccessDeniedException, NotFoundRoleException, NotFoundUserException
 from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.rbac import RBACManager
+from app.auth.services.rbac import AuthRBACManager
 from tests.auth.integration.factories import RoleFactory, UserFactory
 
 
@@ -22,7 +22,7 @@ class TestAssignRoleCommand:
     async def test_assign_role_success(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -43,7 +43,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AssignRoleCommand(
             assign_to_user=standard_user.id,
@@ -63,7 +63,7 @@ class TestAssignRoleCommand:
     async def test_assign_role_nonexistent_user(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -83,7 +83,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AssignRoleCommand(
             assign_to_user=99999,
@@ -98,7 +98,7 @@ class TestAssignRoleCommand:
     async def test_assign_nonexistent_role(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -115,7 +115,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AssignRoleCommand(
             assign_to_user=standard_user.id,
@@ -130,7 +130,7 @@ class TestAssignRoleCommand:
     async def test_assign_role_insufficient_permissions(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -158,7 +158,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(standard_user)
+        user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = AssignRoleCommand(
             assign_to_user=another_user.id,
@@ -173,7 +173,7 @@ class TestAssignRoleCommand:
     async def test_remove_role_success(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -202,7 +202,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = RemoveRoleCommand(
             remove_from_user=test_user.id,
@@ -223,7 +223,7 @@ class TestAssignRoleCommand:
     async def test_assign_multiple_roles(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -245,7 +245,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command1 = AssignRoleCommand(
             assign_to_user=standard_user.id,
@@ -273,7 +273,7 @@ class TestAssignRoleCommand:
     async def test_remove_role_user_without_role(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -294,7 +294,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = RemoveRoleCommand(
             remove_from_user=standard_user.id,
@@ -309,7 +309,7 @@ class TestAssignRoleCommand:
     async def test_assign_role_same_role_twice(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -330,7 +330,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(admin_user)
+        user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = AssignRoleCommand(
             assign_to_user=standard_user.id,
@@ -354,7 +354,7 @@ class TestAssignRoleCommand:
     async def test_remove_role_insufficient_permissions(
         self,
         db_session: AsyncSession,
-        rbac_manager: RBACManager,
+        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         user_repository: UserRepository,
         permission_repository: PermissionRepository,
@@ -382,7 +382,7 @@ class TestAssignRoleCommand:
             token_blacklist=token_blacklist_repository,
         )
 
-        user_jwt = UserJWTData.create_from_user(standard_user)
+        user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = RemoveRoleCommand(
             remove_from_user=target_user.id,

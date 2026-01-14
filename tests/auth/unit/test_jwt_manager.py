@@ -2,9 +2,10 @@ import pytest
 from jose import jwt
 
 from app.auth.dtos.tokens import TokenType
-from app.auth.dtos.user import UserJWTData
-from app.auth.exceptions import ExpiredTokenException, InvalidTokenException
-from app.auth.services.jwt import JWTManager
+from app.auth.dtos.user import AuthUserJWTData
+from app.auth.services.jwt import AuthJWTManager
+from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
 from tests.auth.integration.factories import TokenFactory
 
 
@@ -12,8 +13,8 @@ from tests.auth.integration.factories import TokenFactory
 @pytest.mark.auth
 class TestJWTManager:
 
-    def test_create_token_pair(self, jwt_manager: JWTManager):
-        user_data = UserJWTData(
+    def test_create_token_pair(self, jwt_manager: AuthJWTManager):
+        user_data = AuthUserJWTData(
             id="123",
             roles=["user"],
             permissions=["user:view"],
@@ -45,9 +46,9 @@ class TestJWTManager:
         assert refresh_payload["sub"] == "123"
 
     @pytest.mark.asyncio
-    async def test_validate_valid_token(self, jwt_manager: JWTManager):
+    async def test_validate_valid_token(self, jwt_manager: AuthJWTManager):
 
-        user_data = UserJWTData(
+        user_data = AuthUserJWTData(
             id="123",
             roles=["user"],
             permissions=["user:view"],
@@ -58,7 +59,7 @@ class TestJWTManager:
 
         token_data = await jwt_manager.validate_token(
             token_group.access_token,
-            TokenType.ACCESS
+            JwtTokenType.ACCESS
         )
 
         assert token_data.sub == "123"
@@ -67,8 +68,8 @@ class TestJWTManager:
         assert token_data.permissions == ["user:view"]
     
     @pytest.mark.asyncio
-    async def test_validate_wrong_token_type(self, jwt_manager: JWTManager):
-        user_data = UserJWTData(
+    async def test_validate_wrong_token_type(self, jwt_manager: AuthJWTManager):
+        user_data = AuthUserJWTData(
             id="123",
             roles=[],
             permissions=[],
@@ -80,18 +81,18 @@ class TestJWTManager:
         with pytest.raises(InvalidTokenException):
             await jwt_manager.validate_token(
                 token_group.refresh_token,
-                TokenType.ACCESS
+                JwtTokenType.ACCESS
             )
 
     @pytest.mark.asyncio
-    async def test_validate_invalid_token(self, jwt_manager: JWTManager):
+    async def test_validate_invalid_token(self, jwt_manager: AuthJWTManager):
         invalid_token = "invalid.token.here"
 
         with pytest.raises(InvalidTokenException):
-            await jwt_manager.validate_token(invalid_token, TokenType.ACCESS)
+            await jwt_manager.validate_token(invalid_token, JwtTokenType.ACCESS)
 
     @pytest.mark.asyncio
-    async def test_validate_expired_token(self, jwt_manager: JWTManager):
+    async def test_validate_expired_token(self, jwt_manager: AuthJWTManager):
         payload = TokenFactory.create_access_token_payload(
             user_id=123,
             exp_minutes=-1
@@ -103,10 +104,10 @@ class TestJWTManager:
         )
 
         with pytest.raises(ExpiredTokenException):
-            await jwt_manager.validate_token(expired_token, TokenType.ACCESS)
+            await jwt_manager.validate_token(expired_token, JwtTokenType.ACCESS)
 
-    def test_generate_payload_access_token(self, jwt_manager: JWTManager):
-        user_data = UserJWTData(
+    def test_generate_payload_access_token(self, jwt_manager: AuthJWTManager):
+        user_data = AuthUserJWTData(
             id="123",
             roles=["admin"],
             permissions=["user:create", "user:delete"],
@@ -126,8 +127,8 @@ class TestJWTManager:
         assert payload["roles"] == ["admin"]
         assert payload["permissions"] == ["user:create", "user:delete"]
 
-    def test_generate_payload_refresh_token(self, jwt_manager: JWTManager):
-        user_data = UserJWTData(
+    def test_generate_payload_refresh_token(self, jwt_manager: AuthJWTManager):
+        user_data = AuthUserJWTData(
             id="456",
             roles=["user"],
             permissions=["user:view"],

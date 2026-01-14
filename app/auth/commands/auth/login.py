@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.tokens import TokenGroup
-from app.auth.dtos.user import UserJWTData
+from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import WrongLoginDataException
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.auth.services.jwt import JWTManager
+from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
@@ -26,7 +26,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
     session: AsyncSession
     user_repository: UserRepository
     session_manager: SessionManager
-    jwt_manager: JWTManager
+    jwt_manager: AuthJWTManager
     hash_service: HashService
 
     async def handle(self, command: LoginCommand) -> TokenGroup:
@@ -45,7 +45,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
         )
 
         token_group = self.jwt_manager.create_token_pair(
-            UserJWTData.create_from_user(user, device_id=session.device_id)
+            AuthUserJWTData.create_from_user(user, device_id=session.device_id)
         )
 
         await self.session.commit()

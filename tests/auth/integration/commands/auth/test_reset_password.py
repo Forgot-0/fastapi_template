@@ -7,11 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
-from app.auth.exceptions import InvalidTokenException, NotFoundUserException, PasswordMismatchException
+from app.auth.exceptions import NotFoundUserException, PasswordMismatchException
 from app.auth.models.user import User
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
+from app.core.services.auth.exceptions import InvalidTokenException
 from tests.conftest import MockEventBus, MockMailService
 
 
