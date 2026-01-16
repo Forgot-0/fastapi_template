@@ -1,107 +1,98 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal
+from typing import Generic, TypeVar
 
-from sqlalchemy import Column, Select, func, select
+from sqlalchemy import Select, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, subqueryload
 
-from app.core.api.schemas import ListParams, PaginatedResult, Pagination, SortOrder
-from app.core.db.base_model import BaseModel
+from app.core.db.convertor import SQLAlchemyFilterConverter
+from app.core.filters.base import BaseFilter
+
+
+T = TypeVar('T')
+
+@dataclass(frozen=True)
+class PageResult(Generic[T]):
+    items: list[T]
+    total: int
+    page: int
+    page_size: int
+
+    @property
+    def total_pages(self) -> int:
+        if self.page_size == 0:
+            return 0
+        return (self.total + self.page_size - 1) // self.page_size
+
+    @property
+    def has_next(self) -> bool:
+        return self.page < self.total_pages
+
+    @property
+    def has_previous(self) -> bool:
+        return self.page > 1
+
+    @property
+    def next_page(self) -> int | None:
+        return self.page + 1 if self.has_next else None
+
+    @property
+    def previous_page(self) -> int | None:
+        return self.page - 1 if self.has_previous else None
 
 
 @dataclass
-class BaseRepositoryMixin:
+class IRepository(ABC, Generic[T]):
     session: AsyncSession
 
-    async def get_list(
-        self,
-        model: type[BaseModel],
-        params: ListParams,
-        relations: dict[Literal["select", "joined", "subquery"], list[str]] | None = None,
-    )  -> PaginatedResult[BaseModel]:
-        query = select(model)
-        if params.filters:
-            for filter_params in params.filters:
-                if isinstance(filter_params.value, list):
-                    query = query.where(getattr(model, filter_params.field).in_(filter_params.value))
-                else:
-                    query = query.where(getattr(model, filter_params.field) == filter_params.value)
+    async def find_by_filter(self, model: type[T], filters: BaseFilter) -> PageResult[T]:
+        stmt = select(model)
 
-        query = self._load_relations(query=query, relations=relations, model=model)
+        loading_options = SQLAlchemyFilterConverter.build_loading_options(model, filters.loading_config)
 
-        if params.sort:
-            for sort_params in params.sort:
-                column: Column = getattr(model, sort_params.field)
-                query = query.order_by(column.desc() if sort_params.order == SortOrder.DESC else column)
+        if loading_options:
+            stmt = stmt.options(*loading_options)
 
-        total = await self.session.scalar(select(func.count()).select_from(query.subquery()))
-        if total is None:
-            total = 0
+        conditions = SQLAlchemyFilterConverter.filter_to_sqlalchemy_conditions(model, filters)
 
-        query = query.offset((params.page - 1) * params.page_size).limit(params.page_size)
-        result = await self.session.execute(query)
+        stmt = self.apply_relationship_filters(stmt, filters)
+
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total_result = await self.session.execute(count_stmt)
+        total = total_result.scalar_one()
+
+        sort_clauses = SQLAlchemyFilterConverter.get_sort_attributes(model, filters.sort_fields)
+        if sort_clauses:
+            stmt = stmt.order_by(*sort_clauses)
+
+        stmt = stmt.offset(filters.pagination.offset).limit(filters.pagination.limit)
+        # sql_query = str(stmt.compile(compile_kwargs={"literal_binds": True}))
+
+        # print(sql_query)
+        result = await self.session.execute(stmt)
         items = result.scalars().all()
-        return PaginatedResult(
+
+        return PageResult(
             items=list(items),
-            pagination=Pagination(total=total, page=params.page, page_size=params.page_size),
+            total=total,
+            page=filters.pagination.page,
+            page_size=filters.pagination.page_size
         )
+    
+    async def count_by_filter(self, model: type[T], filters: BaseFilter) -> int:
+        stmt = select(func.count()).select_from(model)
 
-    def _load_relations(
-        self,
-        query: Select,
-        model: type[BaseModel],
-        relations: dict[Literal["select", "joined", "subquery"], list[str]] | None = None,
-    ) -> Select:
+        conditions = SQLAlchemyFilterConverter.filter_to_sqlalchemy_conditions(model, filters)
+        stmt = self.apply_relationship_filters(stmt, filters)
 
-        if not relations:
-            return query
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
 
-        loader_map = {
-            "select": selectinload,
-            "joined": joinedload,
-            "subquery": subqueryload,
-        }
+        result = await self.session.execute(stmt)
+        return result.scalar_one()
 
-        loader_method_name = {
-            "select": "selectinload",
-            "joined": "joinedload",
-            "subquery": "subqueryload",
-        }
-
-        for strategy, rels in relations.items():
-            if strategy not in loader_map:
-                raise ValueError(f"Unknown loading strategy: {strategy}")
-
-            for relation_path in rels:
-                parts = relation_path.split(".")
-                current_model = model
-                loader = None
-
-                for i, part in enumerate(parts):
-                    try:
-                        attr = getattr(current_model, part)
-                    except AttributeError as e:
-                        raise AttributeError(f"Model {current_model.__name__} has no attribute '{part}'") from e
-
-                    if loader is None:
-                        loader = loader_map[strategy](attr)
-                    else:
-                        method = getattr(loader, loader_method_name[strategy])
-                        loader = method(attr)
-
-                    prop = getattr(attr, "property", None)
-                    if prop is None or not hasattr(prop, "mapper"):
-                        if i < len(parts) - 1:
-                            raise ValueError(f"Attribute '{part}' of {current_model.__name__} is not a relationship "
-                                                f"but path has more parts: '{relation_path}'")
-                        related_class = None
-                    else:
-                        related_class = prop.mapper.class_
-
-                    if related_class:
-                        current_model = related_class
-
-                if loader is not None:
-                    query = query.options(loader)
-
-        return query
+    @abstractmethod
+    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select: ...

@@ -8,11 +8,19 @@ from app.auth.exceptions import AccessDeniedException
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.auth.dtos.user import UserDTO, AuthUserJWTData
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.depends import UserJWTDataGetter, oauth2_scheme
+from app.core.services.auth.depends import UserJWTDataGetter
 from app.core.services.auth.exceptions import NotAuthenticatedException
 
 if TYPE_CHECKING:
     from app.auth.models.user import User
+
+
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login",
+    refreshUrl="/api/v1/auth/refresh",
+    auto_error=False
+)
 
 
 class CurrentUserGetter:

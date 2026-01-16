@@ -1,11 +1,9 @@
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.dtos.permissions import PermissionDTO
 from app.auth.dtos.role import RoleDTO
+from app.auth.dtos.sessions import SessionDTO
 from app.auth.models.user import User
-from app.core.api.schemas import FilterParam, ListParams, SortParam
 from app.core.services.auth.dto import UserJWTData
 
 
@@ -49,23 +47,9 @@ class AuthUserJWTData(UserJWTData):
 class UserDTO(BaseUser):
     id: int
 
-    roles: list[RoleDTO]
+    roles: list[RoleDTO] = Field(default_factory=list)
     permissions: list[PermissionDTO] = Field(default_factory=list)
+    sessions: list[SessionDTO] = Field(default_factory=list)
 
     is_active: bool
     is_verified: bool
-
-
-class UserSortParam(SortParam):
-    field: Literal["id", "username", "created_at"]
-
-
-class UserFilterParam(FilterParam):
-    field: Literal["id", "username"]
-
-
-class UserListParams(ListParams):
-    sort: list[UserSortParam] | None = Field(None)
-    filters: list[UserFilterParam] | None = Field(None)
-
-

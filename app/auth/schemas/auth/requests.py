@@ -39,7 +39,7 @@ class CallbackRequest(BaseModel):
     code: str
     state: str
 
+
 class OAuthCallbackQuery(BaseModel):
-    provider: str
     code: str
     state: str

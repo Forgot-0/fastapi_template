@@ -1,18 +1,17 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Select, select
 from sqlalchemy.orm import selectinload
 
+from app.auth.filters.users import UserFilter
+from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 from app.auth.models.user import User
-from app.core.db.repository import BaseRepositoryMixin
+from app.core.db.repository import IRepository
 
 
 @dataclass
-class UserRepository(BaseRepositoryMixin):
-    session: AsyncSession
-
+class UserRepository(IRepository[User]):
     async def get_by_email(self, email: str) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.email == email))
         return result.scalars().first()
@@ -60,3 +59,13 @@ class UserRepository(BaseRepositoryMixin):
         user = await self.get_by_id(user_id=user_id)
         if user:
             user.soft_delete()
+
+    def apply_relationship_filters(self, stmt: Select, filters: UserFilter) -> Select:
+
+        if filters.role_names:
+            stmt = stmt.join(User.roles).where(Role.name.in_(filters.role_names))
+
+        if filters.permission_names:
+            stmt = stmt.join(User.permissions).where(Permission.name.in_(filters.permission_names))
+
+        return stmt

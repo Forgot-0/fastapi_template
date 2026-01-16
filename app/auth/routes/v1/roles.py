@@ -1,13 +1,11 @@
-from typing import Annotated
-
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Query, status
 
 from app.auth.commands.roles.add_permissions import AddPermissionRoleCommand
 from app.auth.commands.roles.create import CreateRoleCommand
 from app.auth.commands.roles.delete_permissions import DeletePermissionRoleCommand
 from app.auth.deps import AuthCurrentUserJWTData
-from app.auth.dtos.role import RoleDTO, RoleFilterParam, RoleListParams, RoleSortParam
+from app.auth.dtos.role import RoleDTO
 from app.auth.exceptions import (
     AccessDeniedException,
     DuplicateRoleException,
@@ -17,14 +15,13 @@ from app.auth.exceptions import (
     ProtectedPermissionException,
 )
 from app.auth.queries.roles.get_list import GetListRolesQuery
-from app.auth.schemas.roles.requests import RoleCreateRequest, RolePermissionRequest
-from app.core.api.builder import ListParamsBuilder, create_response
-from app.core.api.schemas import PaginatedResult
+from app.auth.schemas.roles.requests import GetRolesRequest, RoleCreateRequest, RolePermissionRequest
+from app.core.api.builder import create_response
+from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
 
 router = APIRouter(route_class=DishkaRoute)
 
-list_params_builder = ListParamsBuilder(RoleSortParam, RoleFilterParam, RoleListParams)
 
 
 @router.post(
@@ -68,13 +65,13 @@ async def create_role(
 async def get_list_news(
     user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
-    params: Annotated[RoleListParams, Depends(list_params_builder)],
-) -> PaginatedResult[RoleDTO]:
-    list_role: PaginatedResult[RoleDTO]
+    params: GetRolesRequest=Query(),
+) -> PageResult[RoleDTO]:
+    list_role: PageResult[RoleDTO]
     list_role = await mediator.handle_query(
         GetListRolesQuery(
             user_jwt_data=user_jwt_data,
-            role_query=params
+            role_filter=params.to_role_filter()
         )
     )
     return list_role

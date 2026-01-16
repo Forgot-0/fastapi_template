@@ -2,14 +2,15 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import select
+from sqlalchemy import Select, select
 
 from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
-from app.core.db.repository import BaseRepositoryMixin
+from app.core.db.repository import IRepository
+from app.core.filters.base import BaseFilter
 
 
 @dataclass
-class OauthAccountRepository(BaseRepositoryMixin):
+class OauthAccountRepository(IRepository[OAuthAccount]):
     async def create(self, oauth_account: OAuthAccount) -> None:
         self.session.add(oauth_account)
 
@@ -32,6 +33,9 @@ class OauthAccountRepository(BaseRepositoryMixin):
         query = select(OAuthAccount).where(OAuthAccount.user_id == user_id)
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+        return stmt
 
 
 @dataclass

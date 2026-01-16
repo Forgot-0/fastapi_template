@@ -2,16 +2,16 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import select
+from sqlalchemy import Select, select
 
 from app.auth.models.permission import Permission
-from app.core.db.repository import BaseRepositoryMixin
+from app.core.db.repository import IRepository
+from app.core.filters.base import BaseFilter
 from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
-class PermissionRepository(BaseRepositoryMixin):
-
+class PermissionRepository(IRepository[Permission]):
     async def create(self, permission: Permission) -> None:
         self.session.add(permission)
 
@@ -28,6 +28,8 @@ class PermissionRepository(BaseRepositoryMixin):
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
+    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+        return stmt
 
 @dataclass
 class PermissionInvalidateRepository:

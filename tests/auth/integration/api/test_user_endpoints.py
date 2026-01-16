@@ -26,7 +26,7 @@ class TestUserEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert "items" in data
-        assert "pagination" in data
+        assert "page" in data
         assert len(data["items"]) >= 2
 
     @pytest.mark.asyncio

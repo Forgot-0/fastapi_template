@@ -1,10 +1,8 @@
-# app/auth/routes/v1/auth.py
-
 from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -260,16 +258,17 @@ async def oauth_authorize_connect(
     }
 )
 async def oauth_callback(
+    provider: str,
     mediator: FromDishka[BaseMediator],
     refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
-    oauth_callback_query: OAuthCallbackQuery,
     request: Request,
     response: Response,
+    oauth_callback_query: OAuthCallbackQuery = Query(...),
 ) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(
         ProcessOAuthCallbackCommand(
-            provider=oauth_callback_query.provider,
+            provider=provider,
             code=oauth_callback_query.code,
             state=oauth_callback_query.state,
             user_agent=request.headers.get("user-agent", ""),

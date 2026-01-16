@@ -2,17 +2,19 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import selectinload
 
+from app.auth.filters.roles import RoleFilter
+from app.auth.models.permission import Permission
 from app.auth.models.role import Role
-from app.core.db.repository import BaseRepositoryMixin
+from app.core.db.repository import IRepository
+from app.core.filters.base import BaseFilter
 from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
-class RoleRepository(BaseRepositoryMixin):
-
+class RoleRepository(IRepository[Role]):
     async def get_with_permission_by_name(self, name: str) -> Role | None:
         query = select(Role).options(selectinload(Role.permissions)).where(Role.name == name)
         result = await self.session.execute(query)
@@ -30,6 +32,12 @@ class RoleRepository(BaseRepositoryMixin):
 
     async def create(self, role: Role) -> None:
         self.session.add(role)
+
+    def apply_relationship_filters(self, stmt: Select, filters: RoleFilter) -> Select:
+        if filters.permission_names:
+            stmt = stmt.join(Role.permissions).where(Permission.name.in_(filters.permission_names))
+
+        return stmt
 
 
 @dataclass
