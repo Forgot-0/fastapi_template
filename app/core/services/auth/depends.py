@@ -7,7 +7,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.services.auth.dto import UserJWTData
 from app.core.services.auth.jwt_manager import JWTManager
 
-
 security = HTTPBearer()
 
 

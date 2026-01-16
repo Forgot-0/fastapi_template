@@ -10,7 +10,6 @@ from app.auth.exceptions import NotFoundUserException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.configs.app import app_config
 from app.core.services.mail.service import BaseMailService, EmailData
 
 logger = logging.getLogger(__name__)

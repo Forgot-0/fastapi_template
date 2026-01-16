@@ -11,7 +11,6 @@ from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
 
-
 router = APIRouter(route_class=DishkaRoute)
 
 

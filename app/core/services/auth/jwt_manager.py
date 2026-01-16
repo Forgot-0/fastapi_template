@@ -3,9 +3,8 @@ from typing import Any
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
-from app.core.services.auth.dto import Token, JwtTokenType
+from app.core.services.auth.dto import JwtTokenType, Token
 from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
-
 
 
 @dataclass

@@ -6,7 +6,6 @@ import orjson
 from fastapi.responses import ORJSONResponse as _ORJSONResponse
 from pydantic import BaseModel
 
-
 logger = logging.getLogger(__name__)
 
 

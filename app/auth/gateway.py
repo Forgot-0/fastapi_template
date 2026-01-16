@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from app.auth.dtos.user import UserDTO
 
 
-
 class BaseAuthGateway(ABC):
 
     @abstractmethod

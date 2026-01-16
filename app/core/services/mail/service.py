@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from app.core.services.mail.template import BaseTemplate
-from app.core.services.queues.service import QueueResult
 
 
 @dataclass

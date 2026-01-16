@@ -3,7 +3,6 @@ from fastapi import APIRouter, status
 
 from app.core.api.schemas import ORJSONResponse
 
-
 router = APIRouter(tags=["core"], route_class=DishkaRoute)
 
 

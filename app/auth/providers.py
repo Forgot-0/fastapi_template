@@ -63,7 +63,6 @@ from app.core.events.event import EventRegisty
 from app.core.mediators.base import CommandRegisty, QueryRegistry
 
 
-
 class AuthModuleProvider(Provider):
     scope = Scope.REQUEST
 

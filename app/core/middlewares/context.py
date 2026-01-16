@@ -4,7 +4,7 @@ import structlog
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
-class ContextMiddleware:    
+class ContextMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
 

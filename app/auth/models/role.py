@@ -52,13 +52,13 @@ class Role(BaseModel, DateMixin):
 
         self.permissions.remove(permission)
 
-    def is_higher_than(self, other: 'Role') -> bool:
+    def is_higher_than(self, other: "Role") -> bool:
         return self.security_level > other.security_level
 
-    def is_lower_than(self, other: 'Role') -> bool:
+    def is_lower_than(self, other: "Role") -> bool:
         return self.security_level < other.security_level
 
-    def can_manage_role(self, other: 'Role') -> bool:
+    def can_manage_role(self, other: "Role") -> bool:
         return self.security_level > other.security_level
 
     def has_permission(self, permission: Permission) -> bool:

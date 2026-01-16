@@ -1,14 +1,12 @@
 from typing import Any
 
 from sqlalchemy import ColumnElement
-from sqlalchemy.orm import InstrumentedAttribute, selectinload, joinedload, subqueryload, lazyload
+from sqlalchemy.orm import InstrumentedAttribute, joinedload, lazyload, selectinload, subqueryload
 
 from app.core.filters.base import BaseFilter
 from app.core.filters.condition import FilterCondition, FilterOperator
 from app.core.filters.loading_strategy import LoadingConfig, LoadingStrategyType, RelationshipLoading
 from app.core.filters.sort import SortField
-
-
 
 operators_map = {
     FilterOperator.EQ: lambda a, v: a == v,
@@ -58,7 +56,7 @@ class SQLAlchemyFilterConverter:
         try:
             attr = SQLAlchemyFilterConverter.get_model_attribute(model, condition.field)
         except AttributeError:
-            raise ValueError(f"Field '{condition.field}' not found in model {model.__name__}")
+            raise
 
         return operators_map[condition.operator](attr, condition.value)
 
@@ -69,7 +67,6 @@ class SQLAlchemyFilterConverter:
     ) -> list[ColumnElement[bool]]:
         if not filters.has_conditions():
             return []
-        print(filters)
         return [
             SQLAlchemyFilterConverter.condition_to_sqlalchemy(model, cond)
             for cond in filters.conditions
@@ -101,7 +98,7 @@ class SQLAlchemyFilterConverter:
         try:
             relationship_attr = getattr(model, loading.relationship_name)
         except AttributeError:
-            raise 
+            raise
 
         loader = strategy_map[loading.strategy](relationship_attr)
 
@@ -132,7 +129,7 @@ class SQLAlchemyFilterConverter:
                     relationship_loading
                 )
                 options.append(loader)
-            except ValueError as e:
+            except ValueError:
                 continue
 
         return options

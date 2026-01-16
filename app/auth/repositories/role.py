@@ -2,14 +2,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import Select, select
-from sqlalchemy.orm import selectinload
+from sqlalchemy import Select, distinct, func, select
+from sqlalchemy.orm import selectinload, subqueryload
 
 from app.auth.filters.roles import RoleFilter
 from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 from app.core.db.repository import IRepository
-from app.core.filters.base import BaseFilter
 from app.core.utils import fromtimestamp, now_utc
 
 
@@ -35,7 +34,7 @@ class RoleRepository(IRepository[Role]):
 
     def apply_relationship_filters(self, stmt: Select, filters: RoleFilter) -> Select:
         if filters.permission_names:
-            stmt = stmt.join(Role.permissions).where(Permission.name.in_(filters.permission_names))
+            stmt = stmt.where(Role.permissions.any(Permission.name.in_(filters.permission_names)))
 
         return stmt
 

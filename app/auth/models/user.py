@@ -118,20 +118,20 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     def verify(self) -> None:
         self.is_verified = True
 
-    def get_highest_role(self) -> 'Role':
+    def get_highest_role(self) -> "Role":
         return max(self.roles, key=lambda r: r.security_level)
 
-    def has_permission(self, permission: 'Permission') -> bool:
+    def has_permission(self, permission: "Permission") -> bool:
         return any(role.has_permission(permission) for role in self.roles) or permission in self.permissions
 
-    def get_all_permissions_with_inheritance(self) -> set['Permission']:
+    def get_all_permissions_with_inheritance(self) -> set["Permission"]:
         all_permissions = set()
         for role in self.roles:
             all_permissions.update(role.permissions)
         all_permissions.update(self.permissions)
         return all_permissions
 
-    def can_manage_user(self, target_user: 'User') -> bool:
+    def can_manage_user(self, target_user: "User") -> bool:
         my_highest_role = self.get_highest_role()
         target_highest_role = target_user.get_highest_role()
 

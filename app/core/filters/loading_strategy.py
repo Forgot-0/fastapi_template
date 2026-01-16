@@ -18,7 +18,7 @@ class RelationshipLoading:
 
     def __post_init__(self):
         if not self.relationship_name:
-            raise 
+            raise
 
     @property
     def has_nested(self) -> bool:

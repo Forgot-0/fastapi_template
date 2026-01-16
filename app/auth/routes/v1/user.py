@@ -28,7 +28,6 @@ from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
 from app.core.services.auth.exceptions import InvalidTokenException
 
-
 router = APIRouter(route_class=DishkaRoute)
 
 

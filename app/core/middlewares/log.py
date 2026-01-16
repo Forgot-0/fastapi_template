@@ -3,7 +3,6 @@ import time
 
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-
 logger = logging.getLogger(__name__)
 
 

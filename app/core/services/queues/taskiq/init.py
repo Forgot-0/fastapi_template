@@ -1,4 +1,5 @@
 import multiprocessing
+
 from taskiq import AsyncBroker, InMemoryBroker
 from taskiq_redis import ListQueueBroker, RedisAsyncResultBackend
 

@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any
 
 
-
 class FilterOperator(str, Enum):
     EQ = "eq"
     NE = "ne"
@@ -37,7 +36,7 @@ class FilterCondition:
 
     def __post_init__(self):
         if not self.field:
-            raise 
+            raise
 
         if self.value is None and self.operator not in null_set:
-            raise 
+            raise

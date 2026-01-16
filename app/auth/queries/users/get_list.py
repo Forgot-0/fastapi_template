@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.auth.dtos.user import UserDTO, AuthUserJWTData
+from app.auth.dtos.user import AuthUserJWTData, UserDTO
 from app.auth.exceptions import AccessDeniedException
 from app.auth.filters.users import UserFilter
 from app.auth.models.user import User

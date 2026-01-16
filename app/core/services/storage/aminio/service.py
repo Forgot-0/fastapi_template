@@ -116,7 +116,7 @@ class MinioStorageService(BaseStorageService):
 
         logger.info("File uploaded successfully", extra={"file_key": file_key, "bucket_name": bucket_name})
         return (
-            file_key 
+            file_key
             if self.bucket_policy[bucket_name] == Policy.NONE
             else self.get_public_url(bucket_name, file_key)
         )

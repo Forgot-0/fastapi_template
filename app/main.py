@@ -2,7 +2,6 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
-from prometheus_fastapi_instrumentator.instrumentation import PrometheusFastApiInstrumentator
 import redis.asyncio as redis
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
@@ -10,12 +9,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi_limiter import FastAPILimiter
+from prometheus_fastapi_instrumentator.instrumentation import PrometheusFastApiInstrumentator
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routers import router_v1 as auth_router_v1
-from app.core.routers import router as core_router
 from app.core.api.builder import create_response
 from app.core.api.schemas import ErrorDetail, ErrorResponse, ORJSONResponse
 from app.core.configs.app import app_config
@@ -25,10 +24,10 @@ from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.log import LoggingMiddleware
+from app.core.routers import router as core_router
 from app.core.utils import now_utc
 from app.init_data import init_data
 from app.pre_start import pre_start
-
 
 logger = logging.getLogger(__name__)
 

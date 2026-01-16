@@ -4,7 +4,6 @@ from typing import Self
 from pydantic import BaseModel, Field
 
 
-
 class JwtTokenType(str, Enum):
     ACCESS = "access"
     REFRESH = "refresh"

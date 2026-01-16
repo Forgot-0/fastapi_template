@@ -2,8 +2,7 @@
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-
-TDto = TypeVar('TDto')
+TDto = TypeVar("TDto")
 
 
 @dataclass(frozen=True)

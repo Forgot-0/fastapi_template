@@ -7,7 +7,6 @@ from app.auth.repositories.user import UserRepository
 from app.auth.services.jwt import AuthJWTManager
 from app.core.queries import BaseQuery, BaseQueryHandler
 
-
 logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)

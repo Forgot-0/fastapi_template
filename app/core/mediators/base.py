@@ -1,8 +1,9 @@
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.queries import BaseQuery, BaseQueryHandler

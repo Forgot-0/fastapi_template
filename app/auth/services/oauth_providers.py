@@ -9,7 +9,6 @@ import httpx
 from app.auth.dtos.tokens import OAuthData, OAuthToken
 
 
-
 @dataclass
 class OAuthProvider(ABC):
     name: str

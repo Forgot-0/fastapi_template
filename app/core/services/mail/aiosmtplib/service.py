@@ -8,7 +8,7 @@ from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.task import SendEmail
 from app.core.services.mail.service import BaseMailService, EmailData
 from app.core.services.mail.template import BaseTemplate
-from app.core.services.queues.service import QueueResult, QueueServiceInterface
+from app.core.services.queues.service import QueueServiceInterface
 
 
 @dataclass

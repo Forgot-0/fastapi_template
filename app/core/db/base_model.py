@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import Any, Self
 
 from sqlalchemy import DateTime, Select, inspect, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column, reconstructor
-from sqlalchemy.orm.state import InstanceState
+from sqlalchemy.orm import DeclarativeBase, InstanceState, Mapped, declared_attr, mapped_column, reconstructor
 from sqlalchemy.sql import func
 
 from app.core.events.event import BaseEvent
@@ -80,6 +79,7 @@ class DateMixin:
 
 class SoftDeleteMixin:
     @declared_attr
+    @classmethod
     def deleted_at(cls) -> Mapped[datetime | None]:
         return mapped_column(DateTime, nullable=True)
 

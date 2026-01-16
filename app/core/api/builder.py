@@ -1,6 +1,6 @@
 from typing import Any, Union
 
-from pydantic import ConfigDict,create_model
+from pydantic import ConfigDict, create_model
 
 from app.core.api.schemas import (
     ErrorDetail,

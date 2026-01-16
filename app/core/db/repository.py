@@ -9,7 +9,7 @@ from app.core.db.convertor import SQLAlchemyFilterConverter
 from app.core.filters.base import BaseFilter
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 @dataclass(frozen=True)
 class PageResult(Generic[T]):
@@ -70,7 +70,6 @@ class IRepository(ABC, Generic[T]):
 
         stmt = stmt.offset(filters.pagination.offset).limit(filters.pagination.limit)
         # sql_query = str(stmt.compile(compile_kwargs={"literal_binds": True}))
-
         # print(sql_query)
         result = await self.session.execute(stmt)
         items = result.scalars().all()
@@ -81,7 +80,7 @@ class IRepository(ABC, Generic[T]):
             page=filters.pagination.page,
             page_size=filters.pagination.page_size
         )
-    
+
     async def count_by_filter(self, model: type[T], filters: BaseFilter) -> int:
         stmt = select(func.count()).select_from(model)
 
@@ -95,4 +94,5 @@ class IRepository(ABC, Generic[T]):
         return result.scalar_one()
 
     @abstractmethod
-    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select: ...
+    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+        ...

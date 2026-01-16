@@ -4,9 +4,9 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
+from app.auth.dtos.user import AuthUserJWTData, UserDTO
 from app.auth.exceptions import AccessDeniedException
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
-from app.auth.dtos.user import UserDTO, AuthUserJWTData
 from app.core.mediators.base import BaseMediator
 from app.core.services.auth.depends import UserJWTDataGetter
 from app.core.services.auth.exceptions import NotAuthenticatedException
