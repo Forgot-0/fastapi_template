@@ -24,11 +24,7 @@ class CreateOAuthAuthorizeUrlCommandHandler(BaseCommandHandler[CreateOAuthAuthor
         await self.oauth_code_repository.add_oauth_state(state, command.user_id)
 
         logger.info("Login by oauth", extra={"provider": command.provider, "user_id": command.user_id})
-        # return await self.oauth_manager.get_authorize_url(
-        #     provider_name=command.provider, state=state
-        # )
-        url = await self.oauth_manager.get_authorize_url(
+        return await self.oauth_manager.get_authorize_url(
             provider_name=command.provider, state=state
         )
-        print(url)
-        return url
+

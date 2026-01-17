@@ -3,7 +3,6 @@ from typing import Annotated
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Cookie, Depends, Query, Request, Response, status
-from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.auth.commands.auth.auth_url import CreateOAuthAuthorizeUrlCommand
@@ -37,6 +36,7 @@ from app.auth.schemas.auth.requests import (
 )
 from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
+    OAuthUrlResponse,
 )
 from app.auth.services.cookie_manager import RefreshTokenCookieManager
 from app.core.api.builder import create_response
@@ -213,13 +213,13 @@ async def reset_password(
 async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
     provider: str,
-) -> RedirectResponse:
+) -> OAuthUrlResponse:
     url: str
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=None)
     )
 
-    return RedirectResponse(url=url)
+    return OAuthUrlResponse(url=url)
 
 
 @router.get(
@@ -234,12 +234,12 @@ async def oauth_authorize_connect(
     mediator: FromDishka[BaseMediator],
     provider: str,
     current_user: CurrentUserModel,
-) -> RedirectResponse:
+) -> OAuthUrlResponse:
     url: str
     url, *_ = await mediator.handle_command(
         CreateOAuthAuthorizeUrlCommand(provider=provider, user_id=current_user.id)
     )
-    return RedirectResponse(url=url)
+    return OAuthUrlResponse(url=url)
 
 
 @router.get(

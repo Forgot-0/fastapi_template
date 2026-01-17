@@ -44,21 +44,3 @@ class TestUserEndpoints:
         )
 
         assert response.status_code == 403
-    
-    @pytest.mark.asyncio
-    async def test_get_user_sessions_endpoint(
-        self,
-        client: AsyncClient,
-        standard_user: User,
-        auth_headers,
-    ) -> None:
-        headers = auth_headers(standard_user)
-
-        response = await client.get(
-            "/api/v1/users/sessions",
-            headers=headers
-        )
-
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)

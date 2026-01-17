@@ -69,8 +69,6 @@ class IRepository(ABC, Generic[T]):
             stmt = stmt.order_by(*sort_clauses)
 
         stmt = stmt.offset(filters.pagination.offset).limit(filters.pagination.limit)
-        # sql_query = str(stmt.compile(compile_kwargs={"literal_binds": True}))
-        # print(sql_query)
         result = await self.session.execute(stmt)
         items = result.scalars().all()
 

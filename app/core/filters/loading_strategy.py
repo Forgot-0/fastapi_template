@@ -16,10 +16,6 @@ class RelationshipLoading:
     strategy: LoadingStrategyType = LoadingStrategyType.LAZY
     nested: tuple["RelationshipLoading", ...] | None  = None
 
-    def __post_init__(self):
-        if not self.relationship_name:
-            raise
-
     @property
     def has_nested(self) -> bool:
         return self.nested is not None and len(self.nested) > 0
