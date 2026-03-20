@@ -19,7 +19,8 @@ class TestAuthEndpoints:
                 "username": "newuser",
                 "email": "newuser@example.com",
                 "password": "TestPass123!",
-                "password_repeat": "TestPass123!"
+                "password_repeat": "TestPass123!",
+                "university_id": 1
             }
         )
 
@@ -41,7 +42,8 @@ class TestAuthEndpoints:
                 "username": "anotheruser",
                 "email": standard_user.email,
                 "password": "TestPass123!",
-                "password_repeat": "TestPass123!"
+                "password_repeat": "TestPass123!",
+                "university_id": 1
             }
         )
 

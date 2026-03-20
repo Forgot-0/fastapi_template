@@ -19,20 +19,27 @@ from app.auth.services.rbac import AuthRBACManager
 @pytest.mark.auth
 class TestCreatePermissionCommand:
 
-    @pytest.mark.asyncio
-    async def test_create_permission_success(
+    @pytest.fixture
+    def handler(
         self,
         db_session: AsyncSession,
-        permission_repository: PermissionRepository,
         rbac_manager: AuthRBACManager,
-        admin_user: User,
-    ) -> None:
-        handler = CreatePermissionCommandHandler(
+        permission_repository: PermissionRepository,
+    ) -> CreatePermissionCommandHandler:
+        return CreatePermissionCommandHandler(
             session=db_session,
             permission_repository=permission_repository,
             rbac_manager=rbac_manager,
         )
 
+    @pytest.mark.asyncio
+    async def test_create_permission_success(
+        self,
+        db_session: AsyncSession,
+        permission_repository: PermissionRepository,
+        admin_user: User,
+        handler
+    ) -> None:
         user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = CreatePermissionCommand(
@@ -50,19 +57,12 @@ class TestCreatePermissionCommand:
     async def test_create_permission_duplicate(
         self,
         db_session: AsyncSession,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
         admin_user: User,
+        handler
     ) -> None:
         perm = Permission(name="duplicate:perm")
         db_session.add(perm)
         await db_session.commit()
-
-        handler = CreatePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-        )
 
         user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
@@ -77,17 +77,9 @@ class TestCreatePermissionCommand:
     @pytest.mark.asyncio
     async def test_create_permission_insufficient_permissions(
         self,
-        db_session: AsyncSession,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
         standard_user: User,
+        handler
     ) -> None:
-        handler = CreatePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-        )
-
         user_jwt = AuthUserJWTData.create_from_user(standard_user)
 
         command = CreatePermissionCommand(
@@ -98,31 +90,31 @@ class TestCreatePermissionCommand:
         with pytest.raises(AccessDeniedException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
+    @pytest.mark.ahandlersyncio
     async def test_delete_permission_success(
         self,
         db_session: AsyncSession,
         permission_repository: PermissionRepository,
         admin_user: User,
-        permission_blacklist: PermissionInvalidateRepository,
         rbac_manager: AuthRBACManager,
+        permission_blacklist: PermissionInvalidateRepository,
     ) -> None:
         perm = Permission(name="deletable:perm")
         db_session.add(perm)
         await db_session.commit()
-
-        handler = DeletePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-            permission_blacklist=permission_blacklist,
-        )
 
         user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = DeletePermissionCommand(
             name="deletable:perm",
             user_jwt_data=user_jwt,
+        )
+
+        handler = DeletePermissionCommandHandler(
+            session=db_session,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            permission_blacklist=permission_blacklist,
         )
 
         await handler.handle(command)
@@ -135,23 +127,23 @@ class TestCreatePermissionCommand:
     async def test_delete_protected_permission(
         self,
         db_session: AsyncSession,
+        permission_repository: PermissionRepository,
         admin_user: User,
         rbac_manager: AuthRBACManager,
-        permission_repository: PermissionRepository,
         permission_blacklist: PermissionInvalidateRepository
     ) -> None:
-        handler = DeletePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-            permission_blacklist=permission_blacklist,
-        )
-
         user_jwt = AuthUserJWTData.create_from_user(admin_user)
 
         command = DeletePermissionCommand(
             name="role:create",
             user_jwt_data=user_jwt,
+        )
+
+        handler = DeletePermissionCommandHandler(
+            session=db_session,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            permission_blacklist=permission_blacklist,
         )
 
         with pytest.raises(ProtectedPermissionException):
@@ -162,20 +154,11 @@ class TestCreatePermissionCommand:
         self,
         db_session: AsyncSession,
         standard_user: User,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
-        permission_blacklist: PermissionInvalidateRepository
+        handler,
     ) -> None:
         perm = Permission(name="deletable:perm")
         db_session.add(perm)
         await db_session.commit()
-
-        handler = DeletePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-            permission_blacklist=permission_blacklist,
-        )
 
         user_jwt = AuthUserJWTData.create_from_user(standard_user)
 

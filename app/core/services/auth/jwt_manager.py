@@ -12,6 +12,9 @@ class JWTManager:
     jwt_secret: str
     jwt_algorithm: str
 
+    def encode(self, payload: dict[str, Any]) -> str:
+        return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+
     def decode(self, token: str) -> dict[str, Any]:
         try:
             data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])

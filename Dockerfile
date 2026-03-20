@@ -13,7 +13,6 @@ ENV PYTHONUNBUFFERED=1 \
 
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-
 FROM python-base AS builder-base
 RUN apt-get update \
  && apt-get install -y --no-install-recommends gcc git
@@ -34,6 +33,6 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ./app /app
+COPY ./ /app
 COPY alembic.ini /app/
 COPY migrations/ /app/migrations/

@@ -8,7 +8,10 @@ from aiokafka.producer import AIOKafkaProducer
 
 from app.core.events.event import BaseEvent
 from app.core.message_brokers.base import BaseMessageBroker
-from app.core.message_brokers.converters import convert_dict_to_broker_message, convert_event_to_broker_message
+from app.core.message_brokers.converters import (
+    convert_dict_to_broker_message,
+    convert_event_to_broker_message
+)
 
 
 @dataclass
@@ -24,10 +27,10 @@ class KafkaMessageBroker(BaseMessageBroker):
         value = convert_dict_to_broker_message(data)
         await self.producer.send(topic=topic, key=key.encode(), value=value)
 
-    async def send_event(self, key: str, event: BaseEvent) -> None:
+    async def send_event(self, key: str, topic: str, event: BaseEvent) -> None:
         value = convert_event_to_broker_message(event)
         await self.producer.send(
-            topic=event.get_name(),
+            topic=topic,
             key=key.encode(),
             value=value,
         )

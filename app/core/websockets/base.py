@@ -38,3 +38,15 @@ class BaseConnectionManager(ABC):
     @abstractmethod
     async def disconnect_all(self, key: str) -> None:
         ...
+
+    @abstractmethod
+    async def publish(self, connection_id: str, payload: dict) -> None:
+        ...
+
+    @abstractmethod
+    async def startup(self) -> None:
+        ...
+
+    @abstractmethod
+    async def shutdown(self) -> None:
+        ...

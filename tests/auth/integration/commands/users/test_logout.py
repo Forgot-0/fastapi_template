@@ -18,16 +18,33 @@ from tests.auth.integration.factories import CommandFactory
 @pytest.mark.auth
 class TestLogoutCommand:
 
+    @pytest.fixture
+    def handler(
+        self,
+        db_session: AsyncSession,
+        session_manager: SessionManager,
+        jwt_manager: AuthJWTManager,
+        session_repository: SessionRepository,
+        token_blacklist_repository: TokenBlacklistRepository
+    ) -> LogoutCommandHandler:
+        return LogoutCommandHandler(
+            session=db_session,
+            session_manager=session_manager,
+            jwt_manager=jwt_manager,
+            session_repository=session_repository,
+            token_blacklist=token_blacklist_repository,
+        )
+
     @pytest.mark.asyncio
     async def test_logout_success(
         self,
         db_session: AsyncSession,
-        redis_client,
         user_repository: UserRepository,
         session_manager: SessionManager,
         jwt_manager: AuthJWTManager,
         hash_service: HashService,
         standard_user: User,
+        handler
     ):
         login_handler = LoginCommandHandler(
             session=db_session,
@@ -46,18 +63,9 @@ class TestLogoutCommand:
         await db_session.commit()
 
         session_repo = SessionRepository(session=db_session)
-        token_blacklist = TokenBlacklistRepository(client=redis_client)
-
-        logout_handler = LogoutCommandHandler(
-            session=db_session,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            session_repository=session_repo,
-            token_blacklist=token_blacklist,
-        )
 
         logout_command = LogoutCommand(refresh_token=token_group.refresh_token)
-        await logout_handler.handle(logout_command)
+        await handler.handle(logout_command)
         await db_session.commit()
 
         token_data = await jwt_manager.validate_token(token_group.refresh_token, token_type=JwtTokenType.REFRESH)
@@ -69,48 +77,21 @@ class TestLogoutCommand:
     @pytest.mark.asyncio
     async def test_logout_invalid_token(
         self,
-        db_session: AsyncSession,
-        redis_client,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
+        handler
     ) -> None:
-        session_repo = SessionRepository(session=db_session)
-        token_blacklist = TokenBlacklistRepository(client=redis_client)
-
-        logout_handler = LogoutCommandHandler(
-            session=db_session,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            session_repository=session_repo,
-            token_blacklist=token_blacklist,
-        )
-
         logout_command = LogoutCommand(refresh_token="invalid_token")
 
         with pytest.raises(InvalidTokenException):
-            await logout_handler.handle(logout_command)
+            await handler.handle(logout_command)
 
     @pytest.mark.asyncio
     async def test_logout_none_token(
         self,
-        db_session: AsyncSession,
-        redis_client,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
+        handler
     ) -> None:
-        session_repo = SessionRepository(session=db_session)
-        token_blacklist = TokenBlacklistRepository(client=redis_client)
-
-        logout_handler = LogoutCommandHandler(
-            session=db_session,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            session_repository=session_repo,
-            token_blacklist=token_blacklist,
-        )
 
         logout_command = LogoutCommand(refresh_token=None)
 
         with pytest.raises(InvalidTokenException):
-            await logout_handler.handle(logout_command)
+            await handler.handle(logout_command)
 

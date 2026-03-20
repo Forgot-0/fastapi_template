@@ -1,14 +1,21 @@
 import asyncio
 from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from fastapi import WebSocket
+import orjson
+from redis.asyncio import Redis
 
 from app.core.websockets.base import BaseConnectionManager
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class ConnectionManager(BaseConnectionManager):
+    redis: Redis
     lock_map: dict[str, asyncio.Lock] = field(default_factory=dict)
 
     async def accept_connection(self, websocket: WebSocket, key: str, subprotocol: str | None=None) -> None:
@@ -38,7 +45,7 @@ class ConnectionManager(BaseConnectionManager):
         for websocket in self.connections_map[key]:
             try:
                 await websocket.send_json(data)
-            except Exception:
+            except Exception as ex:
                 await self.remove_connection(websocket, key)
 
     async def disconnect_all(self, key: str) -> None:
@@ -48,3 +55,45 @@ class ConnectionManager(BaseConnectionManager):
                     "message": "Abort connection",
                 })
                 await websocket.close()
+
+    async def publish(self, connection_id: str, payload: dict) -> None:
+        await self.redis.publish(
+            f"ws:{connection_id}",
+            orjson.dumps(payload),
+        )
+
+    async def startup(self) -> None:
+        pubsub = self.redis.pubsub()
+        await pubsub.psubscribe("ws:*")
+
+        try:
+            async for message in pubsub.listen():
+                if message["type"] != "pmessage":
+                    continue
+                channel: bytes = message["channel"]
+                connection_id = channel.decode().removeprefix("ws:")
+                try:
+                    payload = orjson.loads(message["data"])
+                except Exception as ex:
+                    logger.error("Bad JSON in channel %s", channel)
+                    continue
+
+                delivered = await self.send_json_all(connection_id, payload)
+                if not delivered:
+                    logger.debug(
+                        "connection_id %s not on this instance, skipped",
+                        connection_id,
+                    )
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            logger.exception("Pub/Sub listener crashed: %s", exc)
+        finally:
+            await pubsub.unsubscribe()
+            await self.redis.aclose()
+
+    async def shutdown(self) -> None:
+        if self.redis:
+            await self.redis.aclose()
+
+        logger.info("ConnectionManager stopped")

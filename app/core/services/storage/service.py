@@ -1,28 +1,22 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import BinaryIO
+
+from app.core.services.storage.dtos import UploadFile, UploadFilePost, UploadFilePostResponse
+
 
 
 @dataclass
-class BaseStorageService(ABC):
+class StorageService(ABC):
     @abstractmethod
     async def upload_put_url(self, bucket_name: str, file_key: str, expires: int) -> str:
         ...
 
     @abstractmethod
-    async def upload_post_file(self, bucket_name: str, file_name: str, expires: int) -> dict[str, str]:
+    async def upload_post_file(self, upload_file_post: UploadFilePost) -> UploadFilePostResponse:
         ...
 
     @abstractmethod
-    async def upload_file(
-        self,
-        bucket_name: str,
-        file_content: BinaryIO,
-        file_key: str,
-        size: int,
-        content_type: str | None = None,
-        metadata: dict[str, str] | None = None
-    ) -> str:
+    async def upload_file(self, upload_file: UploadFile) -> str:
         ...
 
     @abstractmethod
@@ -47,4 +41,4 @@ class BaseStorageService(ABC):
         ...
 
     @abstractmethod
-    def get_public_url(self, bucket: str, file_key: str) -> str: ...
+    def get_public_url_object(self, bucket: str, file_key: str) -> str: ...

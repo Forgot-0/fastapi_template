@@ -546,12 +546,12 @@ async def index(
 
    ```python
    from dishka import FromDishka
-   from app.core.services.storage.service import BaseStorageService
+   from app.core.services.storage.service import StorageService
    
    @router.post("/upload")
    async def upload_file(
        file: UploadFile,
-       storage_service: FromDishka[BaseStorageService]
+       storage_service: FromDishka[StorageService]
    ):
        # Загрузка файла
        file_key = await storage_service.upload_file(
@@ -565,7 +565,7 @@ async def index(
    @router.get("/download/{file_key}")
    async def download_file(
        file_key: str,
-       storage_service: FromDishka[BaseStorageService]
+       storage_service: FromDishka[StorageService]
    ):
        # Генерация presigned URL для скачивания
        url = await storage_service.generate_presigned_url(

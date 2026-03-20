@@ -14,3 +14,11 @@ class CacheServiceInterface(ABC):
     @abstractmethod
     async def delete(self, key: str) -> None:
         ...
+
+    @abstractmethod
+    async def invadate(self, *keys: str) -> None:
+        ...
+
+    @abstractmethod
+    async def get_list_version(self, key_list: str) -> int:
+        ...

@@ -64,6 +64,7 @@ dependencies = [
     "httpx (>=0.28.1,<0.29.0)",
     "prometheus-client (>=0.23.1,<0.24.0)",
     "prometheus-fastapi-instrumentator (>=7.1.0,<8.0.0)",
+    "gunicorn (>=25.1.0,<26.0.0)",
 ]
 
 [dependency-groups]

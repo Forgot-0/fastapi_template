@@ -23,7 +23,7 @@ class BaseTemplate(ABC):
     def _get_name(self) -> str: ...
 
     def _get_data(self) -> dict[str, Any]:
-        return {k: v for k, v in vars(self).items() if k.startswith("_") and not k.startswith("__")}
+        return {k: v for k, v in vars(self).items() if not k.startswith("_") and not k.startswith("__")}
 
     def render(self) -> str:
         try:

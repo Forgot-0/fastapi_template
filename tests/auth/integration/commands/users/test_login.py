@@ -16,24 +16,30 @@ from tests.auth.integration.factories import CommandFactory, UserFactory
 @pytest.mark.integration
 @pytest.mark.auth
 class TestLoginCommand:
-    
-    @pytest.mark.asyncio
-    async def test_login_with_username_success(
+
+    @pytest.fixture
+    def handler(
         self,
         db_session: AsyncSession,
         user_repository: UserRepository,
         session_manager: SessionManager,
         jwt_manager: AuthJWTManager,
         hash_service: HashService,
-        standard_user: User,
-    ) -> None:
-        handler = LoginCommandHandler(
+    ) -> LoginCommandHandler:
+        return LoginCommandHandler(
             session=db_session,
             user_repository=user_repository,
             session_manager=session_manager,
             jwt_manager=jwt_manager,
             hash_service=hash_service,
         )
+
+    @pytest.mark.asyncio
+    async def test_login_with_username_success(
+        self,
+        standard_user: User,
+        handler,
+    ) -> None:
 
         cmd_data = CommandFactory.create_login_command(
             username=standard_user.username,
@@ -49,20 +55,9 @@ class TestLoginCommand:
     @pytest.mark.asyncio
     async def test_login_with_email_success(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         standard_user: User,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         cmd_data = CommandFactory.create_login_command(
             username=standard_user.email,
@@ -78,20 +73,9 @@ class TestLoginCommand:
     @pytest.mark.asyncio
     async def test_login_wrong_password(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         standard_user: User,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         command = LoginCommand(
             username=standard_user.username,
@@ -107,19 +91,8 @@ class TestLoginCommand:
     @pytest.mark.asyncio
     async def test_login_nonexistent_user(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         command = LoginCommand(
             username="nonexistent@example.com",
@@ -134,21 +107,11 @@ class TestLoginCommand:
     async def test_login_creates_session(
         self,
         db_session: AsyncSession,
-        user_repository: UserRepository,
         session_repository: SessionRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         standard_user: User,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
-
+        
         cmd_data = CommandFactory.create_login_command(
             username=standard_user.username,
             password="TestPass123!",
@@ -162,27 +125,16 @@ class TestLoginCommand:
         sessions = await session_repository.get_active_by_user(standard_user.id)
 
         assert len(sessions) > 0
-        print(sessions[0].user_agent)
         assert any(s.user_agent == generate_device_info("Chrome/100.0").user_agent for s in sessions)
 
     @pytest.mark.asyncio
     async def test_login_multiple_times_same_device(
         self,
         db_session: AsyncSession,
-        user_repository: UserRepository,
         session_repository: SessionRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         standard_user: User,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         cmd_data = CommandFactory.create_login_command(
             username=standard_user.username,
@@ -210,10 +162,8 @@ class TestLoginCommand:
         self,
         db_session: AsyncSession,
         user_repository: UserRepository,
-        session_manager: SessionManager,
-        jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         role_repository,
+        handler
     ) -> None:
 
         role = await role_repository.get_with_permission_by_name("user")
@@ -225,14 +175,6 @@ class TestLoginCommand:
         )
         await user_repository.create(oauth_user)
         await db_session.commit()
-
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         command = LoginCommand(
             username="oauthuser",
@@ -246,20 +188,10 @@ class TestLoginCommand:
     @pytest.mark.asyncio
     async def test_login_tokens_contain_user_data(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
         jwt_manager: AuthJWTManager,
-        hash_service: HashService,
         standard_user: User,
+        handler
     ) -> None:
-        handler = LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=jwt_manager,
-            hash_service=hash_service,
-        )
 
         cmd_data = CommandFactory.create_login_command(
             username=standard_user.username,

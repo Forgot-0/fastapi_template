@@ -1,0 +1,12 @@
+__pycache__
+.pytest_cache
+*.pyc
+*.pyo
+*.pyd
+.git
+.env
+.venv
+.vscode
+monitoring
+tests
+nginx

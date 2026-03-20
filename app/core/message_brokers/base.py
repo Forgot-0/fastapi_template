@@ -2,9 +2,8 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, AsyncIterator
 
 from app.core.events.event import BaseEvent
 
@@ -29,11 +28,11 @@ class BaseMessageBroker(ABC):
         ...
 
     @abstractmethod
-    async def send_event(self, key: str, event: BaseEvent) -> None:
+    async def send_event(self, key: str, topic: str, event: BaseEvent) -> None:
         ...
 
     @abstractmethod
-    async def start_consuming(self, topic: list[str]) -> AsyncGenerator[dict[str, Any], None]:
+    def start_consuming(self, topic: list[str]) -> AsyncIterator[dict]:
         ...
 
     @abstractmethod
