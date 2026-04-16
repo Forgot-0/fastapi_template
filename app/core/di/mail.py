@@ -4,7 +4,7 @@ from app.core.configs.app import app_config
 from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.service import AioSmtpLibMailService
 from app.core.services.mail.service import BaseMailService
-from app.core.services.queues.service import QueueServiceInterface
+from app.core.services.queues.service import QueueService
 
 
 class MailProvider(Provider):
@@ -23,7 +23,7 @@ class MailProvider(Provider):
     @provide
     async def get_mail_service(
         self,
-        queue_service: QueueServiceInterface,
+        queue_service: QueueService,
         smtp_config: SMTPConfig
     ) -> BaseMailService:
         return AioSmtpLibMailService(queue_service, smtp_config=smtp_config)

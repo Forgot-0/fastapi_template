@@ -11,6 +11,6 @@ class EventLog(BaseModel, DateMixin):
     __tablename__ = "events_log"
 
     event_id: Mapped[UUID] = mapped_column(SAUUID, primary_key=True)
-    playload: Mapped[dict] = mapped_column(JSONB, default={})
+    payload: Mapped[dict] = mapped_column(JSONB, default={})
     meta_data: Mapped[dict] = mapped_column(JSONB, default={})
 

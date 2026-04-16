@@ -20,5 +20,5 @@ class CacheServiceInterface(ABC):
         ...
 
     @abstractmethod
-    async def get_list_version(self, key_list: str) -> int:
+    async def get_list_version(self, key_list) -> int:
         ...

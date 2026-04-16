@@ -17,6 +17,8 @@ class FilterOperator(str, Enum):
     LIKE = "like"
     ILIKE = "ilike"
     CONTAINS = "contains"
+    ALL = "all"
+    ANY = "any"
     STARTS_WITH = "starts_with"
     ENDS_WITH = "ends_with"
     IS_NULL = "is_null"

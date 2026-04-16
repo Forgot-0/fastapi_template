@@ -81,7 +81,7 @@ class SoftDeleteMixin:
     @declared_attr
     @classmethod
     def deleted_at(cls) -> Mapped[datetime | None]:
-        return mapped_column(DateTime, nullable=True)
+        return mapped_column(DateTime(timezone=True), nullable=True)
 
     @classmethod
     def select_not_deleted(cls) -> Select[tuple[Self]]:

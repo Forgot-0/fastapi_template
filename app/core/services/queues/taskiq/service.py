@@ -6,13 +6,13 @@ from taskiq import AsyncBroker, AsyncTaskiqTask, TaskiqResult
 from app.core.services.queues.service import (
     QueueResult,
     QueueResultStatus,
-    QueueServiceInterface,
+    QueueService,
 )
 from app.core.services.queues.task import BaseTask
 
 
 @dataclass
-class TaskiqQueueService(QueueServiceInterface):
+class TaskiqQueueService(QueueService):
     broker: AsyncBroker
 
     async def push(self, task: type[BaseTask], data: dict[str, Any]) -> str:

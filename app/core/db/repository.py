@@ -1,7 +1,8 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 import hashlib
-from typing import Any, Awaitable, Callable, Generic, ParamSpec, TypeVar
+from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from typing import Any, Generic, ParamSpec, TypeVar
 
 import orjson
 from pydantic import BaseModel
@@ -12,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.base_model import SoftDeleteMixin
 from app.core.db.convertor import SQLAlchemyFilterConverter
 from app.core.filters.base import BaseFilter
-
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -115,7 +115,7 @@ class CacheRepository:
     def _serialize_args_kwargs(self, args: tuple[Any, ...], kwargs: dict[str, Any]) -> bytes:
         args_repr = "|".join(repr(a) for a in args)
         kwargs_items = sorted(kwargs.items())
-        kwargs_repr = "|".join(f"{k}={repr(v)}" for k, v in kwargs_items)
+        kwargs_repr = "|".join(f"{k}={v!r}" for k, v in kwargs_items)
         combined = f"args:{args_repr};kwargs:{kwargs_repr}"
         return combined.encode("utf-8")
 
@@ -134,13 +134,13 @@ class CacheRepository:
         digest = hashlib.sha256(serialized).hexdigest()
         return f"cache:{type_model.__name__}:ver={version}:{func_mod}.{func_qname}:{digest}"
 
-    async def cache(
+    async def cache_with_key(
         self,
+        key: str,
         type_model: type[B],
         func: Callable[P, Awaitable[B]],
         ttl: int=60, *args, **kwargs
     ) -> B:
-        key = await self._build_key(type_model, func, args, kwargs)
         data = await self.redis.get(key)
 
         if data is None:
@@ -150,13 +150,24 @@ class CacheRepository:
             return data
         return type_model.model_validate_json(data)
 
-    async def cache_paginated(
-        self, type_model: type[B],
+
+    async def cache(
+        self,
+        type_model: type[B],
+        func: Callable[P, Awaitable[B]],
+        ttl: int=60, *args, **kwargs
+    ) -> B:
+        key = await self._build_key(type_model, func, args, kwargs)
+        return await self.cache_with_key(
+            key=key, type_model=type_model, func=func, ttl=ttl,
+            *args, **kwargs
+        )
+
+    async def cache_with_key_paginated(
+        self, key: str, type_model: type[B],
         func: Callable[P, Awaitable[PageResult[B]]],
         ttl: int=60, *args, **kwargs
     ) -> PageResult[B]:
-        key = await self._build_key(type_model, func, args, kwargs)
-
         data = await self.redis.get(key)
         if data is None:
             data = await func(*args, **kwargs)
@@ -177,10 +188,22 @@ class CacheRepository:
             page_size=data["page_size"]
         )
 
-    async def invadate_cache(self, *keys: str) -> None:
+    async def cache_paginated(
+        self, type_model: type[B],
+        func: Callable[P, Awaitable[PageResult[B]]],
+        ttl: int=60, *args, **kwargs
+    ) -> PageResult[B]:
+        key = await self._build_key(type_model, func, args, kwargs)
+        return await self.cache_with_key_paginated(
+            key=key, type_model=type_model, func=func,
+            ttl=ttl, *args, **kwargs
+        )
+
+    async def invalidate_cache(self, *keys: str) -> None:
         if keys:
             await self.redis.delete(*keys)
-        await self.redis.incrby(self._LIST_VERSION_KEY)
+        else:
+            await self.redis.incrby(self._LIST_VERSION_KEY)
 
     async def _get_list_version(self) -> int:
         v = await self.redis.get(self._LIST_VERSION_KEY)

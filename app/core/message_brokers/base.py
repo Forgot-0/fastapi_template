@@ -2,8 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Any, AsyncIterator
+from typing import Any
 
 from app.core.events.event import BaseEvent
 

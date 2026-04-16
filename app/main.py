@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import redis.asyncio as redis
+from aiojobs import Scheduler
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -26,6 +27,7 @@ from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.log import LoggingMiddleware
 from app.core.routers import router as core_router
 from app.core.utils import now_utc
+from app.core.websockets.base import BaseConnectionManager
 from app.init_data import init_data
 from app.pre_start import pre_start
 
@@ -44,7 +46,14 @@ async def lifespan(app: FastAPI) :
     await FastAPILimiter.init(redis_client)
     message_broker: BaseMessageBroker = await app.state.dishka_container.get(BaseMessageBroker)
     await message_broker.start()
+
+    connection_manager = await app.state.dishka_container.get(BaseConnectionManager)
+
+    scheduler = Scheduler()
+    await scheduler.spawn(connection_manager.startup())
+
     yield
+    await scheduler.close()
     await redis_client.aclose()
     await message_broker.close()
     await app.state.dishka_container.close()
@@ -95,7 +104,12 @@ def handle_validation_exeption(request: Request, exc: RequestValidationError) ->
     logger.error(
         "Validation exception",
         exc_info=exc,
-        extra={"error": exc.errors()}
+        extra={
+            "status": 422,
+            "title": "Validation exception",
+            "detail": jsonable_encoder(exc.errors()),
+            "code": "VALIDATION",
+        }
     )
     return ORJSONResponse(
         status_code=422,
@@ -115,7 +129,12 @@ def handle_uncown_exception(request: Request, exc: Exception) -> ORJSONResponse:
     logger.error(
         "Uncown exception",
         exc_info=exc,
-        extra={"error": exc}
+        extra={
+            "status": 500,
+            "title": "Uncown exception",
+            "detail": jsonable_encoder(exc),
+            "code": "UNCOWN_EXCEPTION",
+        }
     )
     return ORJSONResponse(
         status_code=500,
@@ -195,9 +214,12 @@ def init_app() -> FastAPI:
             else None
         ),
         lifespan=lifespan,
+        redirect_slashes=False
     )
 
-    PrometheusFastApiInstrumentator().instrument(
+    PrometheusFastApiInstrumentator(
+        excluded_handlers=[r"^/health$", r"^/metrics$"]
+    ).instrument(
         app,
         latency_lowr_buckets=(0.1, 0.5, 1, 1.5, 2, 2.5, 3)
     ).expose(app, should_gzip=True, tags=["core"])
@@ -214,4 +236,3 @@ def init_app() -> FastAPI:
     app.add_exception_handler(RequestValidationError, handle_validation_exeption) # type: ignore
     app.openapi = lambda: custom_openapi(app)
     return app
-

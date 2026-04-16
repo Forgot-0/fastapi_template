@@ -8,7 +8,23 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    command: ["gunicorn", "app.main:init_app()", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+    environment:
+      PROMETHEUS_MULTIPROC_DIR: /prometheus
+    tmpfs:
+      - /prometheus
+    command: >
+      sh -c "
+      rm -rf /prometheus/* &&
+      exec gunicorn 'app.main:init_app()'
+      -k uvicorn.workers.UvicornWorker
+      -w 4
+      -c gunicorn.conf.py
+      --bind 0.0.0.0:8000
+      --timeout 120
+      --graceful-timeout 30
+      --max-requests 10000
+      --max-requests-jitter 1000
+      "
     depends_on:
       db:
         condition: service_healthy
@@ -32,6 +48,9 @@ services:
     image: minio/minio:RELEASE.2025-07-23T15-54-02Z
     container_name: minio
     command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-minio}
       MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-minio123}
@@ -74,7 +93,22 @@ services:
     container_name: "redis"
     ports:
       - "6379:6379"
-    command: redis-server --save 60 1 --loglevel warning
+    command: >
+      redis-server
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --hz 20
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
     volumes:
       - redis-data:/data
     networks:

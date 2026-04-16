@@ -89,7 +89,6 @@ class AppConfig(BaseConfig):
         Literal["stream", "file"]] | str, BeforeValidator(BaseConfig.parse_list)
     ]] = ["stream"]
 
-
     # Auth
     JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"

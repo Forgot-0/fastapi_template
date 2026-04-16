@@ -17,7 +17,7 @@ class QueueResult:
     status: QueueResultStatus
 
 
-class QueueServiceInterface(ABC):
+class QueueService(ABC):
     @abstractmethod
     async def push(self, task: type[BaseTask], data: dict[str, Any]) -> str:
         ...

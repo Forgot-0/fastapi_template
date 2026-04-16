@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from app.core.services.storage.dtos import UploadFile, UploadFilePost, UploadFilePostResponse
 
 
-
 @dataclass
 class StorageService(ABC):
     @abstractmethod
@@ -33,7 +32,7 @@ class StorageService(ABC):
         bucket_name: str,
         file_key: str,
         expires: int = 3600,
-    ) -> str | None:
+    ) -> str:
         ...
 
     @abstractmethod

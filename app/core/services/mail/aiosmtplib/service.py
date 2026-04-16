@@ -8,12 +8,12 @@ from app.core.configs.smtp import SMTPConfig
 from app.core.services.mail.aiosmtplib.task import SendEmail
 from app.core.services.mail.service import BaseMailService, EmailData
 from app.core.services.mail.template import BaseTemplate
-from app.core.services.queues.service import QueueServiceInterface
+from app.core.services.queues.service import QueueService
 
 
 @dataclass
 class AioSmtpLibMailService(BaseMailService):
-    queue_service: QueueServiceInterface
+    queue_service: QueueService
     smtp_config: SMTPConfig
 
     async def send(self, template: BaseTemplate, email_data: EmailData) -> None:

@@ -2,7 +2,7 @@ from dishka import AsyncContainer, Provider, Scope, provide
 from dishka.integrations.taskiq import setup_dishka
 from taskiq import AsyncBroker
 
-from app.core.services.queues.service import QueueServiceInterface
+from app.core.services.queues.service import QueueService
 from app.core.services.queues.taskiq.init import broker
 from app.core.services.queues.taskiq.service import TaskiqQueueService
 
@@ -16,5 +16,5 @@ class QueueProvider(Provider):
         return broker
 
     @provide
-    async def get_queue_service(self, broker: AsyncBroker) -> QueueServiceInterface:
+    async def get_queue_service(self, broker: AsyncBroker) -> QueueService:
         return TaskiqQueueService(broker)

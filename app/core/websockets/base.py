@@ -1,3 +1,4 @@
+import asyncio
 from abc import (
     ABC,
     abstractmethod,
@@ -14,13 +15,27 @@ from fastapi import WebSocket
 
 @dataclass
 class BaseConnectionManager(ABC):
-    connections_map: dict[str, list[WebSocket]] = field(
-        default_factory=lambda: defaultdict(list),
+    connections_map: dict[str, set[WebSocket]] = field(
+        default_factory=lambda: defaultdict(set),
         kw_only=True,
     )
+    heartbeat_interval: int = field(default=30, kw_only=True)
+    heartbeat_task: asyncio.Task | None = field(default=None, kw_only=True)
 
     @abstractmethod
     async def accept_connection(self, websocket: WebSocket, key: str, subprotocol: str | None=None) -> None:
+        ...
+
+    @abstractmethod
+    async def bind_connection(self, websocket: WebSocket, key: str) -> None:
+        ...
+
+    @abstractmethod
+    async def bind_key_connections(self, source_key: str, target_key: str) -> None:
+        ...
+
+    @abstractmethod
+    async def unbind_key_connections(self, source_key: str, target_key: str) -> None:
         ...
 
     @abstractmethod
@@ -40,7 +55,11 @@ class BaseConnectionManager(ABC):
         ...
 
     @abstractmethod
-    async def publish(self, connection_id: str, payload: dict) -> None:
+    async def publish(self, key: str, payload: dict) -> None:
+        ...
+
+    @abstractmethod
+    async def publish_bulk(self, keys: list[str], payload: dict) -> None:
         ...
 
     @abstractmethod

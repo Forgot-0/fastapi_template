@@ -31,4 +31,4 @@ class DBProvider(Provider):
 
     @provide(scope=Scope.APP)
     async def get_redis(self) -> Redis:
-        return Redis.from_url(app_config.redis_url, max_connections=50)
+        return Redis.from_url(app_config.redis_url, max_connections=200)

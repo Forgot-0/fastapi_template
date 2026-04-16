@@ -22,6 +22,7 @@ class BaseEvent(ABC):
             raise FieldRequiredException()
         return name
 
+
 ET = TypeVar("ET", bound=BaseEvent)
 ER = TypeVar("ER", bound=Any)
 

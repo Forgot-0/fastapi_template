@@ -19,6 +19,8 @@ operators_map = {
     FilterOperator.IN: lambda a, v: a.in_(v),
     FilterOperator.NOT_IN: lambda a, v: ~a.in_(v),
     FilterOperator.CONTAINS: lambda a, v: a.ilike(f"%{v}%"),
+    FilterOperator.ALL: lambda a, v: a.contains(v),
+    FilterOperator.ANY: lambda a, v: a.overlap(v),
     FilterOperator.STARTS_WITH: lambda a, v: a.ilike(f"{v}%"),
     FilterOperator.ENDS_WITH: lambda a, v: a.ilike(f"%{v}"),
     FilterOperator.IS_NULL: lambda a, v: a.is_(None),

@@ -4,9 +4,13 @@ from uuid import UUID
 
 import orjson
 from fastapi.responses import ORJSONResponse as _ORJSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger(__name__)
+
+
+class OrmModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ErrorDetail(BaseModel):
