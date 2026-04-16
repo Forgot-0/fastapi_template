@@ -2,17 +2,20 @@
 
 ## Содержание
 
-1. [Введение](#введение)
-2. [Архитектура](#project-structure)
-    - [База данных](#database-layer)
-    - [API слой](#api-layer)
-    - [Конфигурация](#config)
+- [FastAPI Template](#fastapi-template)
+  - [Содержание](#содержание)
+  - [Введение](#введение)
+    - [Project Structure](#project-structure)
+    - [Database Layer](#database-layer)
+    - [API Layer](#api-layer)
+    - [Config](#config)
     - [Dependency Injection](#dependency-injection)
-3. [Безопасность](#security)
-    - [Политики доступа](#policies)
-    - [OAuth аутентификация](#oauth-authentication)
-4. [Core Services](#core-services)
-    - [Events System](#events)
+  - [Security](#security)
+    - [Policies](#policies)
+    - [OAuth Authentication](#oauth-authentication)
+  - [Filter System](#filter-system)
+  - [Core Services](#core-services)
+    - [Events](#events)
     - [Cache Service](#cache-service)
     - [Queue Service](#queue-service)
     - [Mail Service](#mail-service)
@@ -20,12 +23,21 @@
     - [WebSocket Service](#websocket-service)
     - [Message Brokers](#message-brokers)
     - [Logging Service](#logging-service)
+    - [Monitoring](#monitoring)
+    - [Middleware](#middleware)
+  - [Application Lifecycle](#application-lifecycle)
+    - [Startup Sequence](#startup-sequence)
+    - [Shutdown](#shutdown)
+  - [Создание нового модуля](#создание-нового-модуля)
+    - [1. Структура модуля](#1-структура-модуля)
+    - [2. Пошаговое создание](#2-пошаговое-создание)
+    - [3. Соглашения по именованию](#3-соглашения-по-именованию)
+
+---
 
 ## Введение
 
-
-Вдохновлен [Starter Kit](https://github.com/arctikant/fastapi-modular-monolith-starter-kit)
-
+Вдохновлён [Starter Kit](https://github.com/arctikant/fastapi-modular-monolith-starter-kit)
 
 ### Project Structure
 
@@ -33,805 +45,698 @@
 fastapi_template/
 ├── migrations/          # Alembic migrations
 ├── app/                 # Application package
-│   ├── main.py         # Application entry point
-│   ├── pre_start.py    # Pre-start checks and initialization
-│   ├── init_data.py    # Initial data setup
-│   ├── tasks.py        # Background tasks
-│   ├── core/           # Core functionality
-│   │   ├── api/        # API related tools
-│   │   ├── configs/    # Configuration management
-│   │   ├── db/         # Database utilities
-│   │   ├── di/         # Dependency injection setup
-│   │   ├── events/     # Event system
-│   │   ├── log/        # Logging configuration
-│   │   ├── mediators/  # Mediator pattern implementation
-│   │   ├── message_brokers/  # Message broker implementations
-│   │   ├── middlewares/      # Custom middlewares
-│   │   ├── services/   # Core services
-│   │   └── websockets/ # WebSocket support
-│   └── auth/           # Auth module (example module structure)
-│       ├── commands/   # Command handlers
-│       ├── events/     # Module specific events
-│       ├── models/     # Database models
-│       ├── queries/    # Query handlers
-│       ├── repositories/  # Data access layer
-│       ├── routes/     # API routes
-│       ├── schemas/    # Pydantic schemas
-│       └── services/   # Business logic services
-├── monitoring/         # Monitoring configuration (Grafana, Loki, Vector)
-└── pyproject.toml     # Project dependencies
+│   ├── main.py          # Application entry point
+│   ├── pre_start.py     # Pre-start DB checks
+│   ├── init_data.py     # Initial data setup (roles, permissions)
+│   ├── tasks.py         # Taskiq worker entry point & scheduler
+│   ├── core/            # Core functionality
+│   │   ├── api/         # API utilities (builder, rate_limiter, schemas, filter_mapper)
+│   │   ├── configs/     # Configuration management
+│   │   ├── db/          # Database utilities (base_model, repository, session, convertor)
+│   │   ├── di/          # Dependency injection container & providers
+│   │   ├── events/      # Event system (event, service, mediator)
+│   │   ├── filters/     # Generic filter system (base, condition, sort, pagination, loading_strategy)
+│   │   ├── log/         # Logging configuration (structlog)
+│   │   ├── mediators/   # Mediator pattern (command & query registries)
+│   │   ├── message_brokers/  # Kafka / Redis pub-sub
+│   │   ├── middlewares/      # ContextMiddleware, LoggingMiddleware
+│   │   ├── models.py    # Central import of all ORM models (for Alembic)
+│   │   ├── routers.py   # Health-check endpoint
+│   │   ├── services/    # Core services (auth, cache, mail, queues, storage)
+│   │   └── websockets/  # WebSocket connection manager
+│   └── auth/            # Auth module (example module structure)
+│       ├── commands/    # Command handlers (auth, permissions, roles, sessions, users)
+│       ├── dtos/        # Internal data-transfer objects
+│       ├── emails/      # Email templates & HTML views
+│       ├── events/      # Module-specific event handlers
+│       ├── filters/     # Auth-specific filter classes (UserFilter, RoleFilter, …)
+│       ├── models/      # ORM models (User, Role, Permission, Session, OAuthAccount)
+│       ├── queries/     # Query handlers (auth, permissions, roles, sessions, users)
+│       ├── repositories/  # Data access layer (SQLAlchemy + Redis)
+│       ├── routes/      # API routes (v1: auth, users, roles, permissions, sessions)
+│       ├── schemas/     # Pydantic request / response schemas
+│       ├── services/    # Business-logic services (JWT, OAuth, RBAC, hash, session, cookie)
+│       ├── config.py    # Auth module config
+│       ├── deps.py      # FastAPI dependencies (CurrentUser, ActiveUser, …)
+│       ├── exceptions.py
+│       ├── gateway.py   # BaseAuthGateway interface
+│       ├── providers.py # Dishka DI provider
+│       ├── routers.py   # Top-level router
+│       └── tasks.py     # Taskiq task registration
+├── monitoring/          # Grafana / Loki / Vector config
+└── pyproject.toml
 ```
+
+---
 
 ### Database Layer
 
-**Used:**
+**Используется:**
 
 - Database: [PostgreSQL](https://www.postgresql.org)
-- PostgreSQL adapter: [asyncpg](https://pypi.org/project/asyncpg/)
+- Async adapter: [asyncpg](https://pypi.org/project/asyncpg/)
 - ORM: [SQLAlchemy](https://www.sqlalchemy.org) 2.0+ (async)
-- Migration tool: [Alembic](https://github.com/sqlalchemy/alembic)
+- Migrations: [Alembic](https://github.com/sqlalchemy/alembic)
 
 **Key Notes:**
 
-- `app.core.db.BaseModel` — реализует общую логику модели. Все пользовательские модели должны её наследовать. Сам `BaseModel` наследует от `sqlalchemy.orm.DeclarativeBase`.
-- `app.core.db.DateMixin` - Добавляет поля `created_at` и `updated_at` для автоматического отслеживания времени создания и обновления.
-- `app.core.db.SoftDeleteMixin` - Реализует функцию «мягкого» удаления. Чтобы добавить логику «мягкого» удаления для вашей конкретной модели, вам просто нужно унаследовать `SoftDeleteMixin`.
-- `BaseModel` поддерживает систему событий через методы `register_event()` и `pull_events()` для интеграции с EventBus.
-- Все модели должны быть импортированы в `app/core/models.py`, чтобы Alembic мог их видеть и работать с ними.
+- `app.core.db.BaseModel` — базовый класс для всех моделей, наследует `sqlalchemy.orm.DeclarativeBase`. Реализует `to_dict()`, `from_dict()`, `update()`, а также систему событий (`register_event()` / `pull_events()`).
+- `app.core.db.DateMixin` — добавляет поля `created_at` и `updated_at`.
+- `app.core.db.SoftDeleteMixin` — «мягкое» удаление через поле `deleted_at`. Предоставляет `select_not_deleted()` classmethod и `soft_delete()` / `is_deleted()`.
+- Все модели должны быть импортированы в `app/core/models.py`, чтобы Alembic их видел.
+
+```python
+from app.core.db.base_model import BaseModel, DateMixin, SoftDeleteMixin
+
+class Post(BaseModel, DateMixin, SoftDeleteMixin):
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+```
+
+---
 
 ### API Layer
 
-**Used:**
+**Используется:**
 
-- Rate limiting tool: [fastapi-limiter](https://github.com/long2ice/fastapi-limiter)
-- Storage provider: [Redis](https://redis.io)
+- Rate limiting: [fastapi-limiter](https://github.com/long2ice/fastapi-limiter) + Redis
+- Metrics: [prometheus-fastapi-instrumentator](https://github.com/trallnag/prometheus-fastapi-instrumentator)
 
-**Key Notes:**
+**Структура эндпоинтов и схем**
 
-- Для группировки связанных маршрутов следует использовать `APIRouter` из `fastapi`. Их следует разместить в отдельных файлах, расположенных в `routes.v<api-version>` ваших модулей. Например: `app.auth.routes.v1.users.py`.
+Каждый модуль организован следующим образом:
 
-- Каждый модуль имеет маршрутизатор верхнего уровня, который объединяет все групповые маршрутизаторы в один главный. Например: `app.auth.routers.py`.
+- `routes/v<N>/<entity>.py` — роутеры FastAPI
+- `schemas/<entity>/requests.py` — входящие Pydantic-схемы с методом `to_<entity>_filter() -> Filter`
+- `schemas/<entity>/responses.py` — исходящие схемы
 
-- Маршрутизатор верхнего уровня из каждого модуля должен быть зарегистрирован в маршрутизаторе приложения в `app.main.py`
+Пример схемы запроса со встроенной конвертацией в фильтр:
 
-- `app.core.api.builder.ListParamsBuilder` — зависимость, которая анализирует и формирует список параметров запроса. Она использует модели Pydantic `app.core.api.schemas.ListParams`, `app.core.api.schemas.SortParam`, `app.core.api.schemas.FilterParam`. Поэтому мы можем расширить их и настроить правила валидации. Например, в `app.auth.schemas.user.py`:
+```python
+class GetUsersRequest(BaseModel):
+    email: str | None = None
+    is_active: bool | None = None
+    page: int = Field(1, ge=1)
+    page_size: int = Field(20, ge=1, le=100)
+    sort: str | None = Field(default=None, examples=["created_at:desc,username:asc"])
 
-    ```python
-    from app.core.api.schemas import FilterParam, ListParams, SortParam
+    def to_user_filter(self) -> UserFilter:
+        user_filter = UserFilter(email=self.email, is_active=self.is_active)
+        user_filter.set_pagination(Pagination(page=self.page, page_size=self.page_size))
+        for sf in FilterMapper.parse_sort_string(self.sort):
+            user_filter.add_sort(sf.field, sf.direction)
+        return user_filter
+```
 
-    class UserSortParam(SortParam):
-        field: Literal['id', 'username', 'status_id', 'created_at']
+Использование в роутере:
 
-    class UserFilterParam(FilterParam):
-        field: Literal['id', 'username', 'status_id']
+```python
+@router.get("/")
+async def get_list(
+    mediator: FromDishka[BaseMediator],
+    user_jwt_data: AuthCurrentUserJWTData,
+    params: GetUsersRequest = Query(),
+) -> PageResult[UserDTO]:
+    return await mediator.handle_query(
+        GetListUserQuery(user_jwt_data=user_jwt_data, user_filter=params.to_user_filter())
+    )
+```
 
-    class UserListParams(ListParams):
-        sort: list[UserSortParam] | None = Field(None, description='Sorting parameters')
-        filters: list[UserFilterParam] | None = Field(None, description='Filtering parameters')
-    ```
+**Rate Limiter**
 
-    Затем мы создаем экземпляр `app.core.api.builder.ListParamsBuilder` и используем его в функции операции пути:    
+`app.core.api.rate_limiter.ConfigurableRateLimiter` — обёртка над `RateLimiter` из `fastapi-limiter`:
 
-    ```python
-    from app.auth.schemas.user import UserFilterParam, UserListParams, UserResponse, UserSortParam
-    from app.core.api.builder import ListParamsBuilder, PaginatedResponse
-    
-    list_params_builder = ListParamsBuilder(UserListParams, UserSortParam, UserFilterParam)
-    
-    @router.get('')
-    async def get_list(request: UserListParams = Depends(list_params_builder)
-    ) -> PaginatedResponse[list[UserResponse]]:
-        ...
-    ```
-    
-- `app.core.api.rate_limiter.ConfigurableRateLimiter` - это просто простая оболочка для зависимости `RateLimiter` из пакета `fastapi_limiter`, которая добавляет возможность включать/отключать ограничение из конфигурации.
+```python
+from app.core.api.rate_limiter import ConfigurableRateLimiter
 
-    Вот как можно использовать ограничитель `APIRouter`:
+router = APIRouter(dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60))])
 
-    ```python
-    from app.core.api.rate_limiter import ConfigurableRateLimiter
+# или на конкретном эндпоинте:
+@app.get("/", dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60))])
+async def index(): ...
+```
 
-    router = APIRouter(dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60))])
-    ```
+**Формирование ответов об ошибках**
 
-    Практически то же самое для функции операции пропуска:
+`app.core.api.builder.create_response` генерирует OpenAPI-совместимое описание ошибки:
 
-    ```python
-    from app.core.api.rate_limiter import ConfigurableRateLimiter
+```python
+@router.post(
+    "/login",
+    responses={400: create_response(WrongLoginDataException(username="user"))}
+)
+async def login(...): ...
+```
 
-    @app.get("/", dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60))])
-    async def index():
-        ...
-    ```
-
+---
 
 ### Config
 
 **Key Notes:**
-- Конфигурации приложения можно получить через `app.core.configs.app_config`.
-- Каждый модуль должен иметь свой собственный `config.py` (при необходимости), который должен быть унаследован от `app.core.configs.BaseConfig`.
-- Все конфигурации извлекают параметры из файла `.env`.
-- `.env.example` — это всего лишь пример, описывающий все используемые параметры. Его следует скопировать в `.env` при первом развёртывании приложения.
 
-### Dependency Injection.
+- Глобальный конфиг: `app.core.configs.app_config` (класс `AppConfig`).
+- Каждый модуль может иметь собственный `config.py`, унаследованный от `app.core.configs.BaseConfig`.
+- Все настройки читаются из файла `.env`.
+- `.env.example` — шаблон всех переменных; скопируйте его в `.env` при первом развёртывании.
 
-В проекте используется сложная система DI, основанная на фреймворке Diska:
+---
 
-**Container Setup**
-- Модульная регистрация зависимостей в папках `di/`
-- Поддержка как синхронных, так и асинхронных зависимостей
+### Dependency Injection
 
-**Key Features**
-- **Scoped Lifetime Management**: Поддержка времен жизни `APP`, `REQUEST` и `SESSION`
-- **Integration with FastAPI**:
+Используется фреймворк [Dishka](https://github.com/reagento/dishka).
+
+**Container Setup:**
+
+```python
+# app/core/di/container.py
+from dishka import AsyncContainer, make_async_container
+from app.auth.providers import AuthModuleProvider
+from app.core.di import get_core_providers
+
+def create_container(*app_providers) -> AsyncContainer:
+    return make_async_container(
+        *get_core_providers(),
+        AuthModuleProvider(),
+        *app_providers
+    )
+```
+
+**Инициализация с FastAPI:**
+
 ```python
 from dishka.integrations.fastapi import setup_dishka
 from app.core.di.container import create_container
 
-def init_app() -> FastAPI:
-    app = FastAPI()
-    container = create_container()
-    setup_dishka(container=container, app=app)
-    return app
+app = FastAPI(lifespan=lifespan)
+container = create_container()
+setup_dishka(container=container, app=app)
 ```
 
 **Использование в эндпоинтах:**
+
 ```python
 from dishka import FromDishka
 from app.core.mediators.base import BaseMediator
 
 @router.get("/")
 async def example(mediator: FromDishka[BaseMediator]):
-    # Использование медиатора для команд и запросов
-    result = await mediator.handle_command(SomeCommand())
+    result = await mediator.handle_query(SomeQuery(...))
     return result
 ```
 
+**Lifetime scopes:** `APP`, `REQUEST`.
+
+---
+
+## Security
+
 ### Policies
 
-**Key Notes:**
-
-- Все файлы политик должны быть размещены в каталоге `policies` в нашем модуле.
-
-Очень полезно разделить логику доступа к действиям и саму логику действий. Для реализации этого не требуется устанавливать никакие сторонние библиотеки. В шаблоне сейчас нет места для этой логики, поэтому я просто покажу вам пример.
-
-В вашем `app.our_module.policies.users.py`:
+Логика доступа выносится в отдельные функции-политики в директории `policies/` модуля:
 
 ```python
-from app.auth.deps import ActiveUser
-from app.auth.exceptions import ActionNotAllowed
+# app/our_module/policies/posts.py
+from app.auth.dtos.user import AuthUserJWTData
+from app.auth.exceptions import AccessDeniedException
 
-async def can_update(user: ActiveUser) bool:
-    # Any logic we need to restrict access to this action.
-    if not user.is_admin:
-        raise ActionNotAllowed("You don't have permission to update the user")
-    
+async def can_update(user: AuthUserJWTData) -> bool:
+    if "post:update" not in user.permissions:
+        raise AccessDeniedException(need_permissions={"post:update"})
     return True
 ```
 
-Затем мы можем использовать его в нашей функции операции пути:
+Использование в роутере:
 
 ```python
-@router.patch('/{user_id}', dependencies=[Depends(can_update)])
-async def update(user_id: int) -> None:
-    ...
+@router.patch("/{post_id}", dependencies=[Depends(can_update)])
+async def update(post_id: int) -> None: ...
 ```
-
-Как видите, система DI позволяет нам легко и довольно элегантно добавлять эти проверки в наши маршруты. Мы также можем использовать её где угодно в нашем коде, например, в ваших сервисах. Достаточно просто передать необходимые параметры в нашу функцию:
-
-```python
-from app.auth.exceptions import ActionNotAllowed
-
-async def update_status(user_id: int, status_id: UserStatus) -> User:
-    user = await self.get(user_id)
-
-    if not await can_update(user):
-        raise ActionNotAllowed("You don't have permission to update the user.")
-```
-
-Такой подход позволяет нам хранить логику доступа к действиям в одном месте и использовать её повторно при необходимости.
 
 ### OAuth Authentication
 
-**Used:**
-- OAuth 2.0 providers: Google, Yandex, GitHub
-- HTTP client: [httpx](https://www.python-httpx.org)
+**Поддерживаемые провайдеры:** Google, Yandex, GitHub.
 
-**Key Notes:**
+**Структура:**
 
-Проект поддерживает OAuth аутентификацию через несколько провайдеров. Система построена на паттерне Factory для легкого добавления новых провайдеров.
+- `OAuthProvider` — абстрактный базовый класс
+- `OAuthProviderFactory` — реестр провайдеров, создаётся в `AuthModuleProvider`
+- `OAuthManager` — фасад для получения URL авторизации и обработки callback
 
-1. **Поддерживаемые провайдеры:**
-   - Google OAuth 2.0
-   - Yandex OAuth 2.0
-   - GitHub OAuth 2.0
+**API Endpoints:**
 
-2. **Структура OAuth системы:**
-   - `OAuthProvider` - Базовый класс для всех OAuth провайдеров
-   - `OAuthProviderFactory` - Фабрика для управления провайдерами
-   - `OAuthManager` - Менеджер для работы с OAuth
+| Method | Path | Описание |
+|--------|------|----------|
+| `GET` | `/api/v1/auth/oauth/{provider}/authorize` | Получить URL авторизации |
+| `GET` | `/api/v1/auth/oauth/{provider}/authorize/connect` | Привязать OAuth к существующему аккаунту |
+| `GET` | `/api/v1/auth/oauth/{provider}/callback` | Callback от провайдера |
 
-3. **Использование OAuth:**
+**Конфигурация** (`.env`):
 
-   Получение URL для авторизации:
-   ```python
-   from app.auth.services.oauth_manager import OAuthManager
-   
-   oauth_manager: OAuthManager
-   auth_url = await oauth_manager.get_authorize_url(
-       provider_name="google",
-       state="unique_state_string"
-   )
-   ```
+```env
+OAUTH_GOOGLE_CLIENT_ID=...
+OAUTH_GOOGLE_CLIENT_SECRET=...
+OAUTH_GOOGLE_REDIRECT_URI=...
+# Аналогично для YANDEX и GITHUB
+```
 
-   Обработка callback:
-   ```python
-   oauth_data = await oauth_manager.process_callback(
-       provider_name="google",
-       code="authorization_code"
-   )
-   ```
+---
 
-4. **API Endpoints:**
-   - `GET /api/v1/auth/oauth/{provider}/authorize` - Получить URL для авторизации
-   - `GET /api/v1/auth/oauth/{provider}/authorize/connect` - Подключить OAuth к существующему аккаунту
-   - `GET /api/v1/auth/oauth/{provider}/callback` - Callback endpoint для обработки OAuth ответа
+## Filter System
 
-5. **Конфигурация:**
-   OAuth настраивается через переменные окружения в `app.auth.config.AuthConfig`:
-   ```python
-   OAUTH_GOOGLE_CLIENT_ID: str
-   OAUTH_GOOGLE_CLIENT_SECRET: str
-   OAUTH_GOOGLE_REDIRECT_URI: str
-   # Аналогично для Yandex и GitHub
-   ```
+Система фильтрации реализована в `app/core/filters/` и обеспечивает типобезопасное построение SQL-запросов через `SQLAlchemyFilterConverter`.
 
-## Services
+**Компоненты:**
+
+- `BaseFilter` — базовый класс фильтра; хранит условия, сортировку, пагинацию и стратегии загрузки связей.
+- `FilterCondition` / `FilterOperator` — одно условие фильтра и доступные операторы.
+- `Pagination` — параметры страницы (page, page_size, offset, limit).
+- `SortField` / `SortDirection` — параметры сортировки.
+- `RelationshipLoading` / `LoadingStrategyType` — eager-loading стратегии (SELECTIN, JOINED, SUBQUERY, LAZY).
+
+**Создание фильтра:**
+
+```python
+from dataclasses import dataclass
+from app.core.filters.base import BaseFilter
+from app.core.filters.condition import FilterOperator
+from app.core.filters.loading_strategy import LoadingStrategyType
+
+@dataclass
+class PostFilter(BaseFilter):
+    title: str | None = None
+    is_published: bool | None = None
+
+    def __post_init__(self):
+        self._build_conditions()
+
+    def _build_conditions(self) -> None:
+        self.add_condition("title", FilterOperator.CONTAINS, self.title)
+        self.add_condition("is_published", FilterOperator.EQ, self.is_published)
+        self.add_relation("author", LoadingStrategyType.SELECTIN)
+```
+
+**Использование в репозитории:**
+
+```python
+# IRepository.find_by_filter() применяет фильтр автоматически
+result: PageResult[Post] = await self.post_repository.find_by_filter(
+    model=Post,
+    filters=PostFilter(title="fastapi", is_published=True)
+)
+```
+
+**Доступные операторы** (`FilterOperator`):
+
+`EQ`, `NE`, `GT`, `GTE`, `LT`, `LTE`, `IN`, `NOT_IN`, `CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `IS_NULL`, `IS_NOT_NULL`, `IS_NULL_FROM`, `IS_NOT_NULL_FROM`
+
+**Пагинация и сортировка:**
+
+```python
+from app.core.filters.pagination import Pagination
+from app.core.filters.sort import SortDirection
+from app.core.api.filter_mapper import FilterMapper
+
+post_filter = PostFilter(title="fastapi")
+post_filter.set_pagination(Pagination(page=1, page_size=20))
+post_filter.add_sort("created_at", SortDirection.DESC)
+
+# Парсинг строки сортировки из query-параметров:
+for sf in FilterMapper.parse_sort_string("created_at:desc,title:asc"):
+    post_filter.add_sort(sf.field, sf.direction)
+```
+
+**`PageResult`** — возвращаемый тип `find_by_filter`:
+
+```python
+@dataclass(frozen=True)
+class PageResult(Generic[T]):
+    items: list[T]
+    total: int
+    page: int
+    page_size: int
+    # computed: total_pages, has_next, has_previous, next_page, previous_page
+```
+
+---
+
+## Core Services
 
 ### Events
 
-**Used:**
+**Компоненты:**
 
-- `EventBus`: Индивидуальная реализация на основе шаблона Mediator
-- `DI Container`: [Dishka](https://github.com/reagento/dishka)
+- `BaseEvent` — базовый класс события (frozen dataclass, обязателен `__event_name__`)
+- `BaseEventHandler` — абстрактный обработчик события
+- `EventRegisty` — реестр подписок
+- `BaseEventBus` / `MediatorEventBus` — шина событий, работающая через Dishka-контейнер
 
+**Создание события:**
 
-**Key Notes**
+```python
+from dataclasses import dataclass
+from app.core.events.event import BaseEvent
 
-1. **Event System Components:**
-     - `BaseEvent` - Базовый класс для всех событий (из `app.core.events.event`)
-     - `EventRegisty` - Реестр обработчиков событий
-     - `BaseEventBus` - Интерфейс для обработки событий
-     - `MediatorEventBus` - Основная реализация EventBus
+@dataclass(frozen=True)
+class PostPublishedEvent(BaseEvent):
+    post_id: int
+    author_email: str
+    __event_name__: str = "post_published"
+```
 
-2. **Creating New Events:**
-   ```python
-    from dataclasses import dataclass
-    from app.core.events.event import BaseEvent
+**Создание обработчика:**
 
-    @dataclass(frozen=True)
-    class UserCreatedEvent(BaseEvent):
-        email: str
-        username: str
-        __event_name__: str = "user_created"  # Unique event identifier
-    ```
+```python
+@dataclass(frozen=True)
+class NotifyAuthorHandler(BaseEventHandler[PostPublishedEvent, None]):
+    mail_service: BaseMailService
 
-3. **Creating Event Handlers:**
-    ```python
-    @dataclass(frozen=True)
-    class SendVerifyEventHandler(BaseEventHandler[CreatedUserEvent, None]):
-        user_service: UserService
+    async def __call__(self, event: PostPublishedEvent) -> None:
+        await self.mail_service.send_plain(
+            subject="Ваш пост опубликован",
+            recipient=event.author_email,
+            body="..."
+        )
+```
 
-        async def __call__(self, event: CreatedUserEvent) -> None:
-            await self.user_service.send_verify(email=event.email)
-   ```
+**Публикация из модели:**
 
-4. **Dispatching Events:**
-    ```python
-    # In your models
-    class User(BaseModel):
-        @classmethod
-        def create(cls, email: str, username: str, password_hash: str) -> "User":
-            user = User(
-                email=email,
-                username=username,
-                password_hash=password_hash
-            )
+```python
+class Post(BaseModel):
+    @classmethod
+    def publish(cls, ...) -> "Post":
+        post = Post(...)
+        post.register_event(PostPublishedEvent(post_id=post.id, author_email=...))
+        return post
+```
 
-            user.register_event(
-                CreatedUserEvent(
-                    email=email,
-                    username=username
-                )
-            )
-            return user
-    ```
+**В команде:**
+
+```python
+await self.session.commit()
+await self.event_bus.publish(post.pull_events())
+```
+
+**Регистрация в провайдере:**
+
+```python
+@decorate
+def register_events(self, registry: EventRegisty) -> EventRegisty:
+    registry.subscribe(PostPublishedEvent, [NotifyAuthorHandler])
+    return registry
+```
 
 **Best Practices:**
 
-1. **Event Naming:**
-     - Названия событий должны быть описательными и однозначными.
-     - Определите `__event_name__` для каждого события
+- Имена событий — прошедшее время (`post_published`, `user_created`)
+- События неизменяемы (`frozen=True`)
+- Один обработчик — один файл: `events/<entity>/<event_name>.py`
 
-2. **Handler Organization:**
-     - Храните обработчики в отдельном каталоге `events` внутри вашего модуля.
-     - Один обработчик на файл для лучшей организации.
-     - Следуйте шаблону: `<module>/events/<entity>/<event_name>.py`
+---
 
-3. **Event Data:**
-     - События должны быть неизменяемыми (используйте `@dataclass(frozen=True)`)
-     - Включайте в события только необходимые данные
-     - По возможности используйте идентификаторы вместо полных объектов
+### Cache Service
 
+**Используется:** [aiocache](https://github.com/aio-libs/aiocache) + Redis
 
-### Cache service
-
-**Used:**
-
-- Async caching tool: [aiocache](https://github.com/aio-libs/aiocache)
-- Storage provider: [Redis](https://redis.io)
-
-**Key Notes:**
-
-- `CacheServiceInterface` доступен через DI систему Dishka.
-- Сервис предоставляет базовые операции кеширования: get, set, delete.
-
-Использование кеша:
+`CacheServiceInterface` доступен через DI:
 
 ```python
 from dishka import FromDishka
 from app.core.services.cache.base import CacheServiceInterface
 
 @router.get("/items/{item_id}")
-async def get_item(
-    item_id: int,
-    cache_service: FromDishka[CacheServiceInterface]
-):
-    # Проверка кеша
-    cached_item = await cache_service.get(f"item:{item_id}")
-    if cached_item:
-        return cached_item
-    
-    # Получение данных из БД
-    item = await get_item_from_db(item_id)
-    
-    # Сохранение в кеш
-    await cache_service.set(f"item:{item_id}", item, ttl=60)
-    
+async def get_item(item_id: int, cache: FromDishka[CacheServiceInterface]):
+    cached = await cache.get(f"item:{item_id}")
+    if cached:
+        return cached
+    item = await get_from_db(item_id)
+    await cache.set(f"item:{item_id}", item, ttl=60)
     return item
 
 @router.delete("/items/{item_id}")
-async def delete_item(
-    item_id: int,
-    cache_service: FromDishka[CacheServiceInterface]
-):
-    # Удаление из кеша
-    await cache_service.delete(f"item:{item_id}")
-    # Удаление из БД
+async def delete_item(item_id: int, cache: FromDishka[CacheServiceInterface]):
+    await cache.delete(f"item:{item_id}")
     ...
 ```
 
-### Queue service
+Для кеширования запросов к репозиторию также можно использовать `CacheRepository` (в `app/core/db/repository.py`), который предоставляет `cache()` и `cache_paginated()` с автоматической инвалидацией по версии.
 
-**Used:**
+---
 
-- Async distributed task manager: [Taskiq](https://taskiq-python.github.io)
-- Taskiq Redis broker: [Taskiq-Redis](https://github.com/taskiq-python/taskiq-redis)
-- Message broker: [Redis](https://redis.io)
+### Queue Service
 
-**Key Notes:**
-- Каждая задача очереди должна быть унаследована от `app.core.services.queue.task.BaseTask`, иметь атрибут `__task_name__` и реализовывать метод `run(...)`.
-- Все задачи модуля должны быть зарегистрированы в `core/di/tasks.py`.
+**Используется:** [Taskiq](https://taskiq-python.github.io) + [taskiq-redis](https://github.com/taskiq-python/taskiq-redis)
 
-Вот как могут выглядеть задачи очереди:
+**Создание задачи:**
 
 ```python
-from app.core.services.queue import BaseTask
+from dataclasses import dataclass
+from app.core.services.queues.task import BaseTask
 
-class SendEmail(BaseTask):
-    __task_name__ = 'mail.send'
+@dataclass
+class ResizeImage(BaseTask):
+    __task_name__ = "image.resize"
 
     @staticmethod
     @inject
-    async def run(content: str, email_data: dict, smtp_config: FromDishka[SMTPConfig]) -> None:
+    async def run(file_key: str, width: int, storage: FromDishka[StorageService]) -> None:
         ...
-        message = EmailMessage()  
-        ...
-        await aiosmtplib.send(message, **smtp_config)
 ```
 
-Чтобы отправить его в очередь, нам следует использовать `QueueServiceInterface`:
+**Регистрация** в `app/core/tasks.py` → `register_tasks(broker)`.
+
+**Отправка в очередь:**
 
 ```python
-from dishka import FromDishka
 from app.core.services.queues.service import QueueServiceInterface
 
-@router.get('/')
-async def index(
-    queue_service: FromDishka[QueueServiceInterface]
-) -> Response:
-    ...
-    await queue_service.push(
-        task=SendEmail,  
-        data={'content': template.render(), 'email_data': email_data},
-    )
+await queue_service.push(
+    task=ResizeImage,
+    data={"file_key": "uploads/photo.jpg", "width": 800},
+)
 ```
 
-### Mail service
+В тестовом окружении (`ENVIRONMENT=testing`) используется `InMemoryBroker`.
 
-**Used:**
+---
 
-- Async email handling: [aiosmtplib](https://aiosmtplib.readthedocs.io/en/stable)
-- Template engine: [Jinja2](https://jinja.palletsprojects.com)
+### Mail Service
 
-**Key Notes:**
+**Используется:** [aiosmtplib](https://aiosmtplib.readthedocs.io/en/stable) + [Jinja2](https://jinja.palletsprojects.com)
 
-- Каждый шаблон электронной почты должен наследовать `app.core.services.mail.template.BaseTemplate` и реализовывать методы `_get_dir(...)` и `_get_name(...)`.
-- Все классы шаблонов электронной почты должны быть помещены в `emails.templates.py` каждого модуля. Сами HTML-шаблоны должны быть помещены в каталог `emails.views`.
-- Отправка почты может выполняться в фоновом режиме с помощью `QueueService`.
-
-Пример класса шаблона электронной почты:
+**Создание шаблона:**
 
 ```python
-from app.core.services.mail import BaseTemplate
+from pathlib import Path
+from app.core.services.mail.template import BaseTemplate
 
-class UserRegistration(BaseTemplate):
-    def __init__(self, username: str, project_name: str):
+class WelcomeTemplate(BaseTemplate):
+    def __init__(self, username: str) -> None:
         self.username = username
-        self.project_name = project_name
-        
+
     def _get_dir(self) -> Path:
-        return Path('app/auth/emails/views')
+        return Path("app/my_module/emails/views")
 
     def _get_name(self) -> str:
-        return 'user_registration.html'
+        return "welcome.html"
 ```
 
-И HTML-шаблон `user_registration.html`:
+HTML-шаблон (`welcome.html`):
 
-```python
-<h1> Hello {{ username }}!</h1>
-
-<p>You have successfully registered on <b>{{ project_name }}</b>.</p>
-<p>Thank you and welcome to your new account!</p>
+```html
+<h1>Привет, {{ username }}!</h1>
+<p>Добро пожаловать.</p>
 ```
 
-Для отправки электронного письма нам следует использовать `BaseMailService`:
+**Отправка:**
 
 ```python
-from dishka import FromDishka
 from app.core.services.mail.service import BaseMailService, EmailData
-from app.core.configs.app import app_config
 
-@router.get('/')
-async def index(
-    mail_service: FromDishka[BaseMailService]
-) -> Response:
-    ...
-    email_data = EmailData(
-        subject='Successful registration',
-        recipient=user.email
-    )
-    template = UserRegistration(
-        username=user.username,
-        project_name=app_config.PROJECT_NAME
-    )
-    
-    # Синхронная отправка
-    await mail_service.send(template=template, email_data=email_data)
+email_data = EmailData(subject="Добро пожаловать", recipient=user.email)
+template = WelcomeTemplate(username=user.username)
 
-    # Или отправка в фоновом режиме через QueueService
-    await mail_service.queue(template=template, email_data=email_data)
+await mail_service.send(template=template, email_data=email_data)   # синхронно
+await mail_service.queue(template=template, email_data=email_data)  # через очередь
 ```
 
+---
 
 ### Storage Service
 
-**Used:**
-- Object storage: [MinIO](https://min.io) (S3-compatible)
-- Python client: [minio](https://github.com/minio/minio-py)
+**Используется:** [MinIO](https://min.io) (S3-compatible) + [minio-py](https://github.com/minio/minio-py)
 
-**Key Notes:**
+**Основные методы `StorageService`:**
 
-Сервис предоставляет абстракцию для работы с объектным хранилищем, поддерживающим S3 API. Реализация использует MinIO, но может быть легко заменена на AWS S3 или другие S3-совместимые хранилища.
+| Метод | Описание |
+|-------|----------|
+| `upload_file(UploadFile)` | Загрузить файл, вернуть key или public URL |
+| `upload_put_url(bucket, key, expires)` | Presigned PUT URL |
+| `upload_post_file(UploadFilePost)` | Presigned POST (browser upload) |
+| `generate_presigned_url(bucket, key, expires)` | Presigned GET URL |
+| `delete_file(bucket, key)` | Удалить файл |
+| `download(bucket, key)` | Скачать как bytes |
 
-1. **Основные возможности:**
-   - Загрузка файлов
-   - Генерация presigned URLs для загрузки/скачивания
-   - Удаление файлов
-   - Скачивание файлов
-   - Управление bucket policies
+```python
+from dishka import FromDishka
+from app.core.services.storage.service import StorageService
+from app.core.services.storage.dtos import UploadFile
 
-2. **Использование Storage Service:**
+@router.post("/upload")
+async def upload(file: FastAPIUploadFile, storage: FromDishka[StorageService]):
+    key = await storage.upload_file(UploadFile(
+        bucket_name="base",
+        file_content=file.file,
+        file_key=f"uploads/{file.filename}",
+        size=file.size,
+        content_type=file.content_type,
+    ))
+    return {"file_key": key}
+```
 
-   ```python
-   from dishka import FromDishka
-   from app.core.services.storage.service import StorageService
-   
-   @router.post("/upload")
-   async def upload_file(
-       file: UploadFile,
-       storage_service: FromDishka[StorageService]
-   ):
-       # Загрузка файла
-       file_key = await storage_service.upload_file(
-           bucket_name="base",
-           file_content=file.file,
-           file_key=f"uploads/{file.filename}",
-           content_type=file.content_type
-       )
-       return {"file_key": file_key}
+**Bucket Policies** (`app.core.services.storage.aminio.policy.Policy`):
 
-   @router.get("/download/{file_key}")
-   async def download_file(
-       file_key: str,
-       storage_service: FromDishka[StorageService]
-   ):
-       # Генерация presigned URL для скачивания
-       url = await storage_service.generate_presigned_url(
-           bucket_name="base",
-           file_key=file_key,
-           expires=3600  # 1 час
-       )
-       return {"download_url": url}
-   ```
+`NONE` (private) | `GET` | `READ` | `WRITE` | `READ_WRITE`
 
-3. **Bucket Policies:**
-   Поддерживаются различные политики доступа к bucket'ам:
-   - `Policy.NONE` - Публичный доступ
-   - `Policy.READ_ONLY` - Только чтение
-   - `Policy.WRITE_ONLY` - Только запись
-   - `Policy.READ_WRITE` - Чтение и запись
+Настраиваются в `CoreProvider`:
 
-4. **Конфигурация:**
-   Настройки хранилища в `app.core.configs.app_config`:
-   ```python
-   storage_url: str  # URL MinIO сервера
-   STORAGE_ACCESS_KEY: str
-   STORAGE_SECRET_KEY: str
-   ```
+```python
+@provide(scope=Scope.APP)
+def bucket_policy(self) -> dict[str, Policy]:
+    return {"base": Policy.NONE, "public": Policy.READ}
+```
+
+---
 
 ### WebSocket Service
 
-**Used:**
-- WebSocket support: [FastAPI WebSocket](https://fastapi.tiangolo.com/advanced/websockets/)
+**Компоненты:** `BaseConnectionManager` / `ConnectionManager` (Redis pub-sub для горизонтального масштабирования).
 
-**Key Notes:**
+```python
+from dishka import FromDishka
+from app.core.websockets.base import BaseConnectionManager
+from fastapi import WebSocket
 
-Сервис предоставляет управление WebSocket соединениями с поддержкой группировки по ключам и потокобезопасности.
+@router.websocket("/ws/{room_id}")
+async def ws_endpoint(
+    websocket: WebSocket,
+    room_id: str,
+    manager: FromDishka[BaseConnectionManager],
+):
+    await manager.accept_connection(websocket, key=room_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.send_json_all(key=room_id, data={"message": data})
+    except Exception:
+        await manager.remove_connection(websocket, key=room_id)
+```
 
-1. **Основные возможности:**
-   - Управление множественными соединениями
-   - Группировка соединений по ключам
-   - Отправка сообщений всем соединениям в группе
-   - Потокобезопасное управление соединениями
+**Методы:** `accept_connection`, `remove_connection`, `send_all`, `send_json_all`, `disconnect_all`, `publish` (Redis).
 
-2. **Использование WebSocket Service:**
-
-   ```python
-   from dishka import FromDishka
-   from app.core.websockets.base import BaseConnectionManager
-   from fastapi import WebSocket
-
-   @router.websocket("/ws/{room_id}")
-   async def websocket_endpoint(
-       websocket: WebSocket,
-       room_id: str,
-       manager: FromDishka[BaseConnectionManager]
-   ):
-       await manager.accept_connection(websocket, key=room_id)
-       try:
-           while True:
-               data = await websocket.receive_text()
-               # Отправка сообщения всем в комнате
-               await manager.send_json_all(
-                   key=room_id,
-                   data={"message": data, "room": room_id}
-               )
-       except Exception:
-           await manager.remove_connection(websocket, key=room_id)
-   ```
-
-3. **Методы ConnectionManager:**
-   - `accept_connection()` - Принять новое соединение
-   - `remove_connection()` - Удалить соединение
-   - `send_all()` - Отправить bytes всем в группе
-   - `send_json_all()` - Отправить JSON всем в группе
-   - `disconnect_all()` - Отключить все соединения в группе
+---
 
 ### Message Brokers
 
-**Used:**
-- Kafka: [aiokafka](https://github.com/aio-libs/aiokafka)
-- Redis: [redis.asyncio](https://redis.readthedocs.io/en/latest/)
+**Используется:** Kafka ([aiokafka](https://github.com/aio-libs/aiokafka)) | Redis Pub/Sub ([redis.asyncio](https://redis.readthedocs.io/))
 
-**Key Notes:**
+Оба реализуют интерфейс `BaseMessageBroker`:
 
-Проект поддерживает два типа message brokers: Kafka и Redis. Оба реализуют общий интерфейс `BaseMessageBroker`, что позволяет легко переключаться между ними.
+```python
+from dishka import FromDishka
+from app.core.message_brokers.base import BaseMessageBroker
 
-1. **Поддерживаемые брокеры:**
-   - **Kafka** - Для высоконагруженных распределенных систем
-   - **Redis Pub/Sub** - Для простых сценариев pub/sub
+# Отправка события
+await broker.send_event(key="user_123", topic="user_events", event=UserCreatedEvent(...))
 
-2. **Использование Message Broker:**
+# Отправка произвольных данных
+await broker.send_data(key="order_1", topic="orders", data={"action": "created"})
 
-   ```python
-   from dishka import FromDishka
-   from app.core.message_brokers.base import BaseMessageBroker
-   from app.core.events.event import BaseEvent
+# Потребление
+async for message in broker.start_consuming(["user_events"]):
+    print(message)
+```
 
-   @router.post("/publish")
-   async def publish_event(
-       broker: FromDishka[BaseMessageBroker]
-   ):
-       # Отправка события
-       await broker.send_event(
-           key="user_123",
-           event=UserCreatedEvent(email="user@example.com")
-       )
+Брокер автоматически стартует и останавливается в `lifespan` приложения.
 
-       # Или отправка произвольных данных
-       await broker.send_data(
-           key="user_123",
-           topic="user_events",
-           data={"action": "created", "user_id": 123}
-       )
-   ```
-
-3. **Потребление сообщений:**
-
-   ```python
-   async def consume_messages(broker: BaseMessageBroker):
-       async for message in broker.start_consuming(["user_events"]):
-           # Обработка сообщения
-           print(f"Received: {message}")
-   ```
-
-4. **Конфигурация:**
-   Настройки брокера в `app.core.configs.app_config`:
-   ```python
-   BROKER_URL: str  # URL брокера (Kafka или Redis)
-   GROUP_ID: str    # ID группы потребителей (для Kafka)
-   ```
-
-5. **Lifecycle:**
-   Message broker автоматически инициализируется и закрывается в `lifespan` функции приложения.
+---
 
 ### Logging Service
 
-**Used:**
-- Logging solution: [structlog](https://www.structlog.org/en/stable)
+**Используется:** [structlog](https://www.structlog.org/en/stable)
 
-**Key Notes:**
-- Мы можем настроить конфигурацию structlog в `app/core/log/init.py`.
-- Так же добавлен в `app/core/log/processors.py` обработка логов.
-- Логирование интегрировано с middleware для автоматического добавления request_id.
-
-`logger` можно использовать следующим образом:
+Настройка в `app/core/log/init.py` (`configure_logging()`). Поддерживает JSON и console-рендеринг, файловый хендлер, интеграцию с `ContextMiddleware` для добавления `request_id`.
 
 ```python
 import logging
 
 logger = logging.getLogger(__name__)
 
-logger.info('Something happened', extra={"key": "value"})
-logger.error('Error occurred', exc_info=True)
+logger.info("Something happened", extra={"user_id": 42})
+logger.error("Error occurred", exc_info=True)
 ```
+
+---
+
+### Monitoring
+
+**Prometheus** — метрики экспортируются через `prometheus-fastapi-instrumentator`:
+
+```python
+PrometheusFastApiInstrumentator().instrument(app).expose(app, tags=["core"])
+# Эндпоинт: GET /metrics
+```
+
+**Health check:**
+
+```
+GET /health → 200 "Ok"
+```
+
+В директории `monitoring/` расположены конфиги Grafana, Loki и Vector.
+
+---
 
 ### Middleware
 
-**Used:**
-- FastAPI middleware system
-- Custom middleware implementations
+**Встроенные middleware (порядок регистрации → порядок выполнения LIFO):**
 
-**Key Notes:**
+| Middleware | Назначение |
+|-----------|-----------|
+| `ContextMiddleware` | Генерирует `request_id` (UUID), добавляет в `scope["state"]` и заголовок `x-request-id` |
+| `GZipMiddleware` | Сжатие ответов ≥ 1000 байт |
+| `CORSMiddleware` | Добавляется если задан `BACKEND_CORS_ORIGINS` |
+| `LoggingMiddleware` | Логирует метод, путь, статус и время обработки каждого запроса |
 
-1. **Core Middlewares:**
-    - `ContextMiddleware` - Добавляет уникальный ID к каждому запросу
-    - `LoggingMiddleware` - Логирует информацию о запросах и ответах
+Реализованы как ASGI middleware (без `BaseHTTPMiddleware`).
 
-2. **Пример Custom Middleware:**
-    ```python
-    class ContextMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp):
-        super().__init__(app)
-
-    async def dispatch(self, request: Request, call_next):
-        request.state.request_id = uuid4()
-        with structlog.contextvars.bound_contextvars(request_id=str(request.state.request_id)):
-            return await call_next(request)
-    ```
-
-3. **Регистрация Middleware:**
-   ```python
-    from app.core.middlewares import ContextMiddleware, LoggingMiddleware
-
-    app = FastAPI()
+```python
+# app/main.py
+def setup_middleware(app: FastAPI) -> None:
     app.add_middleware(LoggingMiddleware)
-    app.add_middleware(ContextMiddleware)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    if app_config.BACKEND_CORS_ORIGINS:
+        app.add_middleware(CORSMiddleware, ...)
+    app.add_middleware(ContextMiddleware)  # выполняется первым
+```
 
-   ```
-
-4. **Middleware Order (порядок выполнения):**
-    - ContextMiddleware → CORS (если включен) → LoggingMiddleware → Application
-    - **Важно:** В FastAPI middleware выполняются в обратном порядке добавления (последний добавленный выполняется первым)
-    - ContextMiddleware должен быть добавлен последним, чтобы выполниться первым и установить request_id для последующих middleware
-
+---
 
 ## Application Lifecycle
 
 ### Startup Sequence
 
-1. **Pre-start проверки** (`pre_start.py`):
-   ```python
-    @retry(
-        stop=stop_after_attempt(max_tries),
-        wait=wait_fixed(wait_seconds),
-        before=before_log(logger, logging.INFO),  # type: ignore
-        after=after_log(logger, logging.INFO),  # type: ignore
-    )
-    async def init(db: AsyncSession) -> None:
-        try:
-            await db.execute(select(1))
-        except Exception as exc:
-            logger.exception('database_init_error')
-            raise exc
-   ```
+1. **Pre-start** (`pre_start.py`) — проверка подключения к БД с retry (tenacity).
+2. **Init data** (`init_data.py`) — создание базовых ролей (`super_admin`, `system_admin`, `user`).
+3. **FastAPILimiter** — инициализация Redis-клиента для rate limiting.
+4. **Message Broker** — запуск Kafka producer/consumer.
 
-2. **Инициализация приложения** (`main.py`):
-    ```python
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        logger.info("Starting FastAPI")
-        await pre_start()
-        await init_data()
-        redis_client = redis.from_url(app_config.redis_url)
-        await FastAPILimiter.init(redis_client)
-        message_broker = await app.state.dishka_container.get(BaseMessageBroker)
-        await message_broker.start()
-        yield
-        await redis_client.aclose()
-        await message_broker.close()
-        await app.state.dishka_container.close()
-        logger.info("Shutting down FastAPI")
+### Shutdown
 
-    def init_app() -> FastAPI:
-        app = FastAPI(
-            openapi_url=f"{app_config.API_V1_STR}/openapi.json" if app_config.ENVIRONMENT in ["local", "staging"] else None,
-            lifespan=lifespan,
-        )
+`lifespan` завершает Redis-клиент, message broker и Dishka-контейнер.
 
-        configure_logging()
-        container = create_container()
-        setup_dishka(container=container, app=app)
-
-        setup_middleware(app)
-        setup_router(app)
-
-        app.add_exception_handler(Exception, handle_uncown_exception)
-        app.add_exception_handler(ApplicationException, handle_application_exeption)
-        app.add_exception_handler(RequestValidationError, handle_validation_exeption)
-
-        return app
-   ```
-
-3. **Инициализация данных** (`init_data.py`):
-    ```python
-    async def create_first_data(db: AsyncSession) -> None:
-        roles = RolesEnum.get_all_roles()
-        for base_role in roles:
-            role = await db.execute(select(Role).where(Role.name==base_role.name))
-            if role.scalar() is None:
-                db.add(base_role)
-        await db.commit()
-
-    async def init_data() -> None:
-        """Создание начальных данных при первом запуске."""
-        async for db in get_session():
-            await create_first_data(db)
-            break
-    ```
-
+---
 
 ## Создание нового модуля
 
@@ -839,122 +744,151 @@ logger.error('Error occurred', exc_info=True)
 
 ```
 new_module/
+├── models/              # ORM-модели
+├── dtos/                # Внутренние DTO (Pydantic)
+├── schemas/             # Request / Response схемы
+│   └── <entity>/
+│       ├── requests.py
+│       └── responses.py
+├── filters/             # Filter-классы
+├── repositories/        # Репозитории (SQLAlchemy + Redis)
+├── commands/            # Command + CommandHandler
+│   └── <entity>/
+├── queries/             # Query + QueryHandler
+│   └── <entity>/
+├── events/              # EventHandler
+│   └── <entity>/
+├── emails/              # (опционально) шаблоны писем
+│   ├── templates.py
+│   └── views/
 ├── __init__.py
-├── models/              # Модели данных
-│   ├── __init__.py
-│   └── entity.py
-├── repositories/        # Репозитории
-│   ├── __init__.py
-│   └── entity.py
-├── routes/                # API endpoints
-│   ├── __init__.py
-│   └── v1/
-│       ├── __init__.py
-│       └── entity.py
-├── schemas/            # Pydantic models
-│   ├── __init__.py
-│   └── entity.py
-├── commands/           # Command handlers
-│   ├── __init__.py
-│   └── entity/
-│       ├── __init__.py
-│       └── create.py
-├── queries/           # Query handlers
-│   ├── __init__.py
-│   └── entity/
-│       ├── __init__.py
-│       └── get.py
-├── events/            # Event handlers
-│   ├── __init__.py
-│   └── entity/
-│       ├── __init__.py
-│       └── created.py
-├── providers.py    # DI configuration
-└── routers.py      # Main router module
+├── config.py            # (опционально) ModuleConfig(BaseConfig)
+├── gateway.py           # (опционально) интерфейс для межмодульного доступа
+├── exceptions.py
+├── deps.py              # FastAPI-зависимости
+├── providers.py         # Dishka-провайдер
+└── routers.py           # Агрегирующий роутер
 ```
 
-### 2. Шаги создания нового модуля
+### 2. Пошаговое создание
 
-1. **Создание моделей данных:**
-    ```python
-    from app.core.db import BaseModel, DateMixin
+**1. Модель:**
 
-    class Entity(BaseModel, DateMixin):
-        __tablename__ = "entities"
+```python
+from app.core.db.base_model import BaseModel, DateMixin
 
-        id: Mapped[int] = mapped_column(primary_key=True)
-        name: Mapped[str] = mapped_column(String(50))
-    ```
+class Article(BaseModel, DateMixin):
+    __tablename__ = "articles"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+```
 
-2. **Создание репозитория:**
-    ```python
+Зарегистрировать в `app/core/models.py`.
 
-    class EntityRepository:
-        session: AsyncSession
+**2. Фильтр:**
 
-        async def create(self, entity: Entity) -> None:
-            self.add(entity)
-    ```
+```python
+@dataclass
+class ArticleFilter(BaseFilter):
+    title: str | None = None
 
-3. **Настройка DI:**
-    ```python
-    # providers.py
-    from dishka import Provider, Scope, provide
-    
-    class ModuleProvider(Provider):
-        scope = Scope.REQUEST
-        
-        @provide
-        def entity_repository(self, session: AsyncSession) -> EntityRepository:
-            return EntityRepository(session=session)
-    ```
+    def __post_init__(self):
+        self._build_conditions()
 
-4. **Создание API endpoints:**
-    ```python
-    router = APIRouter(prefix="/api/v1/entities")
+    def _build_conditions(self) -> None:
+        self.add_condition("title", FilterOperator.CONTAINS, self.title)
+```
 
-    @router.post("/")
-    async def create_entity(
-        data: EntityCreate,
-        service: FromDishka[EntityService],
-    ) -> EntityResponse:
-        entity = await service.create(data)
-        return EntityResponse.model_validate(entity)
-    ```
+**3. Репозиторий:**
 
-5. **Регистрация модуля:**
-    ```python
-    # В app/core/di/container.py
-    from app.new_module.providers import NewModuleProvider
-    
-    def create_container(*app_providers: Provider) -> AsyncContainer:
-        providers = [
-            *get_core_providers(),
-            NewModuleProvider(),  # Добавляем providers нового модуля
-        ]
-        return make_async_container(*providers, *app_providers)
+```python
+@dataclass
+class ArticleRepository(IRepository[Article]):
+    async def create(self, article: Article) -> None:
+        self.session.add(article)
 
-    # В app/main.py
-    from app.new_module.routers import router_v1 as new_module_router_v1
+    def apply_relationship_filters(self, stmt: Select, filters: ArticleFilter) -> Select:
+        return stmt
+```
 
-    def setup_router(app: FastAPI) -> None:
-        app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
-        app.include_router(new_module_router_v1, prefix=app_config.API_V1_STR)
+**4. Command + Handler:**
 
+```python
+@dataclass(frozen=True)
+class CreateArticleCommand(BaseCommand):
+    title: str
+    user_id: int
 
-### 3. Лучшие практики
+@dataclass(frozen=True)
+class CreateArticleCommandHandler(BaseCommandHandler[CreateArticleCommand, ArticleDTO]):
+    session: AsyncSession
+    article_repository: ArticleRepository
 
-1. **Организация кода:**
-    - Следуйте принципу единой ответственности
-    - Разделяйте слои абстракции
-    - Используйте типизацию
+    async def handle(self, command: CreateArticleCommand) -> ArticleDTO:
+        article = Article(title=command.title)
+        await self.article_repository.create(article)
+        await self.session.commit()
+        return ArticleDTO.model_validate(article.to_dict())
+```
 
-2. **Именование:**
-    - Модули: существительные во множественном числе (users, orders)
-    - Команды: глаголы (create_user, update_order)
-    - События: прошедшее время (user_created, order_updated)
+**5. DI-провайдер:**
 
-3. **Тестирование:**
-    - Создавайте тесты одновременно с кодом
-    - Следуйте структуре модуля в тестах
-    - Используйте фабрики для создания тестовых данных
+```python
+class ArticleModuleProvider(Provider):
+    scope = Scope.REQUEST
+
+    article_repository = provide(ArticleRepository)
+    create_handler = provide(CreateArticleCommandHandler)
+
+    @decorate
+    def register_commands(self, registry: CommandRegisty) -> CommandRegisty:
+        registry.register_command(CreateArticleCommand, [CreateArticleCommandHandler])
+        return registry
+```
+
+**6. Роутер:**
+
+```python
+router = APIRouter(prefix="/articles", route_class=DishkaRoute)
+
+@router.post("/", status_code=201)
+async def create_article(
+    data: ArticleCreateRequest,
+    mediator: FromDishka[BaseMediator],
+) -> ArticleResponse:
+    dto, *_ = await mediator.handle_command(CreateArticleCommand(title=data.title, user_id=...))
+    return ArticleResponse.model_validate(dto)
+```
+
+**7. Регистрация модуля:**
+
+```python
+# app/core/di/container.py
+from app.new_module.providers import ArticleModuleProvider
+
+def create_container(...) -> AsyncContainer:
+    return make_async_container(
+        *get_core_providers(),
+        AuthModuleProvider(),
+        ArticleModuleProvider(),   # ← добавить
+        *app_providers
+    )
+
+# app/main.py
+from app.new_module.routers import router_v1 as article_router_v1
+
+def setup_router(app: FastAPI) -> None:
+    app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
+    app.include_router(article_router_v1, prefix=app_config.API_V1_STR)  # ← добавить
+```
+
+### 3. Соглашения по именованию
+
+| Элемент | Стиль | Пример |
+|---------|-------|--------|
+| Модуль | существительное (мн. число) | `articles`, `orders` |
+| Команда | глагол + существительное | `CreateArticle`, `PublishPost` |
+| Событие | прошедшее время | `ArticleCreated`, `OrderShipped` |
+| Query | `Get` + существительное | `GetListArticles`, `GetArticleById` |
+| Фильтр | существительное + `Filter` | `ArticleFilter` |
+| Репозиторий | существительное + `Repository` | `ArticleRepository` |
