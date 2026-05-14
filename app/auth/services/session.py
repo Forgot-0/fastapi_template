@@ -18,15 +18,12 @@ class SessionManager:
         ):
             return existing_session
 
-        session = Session(
+        session = Session.create(
             user_id=user_id,
             device_id=device_data.device_id,
             device_info=device_data.device_info,
             user_agent=device_data.user_agent,
-            is_active=True
         )
-        session.online()
-
         await self.session_repository.create(session=session)
 
         return session

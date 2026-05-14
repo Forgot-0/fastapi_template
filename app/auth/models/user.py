@@ -19,7 +19,7 @@ class CreatedUserEvent(BaseEvent):
     email: str
     username: str
 
-    __event_name__: str = "user_created"
+    __event_name__: str = "auth.users.created"
 
 
 class UserPermissions(BaseModel):
