@@ -54,7 +54,7 @@ class RefreshTokenCommandHandler(BaseCommandHandler[RefreshTokenCommand, TokenGr
         )
 
         token_group = await self.jwt_manager.refresh_tokens(
-            command.refresh_token, user_jwt_data
+            refresh_data, user_jwt_data
         )
 
         await self.session.commit()

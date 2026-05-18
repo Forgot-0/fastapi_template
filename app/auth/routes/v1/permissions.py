@@ -5,12 +5,13 @@ from app.auth.commands.permissions.create import CreatePermissionCommand
 from app.auth.commands.permissions.delete import DeletePermissionCommand
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.permissions import PermissionDTO
-from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException, ProtectedPermissionException
+from app.auth.exceptions import NotFoundPermissionsException, ProtectedPermissionException
 from app.auth.queries.permissions.get_list import GetListPemissionsQuery
 from app.auth.schemas.permission.requests import GetPermissionsRequest, PermissionCreateRequest
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.exceptions import AccessDeniedException
 
 router = APIRouter(route_class=DishkaRoute)
 

@@ -3,14 +3,12 @@ from datetime import timedelta
 from typing import Any
 from uuid import uuid4
 
-from jose import ExpiredSignatureError, JWTError, jwt
-
 from app.auth.config import auth_config
 from app.auth.dtos.tokens import TokenGroup, TokenType
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.core.services.auth.dto import JwtTokenType, Token
-from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.core.services.auth.exceptions import ExpiredTokenException
 from app.core.services.auth.jwt_manager import JWTManager
 from app.core.utils import fromtimestamp, now_utc
 
@@ -21,15 +19,6 @@ class AuthJWTManager(JWTManager):
     refresh_token_expire_days: int
 
     token_blacklist: TokenBlacklistRepository
-
-    def decode(self, token: str) -> dict[str, Any]:
-        try:
-            data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
-        except ExpiredSignatureError as err:
-            raise ExpiredTokenException(token=token) from err
-        except JWTError as err:
-            raise InvalidTokenException(token=token) from err
-        return data
 
     def generate_payload(self, user_data: AuthUserJWTData, token_type: TokenType) -> dict[str, Any]:
         now = now_utc()
@@ -68,8 +57,7 @@ class AuthJWTManager(JWTManager):
 
         return TokenGroup(access_token=access_token, refresh_token=refresh_token)
 
-    async def refresh_tokens(self, refresh_token: str, security_user: AuthUserJWTData) -> TokenGroup:
-        token = await self.validate_token(refresh_token, token_type=JwtTokenType.REFRESH)
+    async def refresh_tokens(self, token: Token, security_user: AuthUserJWTData) -> TokenGroup:
         token_date = fromtimestamp(token.iat)
 
         date = await self.token_blacklist.get_token_backlist(token.jti)
@@ -78,11 +66,11 @@ class AuthJWTManager(JWTManager):
                 user_id=int(token.sub),
                 expiration=timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS)
             )
-            raise ExpiredTokenException(token=refresh_token)
+            raise ExpiredTokenException
 
         date = await self.token_blacklist.get_user_backlist(int(token.sub))
         if date > token_date:
-            raise ExpiredTokenException(token=refresh_token)
+            raise ExpiredTokenException
 
         await self.revoke_token(token)
         token_pair = self.create_token_pair(security_user=security_user)

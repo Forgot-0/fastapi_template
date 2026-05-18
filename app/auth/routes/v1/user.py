@@ -11,7 +11,6 @@ from app.auth.deps import ActiveUserModel, AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO
 from app.auth.dtos.user import UserDTO
 from app.auth.exceptions import (
-    AccessDeniedException,
     DuplicateUserException,
     NotFoundPermissionsException,
     NotFoundRoleException,
@@ -26,7 +25,7 @@ from app.auth.schemas.users.responses import UserResponse
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.exceptions import InvalidTokenException
+from app.core.services.auth.exceptions import AccessDeniedException, InvalidTokenException
 
 router = APIRouter(route_class=DishkaRoute)
 

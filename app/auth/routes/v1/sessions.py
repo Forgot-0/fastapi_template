@@ -4,12 +4,13 @@ from fastapi import APIRouter, Query, status
 from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO
-from app.auth.exceptions import AccessDeniedException, NotFoundOrInactiveSessionException
+from app.auth.exceptions import NotFoundOrInactiveSessionException
 from app.auth.queries.sessions.get_list import GetListSessionQuery
 from app.auth.schemas.sessions.requests import GetSessionsRequest
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.exceptions import AccessDeniedException
 
 router = APIRouter(route_class=DishkaRoute)
 

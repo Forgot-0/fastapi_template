@@ -54,8 +54,7 @@ router = APIRouter(route_class=DishkaRoute)
     status_code=status.HTTP_200_OK,
     responses={
         400: create_response(WrongLoginDataException(username="aboba"))
-    },
-    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
+    }
 )
 async def login(
     mediator: FromDishka[BaseMediator],
@@ -113,8 +112,7 @@ async def refresh(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         400: create_response(InvalidTokenException())
-    },
-    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
+    }
 )
 async def logout(
     mediator: FromDishka[BaseMediator],
@@ -207,11 +205,10 @@ async def reset_password(
 @router.get(
     "/oauth/{provider}/authorize",
     summary="Get URL for OAuth authorization",
-    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    status_code=status.HTTP_200_OK,
     responses={
         400: create_response(NotExistProviderOAuthException(provider="test"))
-    },
-    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
+    }
 )
 async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
@@ -228,11 +225,10 @@ async def oauth_authorize(
 @router.get(
     "/oauth/{provider}/authorize/connect",
     summary="Get the OAuth connection URL for an existing user",
-    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    status_code=status.HTTP_200_OK,
     responses={
         400: create_response(NotExistProviderOAuthException(provider="test"))
-    },
-    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
+    }
 )
 async def oauth_authorize_connect(
     mediator: FromDishka[BaseMediator],
@@ -259,8 +255,7 @@ async def oauth_authorize_connect(
             ]
         ),
         409: create_response(LinkedAnotherUserOAuthException(provider="string"))
-    },
-    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
+    }
 )
 async def oauth_callback(
     provider: str,

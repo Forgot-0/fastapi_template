@@ -7,7 +7,6 @@ from app.auth.commands.roles.delete_permissions import DeletePermissionRoleComma
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.role import RoleDTO
 from app.auth.exceptions import (
-    AccessDeniedException,
     DuplicateRoleException,
     InvalidRoleNameException,
     NotFoundPermissionsException,
@@ -19,6 +18,7 @@ from app.auth.schemas.roles.requests import GetRolesRequest, RoleCreateRequest, 
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
+from app.core.services.auth.exceptions import AccessDeniedException
 
 router = APIRouter(route_class=DishkaRoute)
 
