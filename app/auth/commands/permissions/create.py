@@ -4,11 +4,12 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import AccessDeniedException, NotFoundPermissionsException
+from app.auth.exceptions import DuplicatePermissionException, NotFoundPermissionsException
 from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
+from app.core.services.auth.exceptions import AccessDeniedException
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class CreatePermissionCommandHandler(BaseCommandHandler[CreatePermissionCommand,
 
         permission = await self.permission_repository.get_permission_by_name(command.name)
         if permission is not None:
-            raise NotFoundPermissionsException(missing={command.name })
+            raise DuplicatePermissionException(name=command.name)
 
         permission = Permission(name=command.name)
         await self.permission_repository.create(permission)

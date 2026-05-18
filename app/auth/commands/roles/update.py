@@ -4,10 +4,11 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import AccessDeniedException, NotFoundRoleException
+from app.auth.exceptions import NotFoundRoleException
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
+from app.core.services.auth.exceptions import AccessDeniedException
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from app.auth.dtos.user import AuthUserJWTData, UserDTO
-from app.auth.exceptions import AccessDeniedException
 from app.auth.filters.users import UserFilter
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
+from app.core.services.auth.exceptions import AccessDeniedException
 
 
 @dataclass(frozen=True)
