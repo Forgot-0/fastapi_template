@@ -4,13 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.user import User
 from tests.auth.integration.factories import RoleFactory
+from tests.support.http import api_path
 
 
 @pytest.mark.integration
 @pytest.mark.auth
+@pytest.mark.asyncio
 class TestRoleEndpoints:
 
-    @pytest.mark.asyncio
     async def test_create_role_endpoint(
         self,
         client: AsyncClient,
@@ -20,7 +21,7 @@ class TestRoleEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.post(
-            "/api/v1/roles/",
+            api_path("roles/"),
             headers=headers,
             json={
                 "name": "test_role",
@@ -32,7 +33,6 @@ class TestRoleEndpoints:
 
         assert response.status_code == 201
 
-    @pytest.mark.asyncio
     async def test_get_roles_endpoint(
         self,
         client: AsyncClient,
@@ -42,7 +42,7 @@ class TestRoleEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.get(
-            "/api/v1/roles/",
+            api_path("roles/"),
             headers=headers
         )
 
@@ -51,7 +51,6 @@ class TestRoleEndpoints:
         assert "items" in data
         assert len(data["items"]) >= 3
 
-    @pytest.mark.asyncio
     async def test_assign_role_endpoint(
         self,
         client: AsyncClient,
@@ -67,7 +66,7 @@ class TestRoleEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.post(
-            f"/api/v1/users/{standard_user.id}/roles",
+            api_path(f"users/{standard_user.id}/roles"),
             headers=headers,
             json={"role_name": "assignable"}
         )

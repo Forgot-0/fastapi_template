@@ -185,7 +185,7 @@ class TokenFactory:
         }
 
 
-class CommandFactory:
+class AuthCommandFactory:
     @staticmethod
     def create_register_command(
         username: str | None = None,

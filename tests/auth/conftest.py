@@ -17,7 +17,6 @@ from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
 
 
-
 @pytest_asyncio.fixture
 async def user_repository(db_session: AsyncSession) -> UserRepository:
     return UserRepository(session=db_session)
@@ -61,12 +60,12 @@ def oauth_code_repository(redis_client: Redis) -> OAuthCodeRepository:
 
 @pytest.fixture
 def hash_service() -> HashService:
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
     return HashService(pwd_context=pwd_context)
 
 
 @pytest.fixture
-def jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> AuthJWTManager:
+def auth_jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> AuthJWTManager:
     return AuthJWTManager(
         jwt_secret=app_config.JWT_SECRET_KEY,
         jwt_algorithm=app_config.JWT_ALGORITHM,
@@ -82,4 +81,3 @@ def rbac_manager() -> AuthRBACManager:
 @pytest.fixture
 def session_manager(session_repository: SessionRepository) -> SessionManager:
     return SessionManager(session_repository)
-

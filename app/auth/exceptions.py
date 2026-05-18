@@ -130,6 +130,20 @@ class AccessDeniedException(ApplicationException):
     def detail(self) -> dict[str, Any]:
         return {"permissions": list(self.need_permissions)}
 
+@dataclass(kw_only=True)
+class DuplicatePermissionException(ApplicationException):
+    name: str
+
+    code: str = "DUPLICATE_PERMISSION"
+    status: int = 409
+
+    @property
+    def message(self) -> str:
+        return "Permission already exists"
+
+    @property
+    def detail(self) -> dict[str, Any]:
+        return {"name": self.name}
 
 @dataclass(kw_only=True)
 class NotFoundPermissionsException(ApplicationException):

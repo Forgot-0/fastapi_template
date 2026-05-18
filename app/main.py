@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import redis.asyncio as redis
-from aiojobs import Scheduler
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -27,7 +26,6 @@ from app.core.middlewares.context import ContextMiddleware
 from app.core.middlewares.log import LoggingMiddleware
 from app.core.routers import router as core_router
 from app.core.utils import now_utc
-from app.core.websockets.base import BaseConnectionManager
 from app.init_data import init_data
 from app.pre_start import pre_start
 
@@ -46,14 +44,7 @@ async def lifespan(app: FastAPI) :
     await FastAPILimiter.init(redis_client)
     message_broker: BaseMessageBroker = await app.state.dishka_container.get(BaseMessageBroker)
     await message_broker.start()
-
-    connection_manager = await app.state.dishka_container.get(BaseConnectionManager)
-
-    scheduler = Scheduler()
-    await scheduler.spawn(connection_manager.startup())
-
     yield
-    await scheduler.close()
     await redis_client.aclose()
     await message_broker.close()
     await app.state.dishka_container.close()
@@ -77,10 +68,10 @@ def setup_middleware(app: FastAPI) -> None:
 
 def setup_router(app: FastAPI) -> None:
     app.include_router(core_router)
+
     app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
 
-
-def handle_application_exeption(request: Request, exc: ApplicationException) -> ORJSONResponse:
+def handle_application_exception(request: Request, exc: ApplicationException) -> ORJSONResponse:
     logger.error(
         "Application exception",
         exc_info=exc,
@@ -100,7 +91,7 @@ def handle_application_exeption(request: Request, exc: ApplicationException) -> 
         ),
     )
 
-def handle_validation_exeption(request: Request, exc: RequestValidationError) -> ORJSONResponse:
+def handle_validation_exception(request: Request, exc: RequestValidationError) -> ORJSONResponse:
     logger.error(
         "Validation exception",
         exc_info=exc,
@@ -125,23 +116,23 @@ def handle_validation_exeption(request: Request, exc: RequestValidationError) ->
         ),
     )
 
-def handle_uncown_exception(request: Request, exc: Exception) -> ORJSONResponse:
+def handle_unknown_exception(request: Request, exc: Exception) -> ORJSONResponse:
     logger.error(
-        "Uncown exception",
+        "Unknown exception",
         exc_info=exc,
         extra={
             "status": 500,
-            "title": "Uncown exception",
-            "detail": jsonable_encoder(exc),
-            "code": "UNCOWN_EXCEPTION",
+            "title": "Unknown exception",
+            "detail": str(exc),
+            "code": "UNKNOWN_EXCEPTION",
         }
     )
     return ORJSONResponse(
         status_code=500,
         content=ErrorResponse(
             error=ErrorDetail(
-                code="UNCOWN_EXCEPTION",
-                message="Uncown exception",
+                code="UNKNOWN_EXCEPTION",
+                message="Unknown exception",
             ),
             status=500,
             request_id=request.state.request_id,
@@ -231,8 +222,30 @@ def init_app() -> FastAPI:
     setup_middleware(app)
     setup_router(app)
 
-    app.add_exception_handler(Exception, handle_uncown_exception)
-    app.add_exception_handler(ApplicationException, handle_application_exeption) # type: ignore
-    app.add_exception_handler(RequestValidationError, handle_validation_exeption) # type: ignore
+    app.add_exception_handler(Exception, handle_unknown_exception)
+    app.add_exception_handler(ApplicationException, handle_application_exception) # type: ignore
+    app.add_exception_handler(RequestValidationError, handle_validation_exception) # type: ignore
+    app.openapi = lambda: custom_openapi(app)
+    return app
+
+
+def test_app() -> FastAPI:
+    app = FastAPI(
+        openapi_url=(
+            f"{app_config.API_V1_STR}/openapi.json"
+            if app_config.ENVIRONMENT in ["local", "testing"]
+            else None
+        ),
+        lifespan=lifespan,
+        redirect_slashes=False
+    )
+
+    configure_logging()
+    setup_middleware(app)
+    setup_router(app)
+
+    app.add_exception_handler(Exception, handle_unknown_exception)
+    app.add_exception_handler(ApplicationException, handle_application_exception) # type: ignore
+    app.add_exception_handler(RequestValidationError, handle_validation_exception) # type: ignore
     app.openapi = lambda: custom_openapi(app)
     return app

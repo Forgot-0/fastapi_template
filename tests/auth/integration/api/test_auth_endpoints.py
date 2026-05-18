@@ -2,25 +2,25 @@ import pytest
 from httpx import AsyncClient
 
 from app.auth.models.user import User
+from tests.support.http import api_path
 
 
 @pytest.mark.integration
 @pytest.mark.auth
+@pytest.mark.asyncio
 class TestAuthEndpoints:
 
-    @pytest.mark.asyncio
     async def test_register_endpoint(
         self,
         client: AsyncClient,
     ):
         response = await client.post(
-            "/api/v1/users/register",
+            api_path("users/register"),
             json={
                 "username": "newuser",
                 "email": "newuser@example.com",
                 "password": "TestPass123!",
-                "password_repeat": "TestPass123!",
-                "university_id": 1
+                "password_repeat": "TestPass123!"
             }
         )
 
@@ -30,20 +30,18 @@ class TestAuthEndpoints:
         assert data["email"] == "newuser@example.com"
         assert "id" in data
 
-    @pytest.mark.asyncio
     async def test_register_duplicate_email(
         self,
         client: AsyncClient,
         standard_user: User,
     ) -> None:
         response = await client.post(
-            "/api/v1/users/register",
+            api_path("users/register"),
             json={
                 "username": "anotheruser",
                 "email": standard_user.email,
                 "password": "TestPass123!",
-                "password_repeat": "TestPass123!",
-                "university_id": 1
+                "password_repeat": "TestPass123!"
             }
         )
 
@@ -51,14 +49,13 @@ class TestAuthEndpoints:
         data = response.json()
         assert data["error"]["code"] == "DUPLICATE_USER"
 
-    @pytest.mark.asyncio
     async def test_login_endpoint(
         self,
         client: AsyncClient,
         standard_user: User,
     ) -> None:
         response = await client.post(
-            "/api/v1/auth/login",
+            api_path("auth/login"),
             data={
                 "username": standard_user.username,
                 "password": "TestPass123!"
@@ -72,14 +69,13 @@ class TestAuthEndpoints:
 
         assert "refresh_token" in response.cookies
 
-    @pytest.mark.asyncio
     async def test_login_wrong_password(
         self,
         client: AsyncClient,
         standard_user: User,
     ) -> None:
         response = await client.post(
-            "/api/v1/auth/login",
+            api_path("auth/login"),
             data={
                 "username": standard_user.username,
                 "password": "WrongPassword123!"
@@ -90,7 +86,6 @@ class TestAuthEndpoints:
         data = response.json()
         assert data["error"]["code"] == "WRONG_LOGIN_DATA"
 
-    @pytest.mark.asyncio
     async def test_me_endpoint(
         self,
         client: AsyncClient,
@@ -100,7 +95,7 @@ class TestAuthEndpoints:
         headers = auth_headers(standard_user)
 
         response = await client.get(
-            "/api/v1/users/me",
+            api_path("users/me"),
             headers=headers
         )
 
@@ -110,16 +105,14 @@ class TestAuthEndpoints:
         assert data["username"] == standard_user.username
         assert data["email"] == standard_user.email
 
-    @pytest.mark.asyncio
     async def test_me_endpoint_unauthorized(
         self,
         client: AsyncClient,
     ) -> None:
-        response = await client.get("/api/v1/users/me")
+        response = await client.get(api_path("users/me"))
 
         assert response.status_code == 401
 
-    @pytest.mark.asyncio
     async def test_refresh_token_endpoint(
         self,
         client: AsyncClient,
@@ -128,7 +121,7 @@ class TestAuthEndpoints:
     ) -> None:
 
         login_response = await client.post(
-            "/api/v1/auth/login",
+            api_path("auth/login"),
             data={
                 "username": standard_user.username,
                 "password": "TestPass123!"
@@ -144,7 +137,7 @@ class TestAuthEndpoints:
 
         headers = auth_headers(standard_user)
         response = await client.post(
-            "/api/v1/auth/refresh",
+            api_path("auth/refresh"),
             headers=headers
         )
 
@@ -153,7 +146,6 @@ class TestAuthEndpoints:
         assert "access_token" in data
         assert data["access_token"] != login_response.json()["access_token"]
 
-    @pytest.mark.asyncio
     async def test_logout_endpoint(
         self,
         client: AsyncClient,
@@ -161,7 +153,7 @@ class TestAuthEndpoints:
     ) -> None:
 
         login_response = await client.post(
-            "/api/v1/auth/login",
+            api_path("auth/login"),
             data={
                 "username": standard_user.email,
                 "password": "TestPass123!"
@@ -174,13 +166,13 @@ class TestAuthEndpoints:
         client.cookies.set("refresh_token", refresh_token)
 
         response = await client.post(
-            "/api/v1/auth/logout",
+            api_path("auth/logout"),
         )
 
         assert response.status_code == 204
 
         refresh_response = await client.post(
-            "/api/v1/auth/refresh",
+            api_path("auth/refresh"),
         )
 
         assert refresh_response.status_code in [400, 401]

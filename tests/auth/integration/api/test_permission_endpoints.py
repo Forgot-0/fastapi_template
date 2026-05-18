@@ -4,13 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.permission import Permission
 from app.auth.models.user import User
+from tests.support.http import api_path
 
 
 @pytest.mark.integration
 @pytest.mark.auth
+@pytest.mark.asyncio
 class TestPermissionEndpoints:
 
-    @pytest.mark.asyncio
     async def test_create_permission_endpoint(
         self,
         client: AsyncClient,
@@ -20,14 +21,13 @@ class TestPermissionEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.post(
-            "/api/v1/permissions/",
+            api_path("permissions/"),
             headers=headers,
             json={"name": "test:permission"}
         )
 
         assert response.status_code == 201
 
-    @pytest.mark.asyncio
     async def test_get_permissions_endpoint(
         self,
         client: AsyncClient,
@@ -37,7 +37,7 @@ class TestPermissionEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.get(
-            "/api/v1/permissions/",
+            api_path("permissions/"),
             headers=headers
         )
 
@@ -45,7 +45,6 @@ class TestPermissionEndpoints:
         data = response.json()
         assert "items" in data
 
-    @pytest.mark.asyncio
     async def test_delete_permission_endpoint(
         self,
         client: AsyncClient,
@@ -60,7 +59,7 @@ class TestPermissionEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.delete(
-            "/api/v1/permissions/deletable:test",
+            api_path("permissions/deletable:test"),
             headers=headers,
         )
 

@@ -2,6 +2,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass, field
 from datetime import timedelta
+import os
 from typing import Any, Callable, Iterable
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ from httpx import ASGITransport, AsyncClient
 import pytest
 import pytest_asyncio
 from dishka import AsyncContainer, Provider, Scope, provide
+from dishka.integrations.fastapi import setup_dishka
 from redis.asyncio import Redis
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -28,9 +30,12 @@ from app.core.services.auth.jwt_manager import JWTManager
 from app.core.services.auth.rbac import RBACManager
 from app.core.services.mail.service import BaseMailService, EmailData
 from app.core.services.mail.template import BaseTemplate
+from app.core.services.queues.service import QueueService
+from app.core.services.storage.service import StorageService
 from app.core.utils import now_utc
-from app.init_data import create_base_roles
-from app.main import init_app
+from app.init_data import init_data
+from app.main import test_app
+from tests.mocks import FakeQueueService, FakeStorageService
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -49,7 +54,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 
 
 @pytest.fixture(scope="session")
-def postgres_container() -> Generator[PostgresContainer, None,]:
+def postgres_container() -> Generator[PostgresContainer, None, None]:
     with PostgresContainer("postgres:18.3") as postgres:
         yield postgres
 
@@ -58,7 +63,6 @@ def postgres_container() -> Generator[PostgresContainer, None,]:
 def redis_container() -> Generator[AsyncRedisContainer, None, None]:
     with AsyncRedisContainer("redis:7.2-alpine") as redis:
         yield redis
-
 
 @pytest_asyncio.fixture(scope="session")
 async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[AsyncEngine, None]:
@@ -86,7 +90,7 @@ async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None, None
     session_maker = async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_maker() as session:
-        await create_base_roles(session)
+        await init_data(session)
 
     yield
 
@@ -163,6 +167,15 @@ class MockEventBus(BaseEventBus):
 def mock_event_bus() -> BaseEventBus:
     return MockEventBus(event_registy=EventRegisty())
 
+
+@pytest.fixture
+def mock_queue_service() -> QueueService:
+    return FakeQueueService()
+
+@pytest.fixture
+def mock_storage_service() -> StorageService:
+    return FakeStorageService()
+
 @pytest.fixture
 def jwt_manager() -> JWTManager:
     return JWTManager(
@@ -228,7 +241,7 @@ async def di_container(
     db_session: AsyncSession,
     redis_client: Redis,
     mock_event_bus: BaseEventBus
-) -> AsyncGenerator[AsyncContainer, None]:
+):
 
     class TestProvider(Provider):
         @provide(scope=Scope.REQUEST)
@@ -243,21 +256,31 @@ async def di_container(
         async def get_mock_event_bus(self) -> BaseEventBus:
             return mock_event_bus
 
+        @provide(scope=Scope.APP)
+        async def get_queue_service(self) -> QueueService:
+            return FakeQueueService()
+
+        @provide(scope=Scope.APP)
+        async def storage_service(self) -> StorageService:
+            return FakeStorageService()
+
     container = create_container(TestProvider())
 
-    yield container
+    return container
 
     await container.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def app(di_container: AsyncContainer) -> FastAPI:
-    app = init_app()
-    app.state.dishka_container = di_container
+    if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
+        del os.environ["PROMETHEUS_MULTIPROC_DIR"]
+    app = test_app()
+    setup_dishka(di_container, app)
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI, redis_client: Redis) -> AsyncGenerator[AsyncClient, None]:
     await FastAPILimiter.init(redis_client)
     transport = ASGITransport(app=app)
@@ -285,3 +308,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "integration: Integration тесты")
     config.addinivalue_line("markers", "slow: Медленные тесты")
     config.addinivalue_line("markers", "auth: Тесты модуля аутентификации")
+    config.addinivalue_line("markers", "profiles: Тесты модуля профиля")
+    config.addinivalue_line("markers", "projects: Тесты модуля projects")
+    config.addinivalue_line("markers", "chats: Тесты модуля chats")
+

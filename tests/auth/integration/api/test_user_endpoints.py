@@ -2,13 +2,14 @@ from httpx import AsyncClient
 import pytest
 
 from app.auth.models.user import User
+from tests.support.http import api_path
 
 
 @pytest.mark.integration
 @pytest.mark.auth
+@pytest.mark.asyncio
 class TestUserEndpoints:
 
-    @pytest.mark.asyncio
     async def test_get_users_list_endpoint(
         self,
         client: AsyncClient,
@@ -19,7 +20,7 @@ class TestUserEndpoints:
         headers = auth_headers(admin_user)
 
         response = await client.get(
-            "/api/v1/users/",
+            api_path("users/"),
             headers=headers
         )
 
@@ -29,7 +30,6 @@ class TestUserEndpoints:
         assert "page" in data
         assert len(data["items"]) >= 2
 
-    @pytest.mark.asyncio
     async def test_get_users_list_unauthorized(
         self,
         client: AsyncClient,
@@ -39,7 +39,7 @@ class TestUserEndpoints:
         headers = auth_headers(standard_user)
 
         response = await client.get(
-            "/api/v1/users/",
+            api_path("users/"),
             headers=headers
         )
 

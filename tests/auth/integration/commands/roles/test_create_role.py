@@ -2,9 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler
-from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import (
-    AccessDeniedException,
     DuplicateRoleException,
     InvalidRoleNameException,
     NotFoundPermissionsException,
@@ -14,20 +12,21 @@ from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.services.rbac import AuthRBACManager
-from tests.auth.integration.factories import RoleFactory, UserFactory
+from app.core.services.auth.exceptions import AccessDeniedException
+from tests.support.jwt import jwt_from_user
 
 
 @pytest.mark.integration
 @pytest.mark.auth
+@pytest.mark.asyncio
 class TestCreateRoleCommand:
-
     @pytest.fixture
     def handler(
         self,
         db_session: AsyncSession,
-        rbac_manager: AuthRBACManager,
         role_repository: RoleRepository,
         permission_repository: PermissionRepository,
+        rbac_manager: AuthRBACManager,
     ) -> CreateRoleCommandHandler:
         return CreateRoleCommandHandler(
             session=db_session,
@@ -36,17 +35,14 @@ class TestCreateRoleCommand:
             rbac_manager=rbac_manager,
         )
 
-
-    @pytest.mark.asyncio
     async def test_create_role_success(
         self,
         db_session: AsyncSession,
         role_repository: RoleRepository,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -64,20 +60,19 @@ class TestCreateRoleCommand:
         assert created_role.description == "Moderator role"
         assert created_role.security_level == 5
 
-    @pytest.mark.asyncio
     async def test_create_role_with_permissions(
         self,
         db_session: AsyncSession,
         role_repository: RoleRepository,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
         perm1 = Permission(name="post:create")
         perm2 = Permission(name="post:edit")
         db_session.add_all([perm1, perm2])
         await db_session.commit()
 
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -94,15 +89,13 @@ class TestCreateRoleCommand:
         assert created_role is not None
         assert len(created_role.permissions) == 2
 
-    @pytest.mark.asyncio
     async def test_create_role_duplicate_name(
         self,
         db_session: AsyncSession,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command1 = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -125,14 +118,12 @@ class TestCreateRoleCommand:
         with pytest.raises(DuplicateRoleException):
             await handler.handle(command2)
 
-    @pytest.mark.asyncio
     async def test_create_role_insufficient_permissions(
         self,
+        handler: CreateRoleCommandHandler,
         standard_user: User,
-        handler
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(standard_user)
+        user_jwt = jwt_from_user(standard_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -145,14 +136,12 @@ class TestCreateRoleCommand:
         with pytest.raises(AccessDeniedException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_invalid_name(
         self,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -165,13 +154,12 @@ class TestCreateRoleCommand:
         with pytest.raises(InvalidRoleNameException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_nonexistent_permission(
         self,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -184,14 +172,12 @@ class TestCreateRoleCommand:
         with pytest.raises(NotFoundPermissionsException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_security_level_too_high(
         self,
+        handler: CreateRoleCommandHandler,
         standard_user: User,
-        handler,
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(standard_user)
+        user_jwt = jwt_from_user(standard_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -204,14 +190,12 @@ class TestCreateRoleCommand:
         with pytest.raises(AccessDeniedException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_empty_name(
         self,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -224,13 +208,12 @@ class TestCreateRoleCommand:
         with pytest.raises(InvalidRoleNameException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_with_invalid_security_level(
         self,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         command = CreateRoleCommand(
             user_jwt_data=user_jwt,
@@ -243,15 +226,14 @@ class TestCreateRoleCommand:
         with pytest.raises(AccessDeniedException):
             await handler.handle(command)
 
-    @pytest.mark.asyncio
     async def test_create_role_preserves_description(
         self,
         db_session: AsyncSession,
         role_repository: RoleRepository,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         description = "This is a detailed description of the editor role"
         command = CreateRoleCommand(
@@ -269,15 +251,14 @@ class TestCreateRoleCommand:
         assert created_role is not None
         assert created_role.description == description
 
-    @pytest.mark.asyncio
     async def test_create_multiple_roles_with_different_levels(
         self,
         db_session: AsyncSession,
         role_repository: RoleRepository,
+        handler: CreateRoleCommandHandler,
         admin_user: User,
-        handler
     ) -> None:
-        user_jwt = AuthUserJWTData.create_from_user(admin_user)
+        user_jwt = jwt_from_user(admin_user)
 
         roles_data = [
             ("viewer_role", "Can view content", 1),
@@ -300,5 +281,3 @@ class TestCreateRoleCommand:
             created_role = await role_repository.get_by_name(role_name)
             assert created_role is not None
             assert created_role.security_level == security_level
-
-

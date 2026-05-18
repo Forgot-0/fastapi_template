@@ -197,7 +197,7 @@ async def reset_password(
         ResetPasswordCommand(
             token=reset_password_request.token,
             password=reset_password_request.password,
-            repeat_password=reset_password_request.password_repeat
+            password_repeat=reset_password_request.password_repeat
         )
     )
 

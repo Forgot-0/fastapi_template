@@ -1,0 +1,90 @@
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.commands.permissions.delete import DeletePermissionCommand, DeletePermissionCommandHandler
+from app.auth.exceptions import ProtectedPermissionException
+from app.auth.models.permission import Permission
+from app.auth.models.user import User
+from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
+from app.auth.services.rbac import AuthRBACManager
+from app.core.services.auth.exceptions import AccessDeniedException
+from tests.support.jwt import jwt_from_user
+
+
+@pytest.mark.integration
+@pytest.mark.auth
+@pytest.mark.asyncio
+class TestDeletePermissionCommand:
+    @pytest.fixture
+    def handler(
+        self,
+        db_session: AsyncSession,
+        permission_repository: PermissionRepository,
+        rbac_manager: AuthRBACManager,
+        permission_blacklist: PermissionInvalidateRepository,
+    ) -> DeletePermissionCommandHandler:
+        return DeletePermissionCommandHandler(
+            session=db_session,
+            permission_repository=permission_repository,
+            rbac_manager=rbac_manager,
+            permission_blacklist=permission_blacklist,
+        )
+
+    async def test_delete_permission_success(
+        self,
+        db_session: AsyncSession,
+        permission_repository: PermissionRepository,
+        handler: DeletePermissionCommandHandler,
+        admin_user: User,
+    ) -> None:
+        perm = Permission(name="deletable:perm")
+        db_session.add(perm)
+        await db_session.commit()
+
+        user_jwt = jwt_from_user(admin_user)
+
+        command = DeletePermissionCommand(
+            name="deletable:perm",
+            user_jwt_data=user_jwt,
+        )
+
+        await handler.handle(command)
+        await db_session.commit()
+
+        deleted_perm = await permission_repository.get_permission_by_name("deletable:perm")
+        assert deleted_perm is None
+
+    async def test_delete_protected_permission(
+        self,
+        handler: DeletePermissionCommandHandler,
+        admin_user: User,
+    ) -> None:
+        user_jwt = jwt_from_user(admin_user)
+
+        command = DeletePermissionCommand(
+            name="role:create",
+            user_jwt_data=user_jwt,
+        )
+
+        with pytest.raises(ProtectedPermissionException):
+            await handler.handle(command)
+
+    async def test_delete_permission_insufficient_permissions(
+        self,
+        db_session: AsyncSession,
+        handler: DeletePermissionCommandHandler,
+        standard_user: User,
+    ) -> None:
+        perm = Permission(name="deletable:perm")
+        db_session.add(perm)
+        await db_session.commit()
+
+        user_jwt = jwt_from_user(standard_user)
+
+        command = DeletePermissionCommand(
+            name="deletable:perm",
+            user_jwt_data=user_jwt,
+        )
+
+        with pytest.raises(AccessDeniedException):
+            await handler.handle(command)

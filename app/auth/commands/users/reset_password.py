@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class ResetPasswordCommand(BaseCommand):
     token: str
     password: str
-    repeat_password: str
+    password_repeat: str
 
 
 @dataclass(frozen=True)
@@ -41,7 +41,7 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
         if not user:
             raise NotFoundUserException(user_by="1", user_field="id")
 
-        if command.password != command.repeat_password:
+        if command.password != command.password_repeat:
             raise PasswordMismatchException
 
         user.password_reset(self.hash_service.hash_password(command.password))
