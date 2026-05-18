@@ -5,10 +5,11 @@ from uuid import uuid4
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
+from app.auth.config import auth_config
 from app.auth.dtos.tokens import TokenGroup, TokenType
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.repositories.session import TokenBlacklistRepository
-from app.core.services.auth.dto import JwtTokenType
+from app.core.services.auth.dto import JwtTokenType, Token
 from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
 from app.core.services.auth.jwt_manager import JWTManager
 from app.core.utils import fromtimestamp, now_utc
@@ -73,23 +74,25 @@ class AuthJWTManager(JWTManager):
 
         date = await self.token_blacklist.get_token_backlist(token.jti)
         if date > token_date:
+            await self.token_blacklist.add_user(
+                user_id=int(token.sub),
+                expiration=timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS)
+            )
             raise ExpiredTokenException(token=refresh_token)
 
         date = await self.token_blacklist.get_user_backlist(int(token.sub))
         if date > token_date:
             raise ExpiredTokenException(token=refresh_token)
 
-        await self.revoke_token(refresh_token)
+        await self.revoke_token(token)
         token_pair = self.create_token_pair(security_user=security_user)
 
         return token_pair
 
-    async def revoke_token(self, token: str) -> None:
-        token_data = await self.validate_token(token, JwtTokenType.REFRESH)
-
+    async def revoke_token(self, token: Token) -> None:
         current_time = now_utc()
-        token_exp_dt = fromtimestamp(token_data.exp)
+        token_exp_dt = fromtimestamp(token.exp)
 
         seconds_until_expiry = token_exp_dt - (current_time + timedelta(days=1))
-        await self.token_blacklist.add_jwt_token(token_data.jti, seconds_until_expiry)
+        await self.token_blacklist.add_jwt_token(token.jti, seconds_until_expiry)
 

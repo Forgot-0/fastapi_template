@@ -1,8 +1,10 @@
+from datetime import timedelta
 import logging
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.config import auth_config
 from app.auth.exceptions import NotFoundUserException, PasswordMismatchException
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
@@ -44,6 +46,7 @@ class ResetPasswordCommandHandler(BaseCommandHandler[ResetPasswordCommand, None]
 
         user.password_reset(self.hash_service.hash_password(command.password))
         await self.token_repository.invalidate_token(token=command.token)
+        await self.token_repository.add_user(user_id=user_id, expiration=timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS))
 
         await self.session.commit()
         await self.event_bus.publish(user.pull_events())
