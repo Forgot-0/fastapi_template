@@ -1,9 +1,114 @@
 # FastAPI Template
 
+Production-ready модульный монолит на FastAPI: асинхронный SQLAlchemy 2.0, CQRS-style команды/запросы через собственный медиатор, Dependency Injection на [Dishka](https://github.com/reagento/dishka), событийная модель, готовые сервисы (кэш, очереди, почта, S3-хранилище, WebSocket, Kafka/Redis message-брокеры) и полный набор наблюдаемости (Prometheus, Grafana, Loki).
+
+Вдохновлён [Starter Kit](https://github.com/arctikant/fastapi-modular-monolith-starter-kit).
+
+Модуль `app/auth` — это не просто аутентификация, а **эталонный (reference) модуль**: он показывает, как должен быть устроен любой новый модуль в проекте (модели, фильтры, репозитории, команды/запросы, DI-провайдер, роуты). При добавлении нового функционала — копируйте паттерны оттуда.
+
+## Технологический стек
+
+| Категория | Технологии |
+|---|---|
+| Web-фреймворк | [FastAPI](https://fastapi.tiangolo.com) 0.135+, Python 3.14, [uvicorn](https://www.uvicorn.org)/[gunicorn](https://gunicorn.org) |
+| БД / ORM | [PostgreSQL](https://www.postgresql.org), [SQLAlchemy](https://www.sqlalchemy.org) 2.0 (async, asyncpg), [Alembic](https://github.com/sqlalchemy/alembic) |
+| DI | [Dishka](https://github.com/reagento/dishka) |
+| Кэш / Rate-limit | Redis, [aiocache](https://github.com/aio-libs/aiocache), [fastapi-limiter](https://github.com/long2ice/fastapi-limiter) |
+| Очереди задач | [Taskiq](https://taskiq-python.github.io) + taskiq-redis (worker + scheduler) |
+| Message broker | Kafka ([aiokafka](https://github.com/aio-libs/aiokafka)) / Redis Pub-Sub |
+| Хранилище файлов | [MinIO](https://min.io) (S3-совместимое) |
+| Почта | [aiosmtplib](https://aiosmtplib.readthedocs.io/en/stable) + Jinja2-шаблоны |
+| Аутентификация | JWT ([pyjwt](https://pyjwt.readthedocs.io)), Argon2 ([argon2-cffi](https://argon2-cffi.readthedocs.io)), OAuth2 (Google, Yandex, GitHub), RBAC |
+| Логирование | [structlog](https://www.structlog.org/en/stable) |
+| Мониторинг | Prometheus, Grafana, Loki, Vector |
+| Тесты | pytest, pytest-asyncio, [testcontainers](https://testcontainers-python.readthedocs.io) (Postgres, Redis) |
+| Линтеры / типы | ruff, mypy, pylint, pre-commit |
+| Инфраструктура | Docker / Docker Compose |
+
+## Быстрый старт
+
+```bash
+git clone https://github.com/Forgot-0/fastapi_template.git
+cd fastapi_template
+
+# 1. Переменные окружения
+cp .env.example .env
+# отредактируйте .env: минимум SECRET_KEY, JWT_SECRET_KEY, POSTGRES_*
+
+# 2. Docker-сеть (используется всеми docker-compose файлами проекта)
+docker network create app-network
+
+# 3. Поднять инфраструктуру и приложение
+docker compose up --build
+
+# 4. Применить миграции (обычно выполняется отдельным сервисом `migrations` в docker-compose,
+#    но можно и вручную)
+docker compose exec app alembic upgrade head
+```
+
+После запуска:
+
+- API: <http://localhost:8000>
+- Swagger UI: <http://localhost:8000/docs>
+- OpenAPI JSON: <http://localhost:8000/api/v1/openapi.json> (доступен только в `local`/`testing` окружениях)
+- Health-check: `GET /health`
+- Метрики Prometheus: `GET /metrics`
+- MinIO Console: <http://localhost:9001>
+
+**Локальная разработка без полного Docker-стека** (нужен только Poetry и Python 3.14):
+
+```bash
+poetry install --with dev,test
+poetry run uvicorn app.main:init_app --factory --reload
+```
+
+### Тесты
+
+Тесты используют `testcontainers` и поднимают собственные контейнеры Postgres/Redis — для их запуска нужен работающий Docker.
+
+```bash
+poetry install --with test
+poetry run pytest              # все тесты
+poetry run pytest -m unit      # только unit
+poetry run pytest -m integration  # только integration
+```
+
+### Линтинг и типы
+
+```bash
+poetry run ruff check .
+poetry run mypy .
+poetry run pylint app
+pre-commit run --all-files
+```
+
+---
+
+## Правила для AI-ассистентов
+
+> Этот раздел — инструкция для LLM/AI-агентов (Claude, Copilot, Cursor и т.п.), которые будут писать код в этом репозитории. Следуйте ей так же строго, как и человек-разработчик.
+
+1. **Не изобретайте новую архитектуру.** Проект уже задаёт паттерн: Router → Command/Query → Handler → Repository → Model. Любой новый функционал раскладывается по этим слоям, а не пишется «в одну функцию во вьюхе».
+2. **Модуль `app/auth` — эталон.** Перед созданием нового модуля откройте соответствующие файлы `app/auth/*` и повторяйте структуру 1:1 (см. раздел [«Создание нового модуля»](#создание-нового-модуля)).
+3. **DI только через Dishka.** Никаких глобальных синглтонов или `Depends()` с ручным созданием сервисов внутри роутера — сервисы и репозитории объявляются в `providers.py` и получаются через `FromDishka[...]`.
+4. **Команды меняют состояние, запросы — только читают.** Используйте `BaseCommand`/`BaseCommandHandler` для записи и `BaseQuery`/`BaseQueryHandler` для чтения; не смешивайте побочные эффекты в query-хендлерах.
+5. **Фильтрация и пагинация — через `app.core.filters`.** Не пишите вручную `WHERE`/`LIMIT/OFFSET` в репозиториях — создавайте `XxxFilter(BaseFilter)` и используйте `find_by_filter`.
+6. **Модели наследуют `BaseModel` (+ миксины).** Новая модель обязательно регистрируется в `app/core/models.py`, иначе Alembic её не увидит.
+7. **Придерживайтесь соглашений по именованию** из раздела [«Соглашения по именованию»](#3-соглашения-по-именованию) (`CreateArticle`, `GetListArticles`, `ArticleFilter`, `ArticleRepository` и т.д.).
+8. **Каждое изменение бизнес-логики сопровождается тестом** в `tests/` (unit — без БД/Docker, integration — с `testcontainers`, по аналогии с `tests/auth`).
+9. **Не добавляйте новые зависимости/сервисы «по умолчанию».** Если задачу можно решить существующими сервисами (`CacheServiceInterface`, `QueueServiceInterface`, `StorageService`, `BaseMailService`, `BaseMessageBroker`) — используйте их, а не новую библиотеку.
+10. **Секреты и конфигурация — только через `.env` / `BaseConfig`.** Не хардкодьте ключи, хосты или пароли в коде.
+
+---
+
 ## Содержание
 
 - [FastAPI Template](#fastapi-template)
-  - [Содержание](#содержание)
+  - [Технологический стек](#технологический-стек)
+  - [Быстрый старт](#быстрый-старт)
+    - [Тесты](#тесты)
+    - [Линтинг и типы](#линтинг-и-типы)
+  - [Правила для AI-ассистентов](#правила-для-ai-ассистентов)
   - [Введение](#введение)
     - [Project Structure](#project-structure)
     - [Database Layer](#database-layer)
@@ -36,8 +141,6 @@
 ---
 
 ## Введение
-
-Вдохновлён [Starter Kit](https://github.com/arctikant/fastapi-modular-monolith-starter-kit)
 
 ### Project Structure
 
