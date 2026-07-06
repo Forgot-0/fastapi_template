@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundRoleException, NotFoundUserException
+from app.auth.exceptions import NotFoundRoleError, NotFoundUserError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -34,19 +34,19 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
 
     async def handle(self, command: RemoveRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"user:update", "role:remove"}):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"user:update", "role:remove"} - set(command.user_jwt_data.permissions)
             )
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise NotFoundRoleException(name=command.role_name)
+            raise NotFoundRoleError(name=command.role_name)
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
 
         user = await self.user_repository.get_user_with_permission_by_id(command.remove_from_user)
         if user is None:
-            raise NotFoundUserException(user_by=command.remove_from_user, user_field="id")
+            raise NotFoundUserError(user_by=command.remove_from_user, user_field="id")
 
         user.delete_role(role)
         await self.token_blacklist.add_user(user.id)

@@ -2,18 +2,18 @@ import hashlib
 import secrets
 from datetime import timedelta
 
+from dishka import AsyncContainer
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler
-from app.auth.exceptions import NotFoundUserException, PasswordMismatchException
+from app.auth.exceptions import NotFoundUserError, PasswordMismatchError
 from app.auth.models.user import User
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
-from app.core.services.auth.exceptions import InvalidTokenException
-from tests.conftest import MockEventBus, MockMailService
+from app.core.services.auth.exceptions import InvalidTokenError
+from tests.conftest import MockMailService
 
 
 @pytest.mark.integration
@@ -21,17 +21,12 @@ from tests.conftest import MockEventBus, MockMailService
 @pytest.mark.asyncio
 class TestSendResetPasswordCommand:
     @pytest.fixture
-    def handler(
+    async def handler(
         self,
-        user_repository: UserRepository,
-        mock_mail_service: MockMailService,
-        token_blacklist_repository: TokenBlacklistRepository,
+        request_container: AsyncContainer
     ) -> SendResetPasswordCommandHandler:
-        return SendResetPasswordCommandHandler(
-            user_repository=user_repository,
-            mail_service=mock_mail_service,
-            token_repository=token_blacklist_repository,
-        )
+        return await request_container.get(SendResetPasswordCommandHandler)
+
 
     async def test_send_reset_password_code_success(
         self,
@@ -51,7 +46,7 @@ class TestSendResetPasswordCommand:
     ) -> None:
         command = SendResetPasswordCommand(email="nonexistent@example.com")
 
-        with pytest.raises(NotFoundUserException):
+        with pytest.raises(NotFoundUserError):
             await handler.handle(command)
 
 
@@ -60,25 +55,14 @@ class TestSendResetPasswordCommand:
 @pytest.mark.asyncio
 class TestResetPasswordCommand:
     @pytest.fixture
-    def handler(
+    async def handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        mock_event_bus: MockEventBus,
-        token_blacklist_repository: TokenBlacklistRepository,
-        hash_service: HashService,
+        request_container: AsyncContainer
     ) -> ResetPasswordCommandHandler:
-        return ResetPasswordCommandHandler(
-            session=db_session,
-            event_bus=mock_event_bus,
-            user_repository=user_repository,
-            token_repository=token_blacklist_repository,
-            hash_service=hash_service,
-        )
+        return await request_container.get(ResetPasswordCommandHandler)
 
     async def test_reset_password_success(
         self,
-        db_session: AsyncSession,
         user_repository: UserRepository,
         hash_service: HashService,
         standard_user: User,
@@ -102,7 +86,6 @@ class TestResetPasswordCommand:
         )
 
         await handler.handle(command)
-        await db_session.commit()
 
         updated_user = await user_repository.get_by_id(standard_user.id)
         assert updated_user is not None
@@ -119,7 +102,7 @@ class TestResetPasswordCommand:
             password_repeat="NewPassword123!",
         )
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await handler.handle(command)
 
     async def test_reset_password_mismatch(
@@ -143,12 +126,11 @@ class TestResetPasswordCommand:
             password_repeat="DifferentPassword123!",
         )
 
-        with pytest.raises(PasswordMismatchException):
+        with pytest.raises(PasswordMismatchError):
             await handler.handle(command)
 
     async def test_reset_password_token_invalidated_after_use(
         self,
-        db_session: AsyncSession,
         standard_user: User,
         token_blacklist_repository: TokenBlacklistRepository,
         handler: ResetPasswordCommandHandler,
@@ -170,7 +152,6 @@ class TestResetPasswordCommand:
         )
 
         await handler.handle(command)
-        await db_session.commit()
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await handler.handle(command)

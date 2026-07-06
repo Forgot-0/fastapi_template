@@ -1,13 +1,13 @@
+from dishka import AsyncContainer
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.permissions.create import CreatePermissionCommand, CreatePermissionCommandHandler
-from app.auth.exceptions import DuplicatePermissionException
+from app.auth.exceptions import DuplicatePermissionError
 from app.auth.models.permission import Permission
 from app.auth.models.user import User
 from app.auth.repositories.permission import PermissionRepository
-from app.auth.services.rbac import AuthRBACManager
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 from tests.support.jwt import jwt_from_user
 
 
@@ -16,21 +16,14 @@ from tests.support.jwt import jwt_from_user
 @pytest.mark.asyncio
 class TestCreatePermissionCommand:
     @pytest.fixture
-    def handler(
+    async def handler(
         self,
-        db_session: AsyncSession,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
+        request_container: AsyncContainer
     ) -> CreatePermissionCommandHandler:
-        return CreatePermissionCommandHandler(
-            session=db_session,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-        )
+        return await request_container.get(CreatePermissionCommandHandler)
 
     async def test_create_permission_success(
         self,
-        db_session: AsyncSession,
         permission_repository: PermissionRepository,
         handler: CreatePermissionCommandHandler,
         admin_user: User,
@@ -43,7 +36,6 @@ class TestCreatePermissionCommand:
         )
 
         await handler.handle(command)
-        await db_session.commit()
 
         created_perm = await permission_repository.get_permission_by_name("post:publish")
         assert created_perm is not None
@@ -65,7 +57,7 @@ class TestCreatePermissionCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(DuplicatePermissionException):
+        with pytest.raises(DuplicatePermissionError):
             await handler.handle(command)
 
     async def test_create_permission_insufficient_permissions(
@@ -80,5 +72,5 @@ class TestCreatePermissionCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             await handler.handle(command)

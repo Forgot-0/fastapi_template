@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundRoleException, NotFoundUserException
+from app.auth.exceptions import NotFoundRoleError, NotFoundUserError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +34,16 @@ class AssignRoleCommandHandler(BaseCommandHandler[AssignRoleCommand, None]):
 
     async def handle(self, command: AssignRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:assign" }):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"role:assign" } - set(command.user_jwt_data.permissions)
             )
         role = await self.role_repository.get_by_name(command.role_name)
         if role is None:
-            raise NotFoundRoleException(name=command.role_name)
+            raise NotFoundRoleError(name=command.role_name)
 
         assign_user = await self.user_repository.get_user_with_permission_by_id(command.assign_to_user)
         if assign_user is None:
-            raise NotFoundUserException(user_by=command.assign_to_user, user_field="id")
+            raise NotFoundUserError(user_by=command.assign_to_user, user_field="id")
 
         self.rbac_manager.check_security_level(
             command.user_jwt_data.security_level,

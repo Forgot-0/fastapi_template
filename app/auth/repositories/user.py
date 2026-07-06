@@ -7,14 +7,16 @@ from app.auth.filters.users import UserFilter
 from app.auth.models.permission import Permission
 from app.auth.models.role import Role
 from app.auth.models.user import User
-from app.core.db.repository import IRepository
+from app.core.db.repository import CacheRepository, IRepository
 
 
 @dataclass
-class UserRepository(IRepository[User]):
+class UserRepository(IRepository[User], CacheRepository):
+    _LIST_VERSION_KEY = "user:list"
+
     async def get_by_email(self, email: str) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.email == email))
-        return result.scalars().first()
+        return result.scalar()
 
     async def get_with_roles_by_email(self, email: str) -> (User | None):
         result = await self.session.execute(
@@ -22,11 +24,11 @@ class UserRepository(IRepository[User]):
                 selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
             ).where(User.email == email)
         )
-        return result.scalars().first()
+        return result.scalar()
 
     async def get_by_username(self, username: str) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.username == username))
-        return result.scalars().first()
+        return result.scalar()
 
     async def get_with_roles_by_username(self, username: str) -> (User | None):
         result = await self.session.execute(
@@ -34,7 +36,7 @@ class UserRepository(IRepository[User]):
                 selectinload(User.permissions), selectinload(User.roles).selectinload(Role.permissions)
             ).where(User.username == username)
         )
-        return result.scalars().first()
+        return result.scalar()
 
     async def get_by_id(self, user_id: int) -> (User | None):
         result = await self.session.execute(User.select_not_deleted().where(User.id == user_id))
@@ -55,6 +57,9 @@ class UserRepository(IRepository[User]):
     async def create(self, user: User) -> None:
         self.session.add(user)
 
+    async def update(self, user: User) -> None:
+        await self.session.merge(user)
+
     async def delete_by_id(self, user_id: int) -> None:
         user = await self.get_by_id(user_id=user_id)
         if user:
@@ -63,7 +68,7 @@ class UserRepository(IRepository[User]):
     def apply_relationship_filters(self, stmt: Select, filters: UserFilter) -> Select:
 
         if filters.role_names:
-            stmt = stmt.join(User.roles).where(Role.name.in_(filters.role_names))
+            stmt = stmt.join(User.roles).where(User.roles.contains(filters.role_names))
 
         if filters.permission_names:
             stmt = stmt.join(User.permissions).where(Permission.name.in_(filters.permission_names))

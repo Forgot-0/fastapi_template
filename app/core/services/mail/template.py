@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader
 
 
 class BaseTemplate(ABC):
@@ -10,11 +10,11 @@ class BaseTemplate(ABC):
 
     @property
     def env(self) -> Environment:
-        if self.__class__._env is None:
-            self.__class__._env = Environment(
-                loader=FileSystemLoader(self._get_dir()), autoescape=select_autoescape(["html"])
+        if self._env is None:
+            self._env = Environment(
+                loader=FileSystemLoader(self._get_dir()), autoescape=True
             )
-        return self.__class__._env
+        return self._env
 
     @abstractmethod
     def _get_dir(self) -> Path: ...
@@ -26,7 +26,5 @@ class BaseTemplate(ABC):
         return {k: v for k, v in vars(self).items() if not k.startswith("_") and not k.startswith("__")}
 
     def render(self) -> str:
-        try:
-            return self.env.get_template(self._get_name()).render(self._get_data())
-        except Exception as exc:
-            raise exc
+        return self.env.get_template(self._get_name()).render(self._get_data())
+

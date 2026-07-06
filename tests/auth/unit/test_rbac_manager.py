@@ -2,11 +2,11 @@ import pytest
 
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import (
-    InvalidRoleNameException,
-    ProtectedPermissionException,
+    InvalidRoleNameError,
+    ProtectedPermissionError,
 )
 from app.auth.services.rbac import AuthRBACManager
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 
 @pytest.mark.unit
@@ -88,7 +88,7 @@ class TestRBACManager:
         should_raise: bool,
     ):
         if should_raise:
-            with pytest.raises(AccessDeniedException):
+            with pytest.raises(AccessDeniedError):
                 rbac_manager.check_security_level(user_level=user_level, role_level=role_level)
         else:
             rbac_manager.check_security_level(user_level=user_level, role_level=role_level)
@@ -101,18 +101,18 @@ class TestRBACManager:
     ):
         rbac_manager.validate_role_name(admin_auth_user_jwt, "custom_role")
 
-        with pytest.raises(InvalidRoleNameException):
+        with pytest.raises(InvalidRoleNameError):
             rbac_manager.validate_role_name(admin_auth_user_jwt, "ab")
 
-        with pytest.raises(InvalidRoleNameException):
+        with pytest.raises(InvalidRoleNameError):
             rbac_manager.validate_role_name(admin_auth_user_jwt, "a" * 30)
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             rbac_manager.validate_role_name(regular_auth_user_jwt, "system_custom")
 
         rbac_manager.validate_role_name(admin_auth_user_jwt, "system_custom")
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             rbac_manager.validate_role_name(regular_auth_user_jwt, "admin_custom")
 
     def test_validate_permissions_various(
@@ -122,12 +122,12 @@ class TestRBACManager:
         regular_auth_user_jwt: AuthUserJWTData,
         admin_auth_user_jwt: AuthUserJWTData,
     ):
-        with pytest.raises(ProtectedPermissionException):
+        with pytest.raises(ProtectedPermissionError):
             rbac_manager.validate_permissions(regular_auth_user_jwt, "role:create")
 
         rbac_manager.validate_permissions(admin_auth_user_jwt, "role:create")
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             rbac_manager.validate_permissions(regular_auth_user_jwt, "user:delete")
 
         user_with_perm = make_auth_user_jwt(role="user", permissions=["user:delete"])

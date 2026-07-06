@@ -19,13 +19,13 @@ from app.auth.commands.users.verify import VerifyCommand
 from app.auth.deps import CurrentUserModel
 from app.auth.dtos.tokens import TokenGroup
 from app.auth.exceptions import (
-    LinkedAnotherUserOAuthException,
-    NotExistProviderOAuthException,
-    NotFoundOrInactiveSessionException,
-    NotFoundUserException,
-    OAuthStateNotFoundException,
-    PasswordMismatchException,
-    WrongLoginDataException,
+    LinkedAnotherUserOAuthError,
+    NotExistProviderOAuthError,
+    NotFoundOrInactiveSessionError,
+    NotFoundUserError,
+    OAuthStateNotFoundError,
+    PasswordMismatchError,
+    WrongLoginDataError,
 )
 from app.auth.schemas.auth.requests import (
     OAuthCallbackQuery,
@@ -42,7 +42,7 @@ from app.auth.services.cookie_manager import RefreshTokenCookieManager
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.core.services.auth.exceptions import ExpiredTokenError, InvalidTokenError
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -53,8 +53,9 @@ router = APIRouter(route_class=DishkaRoute)
     description="Authenticates the user and returns a pair of tokens: access and refresh.",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(WrongLoginDataException(username="aboba"))
-    }
+        400: create_response(WrongLoginDataError(username="aboba"))
+    },
+    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def login(
     mediator: FromDishka[BaseMediator],
@@ -82,8 +83,8 @@ async def login(
     description="Refreshes the access token using the refresh token.",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response([InvalidTokenException(), ExpiredTokenException()]),
-        404: create_response(NotFoundOrInactiveSessionException())
+        400: create_response([InvalidTokenError(), ExpiredTokenError()]),
+        404: create_response(NotFoundOrInactiveSessionError())
     },
     dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
@@ -111,7 +112,7 @@ async def refresh(
     description="Invalidates the user's refresh token to log out.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        400: create_response(InvalidTokenException())
+        400: create_response(InvalidTokenError())
     }
 )
 async def logout(
@@ -129,7 +130,7 @@ async def logout(
     description="Sends an email verification code. Limit: 3 requests per hour.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
+        404: create_response(NotFoundUserError(user_by="test@test.com", user_field="email"))
     },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))],
 )
@@ -147,7 +148,7 @@ async def send_verify_code(
     description="Sends a password reset code. Limit: 3 requests per hour.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        404: create_response(NotFoundUserException(user_by="test@test.com", user_field="email"))
+        404: create_response(NotFoundUserError(user_by="test@test.com", user_field="email"))
     },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
@@ -166,8 +167,8 @@ async def send_reset_password_code(
     description="Confirms the email using the passed token.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        400: create_response(InvalidTokenException()),
-        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+        400: create_response(InvalidTokenError()),
+        404: create_response(NotFoundUserError(user_by=1, user_field="id"))
     },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
@@ -184,8 +185,8 @@ async def verify_email(
     description="Resets the password using the token and new password data.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        400: create_response([InvalidTokenException(), PasswordMismatchException()]),
-        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+        400: create_response([InvalidTokenError(), PasswordMismatchError()]),
+        404: create_response(NotFoundUserError(user_by=1, user_field="id"))
     },
     dependencies=[Depends(ConfigurableRateLimiter(times=3, seconds=60*60))]
 )
@@ -207,8 +208,9 @@ async def reset_password(
     summary="Get URL for OAuth authorization",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(NotExistProviderOAuthException(provider="test"))
-    }
+        400: create_response(NotExistProviderOAuthError(provider="test"))
+    },
+    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def oauth_authorize(
     mediator: FromDishka[BaseMediator],
@@ -227,8 +229,9 @@ async def oauth_authorize(
     summary="Get the OAuth connection URL for an existing user",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(NotExistProviderOAuthException(provider="test"))
-    }
+        400: create_response(NotExistProviderOAuthError(provider="test"))
+    },
+    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def oauth_authorize_connect(
     mediator: FromDishka[BaseMediator],
@@ -247,14 +250,14 @@ async def oauth_authorize_connect(
     summary="Callback for OAuth provider",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(NotExistProviderOAuthException(provider="string")),
+        400: create_response(NotExistProviderOAuthError(provider="string")),
         404: create_response(
             [
-                OAuthStateNotFoundException(state="string"),
-                NotFoundUserException(user_by=1, user_field="id"),
+                OAuthStateNotFoundError(state="string"),
+                NotFoundUserError(user_by=1, user_field="id"),
             ]
         ),
-        409: create_response(LinkedAnotherUserOAuthException(provider="string"))
+        409: create_response(LinkedAnotherUserOAuthError(provider="string"))
     }
 )
 async def oauth_callback(
@@ -263,7 +266,7 @@ async def oauth_callback(
     refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
     request: Request,
     response: Response,
-    oauth_callback_query: OAuthCallbackQuery = Query(...),
+    oauth_callback_query: Annotated[OAuthCallbackQuery, Query()],
 ) -> AccessTokenResponse:
     token_group: TokenGroup
     token_group, *_ = await mediator.handle_command(

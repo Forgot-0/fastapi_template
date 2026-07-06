@@ -48,7 +48,11 @@ class OAuthCodeRepository:
         )
 
     async def get_state(self, state: str) -> int | None:
-        return int(await self.client.get(f"state:{state}"))
+        state = await self.client.get(f"state:{state}")
+        if state is None:
+            return None
+
+        return int(state)
 
     async def delete(self, state: str) -> None:
         await self.client.delete(f"state:{state}")

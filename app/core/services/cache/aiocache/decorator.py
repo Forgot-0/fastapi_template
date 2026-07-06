@@ -13,7 +13,7 @@ class AioCachedDecorator:
     cache: BaseCache
 
     def __call__(self, ttl: int, key_builder: Callable | None = None) -> Callable:
-        def decorator(func: Callable):
+        def decorator(func: Callable) -> Callable:
             @wraps(func)
             async def wrapper(*args: Any, **kwargs: Any) -> Any:
                 cache_key = (

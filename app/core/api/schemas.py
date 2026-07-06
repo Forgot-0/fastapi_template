@@ -3,7 +3,7 @@ from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 import orjson
-from fastapi.responses import ORJSONResponse as _ORJSONResponse
+from fastapi.responses import Response as _ORJSONResponse
 from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger(__name__)

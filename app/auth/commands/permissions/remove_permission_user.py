@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundPermissionsException, NotFoundUserException
+from app.auth.exceptions import NotFoundPermissionsError, NotFoundUserError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +32,13 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
 
     async def handle(self, command: DeletePermissionToUserCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"permission:update", "user:update"}):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"permission:update", "user:update"} - set(command.user_jwt_data.permissions)
             )
 
         user = await self.user_repository.get_user_with_permission_by_id(command.user_id)
         if user is None:
-            raise NotFoundUserException(user_by=command.user_id, user_field="id")
+            raise NotFoundUserError(user_by=command.user_id, user_field="id")
 
         permissions = await self.permission_repository.get_permissions_by_names(
             command.permissions
@@ -47,7 +47,7 @@ class DeletePermissionToUserCommandHandler(BaseCommandHandler[DeletePermissionTo
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise NotFoundPermissionsException(missing=missing)
+            raise NotFoundPermissionsError(missing=missing)
 
         for permission in permissions:
             user.delete_permission(permission)

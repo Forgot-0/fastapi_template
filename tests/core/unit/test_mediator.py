@@ -113,7 +113,7 @@ class TestQueryRegistry:
         assert registry.queries_map[MockMediatorQuery] == Handler2
 
 
-@pytest.mark.unit  
+@pytest.mark.unit
 class TestMediatorIntegration:
 
     @pytest.mark.asyncio

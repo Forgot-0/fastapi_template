@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-from app.core.exceptions import ApplicationException
+from app.core.exceptions import ApplicationError
 
 
 @dataclass(kw_only=True)
-class InvalidTokenException(ApplicationException):
+class InvalidTokenError(ApplicationError):
     token: str | None = None
 
     code: str = "INVALID_TOKEN"
@@ -17,11 +17,11 @@ class InvalidTokenException(ApplicationException):
 
     @property
     def detail(self) -> dict[str, Any]:
-        return {"token": self.token}
+        return {}
 
 
 @dataclass(kw_only=True)
-class ExpiredTokenException(ApplicationException):
+class ExpiredTokenError(ApplicationError):
     token: str | None = None
 
     code: str = "EXPIRED_TOKEN"
@@ -33,10 +33,10 @@ class ExpiredTokenException(ApplicationException):
 
     @property
     def detail(self) -> dict[str, Any]:
-        return {"token": self.token}
+        return {}
 
 @dataclass
-class NotAuthenticatedException(ApplicationException):
+class NotAuthenticatedError(ApplicationError):
     code: str = "NOT_AUTHNTICATED"
     status: int = 401
 
@@ -50,7 +50,7 @@ class NotAuthenticatedException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class AccessDeniedException(ApplicationException):
+class AccessDeniedError(ApplicationError):
     need_permissions: set[str]
 
     code: str = "ACCESS_DENIED"

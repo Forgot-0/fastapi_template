@@ -9,7 +9,7 @@ from app.core.configs.base import BaseConfig
 class AppConfig(BaseConfig):
 
     ENVIRONMENT: Literal["local", "production", "testing"] = "local"
-    PROJECT_NAME: str = "FastAPI Template"
+    PROJECT_NAME: str = "Social"
     DOMAIN: str = "localhost"
     HOST: str = "127.0.0.1"
     PORT: int = 80

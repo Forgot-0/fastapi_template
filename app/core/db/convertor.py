@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy import ColumnElement
 from sqlalchemy.orm import InstrumentedAttribute, joinedload, lazyload, selectinload, subqueryload
 
-from app.core.db.exceptions import AttributeNotExistException
+from app.core.db.exceptions import AttributeNotExistError
 from app.core.filters.base import BaseFilter
 from app.core.filters.condition import FilterCondition, FilterOperator
 from app.core.filters.loading_strategy import LoadingConfig, LoadingStrategyType, RelationshipLoading
@@ -58,8 +58,8 @@ class SQLAlchemyFilterConverter:
     ) -> ColumnElement[bool]:
         try:
             attr = SQLAlchemyFilterConverter.get_model_attribute(model, condition.field)
-        except AttributeError:
-            raise AttributeNotExistException(field=condition.field)
+        except AttributeError as err:
+            raise AttributeNotExistError(field=condition.field) from err
 
         return operators_map[condition.operator](attr, condition.value)
 
@@ -100,8 +100,8 @@ class SQLAlchemyFilterConverter:
 
         try:
             relationship_attr = getattr(model, loading.relationship_name)
-        except AttributeError:
-            raise AttributeNotExistException(field=loading.relationship_name)
+        except AttributeError as err:
+            raise AttributeNotExistError(field=loading.relationship_name) from err
 
         loader = strategy_map[loading.strategy](relationship_attr)
 

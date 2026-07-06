@@ -19,7 +19,23 @@ class CreatedUserEvent(BaseEvent):
     email: str
     username: str
 
-    __event_name__: str = "auth.users.created"
+    __event_name__: str = "auth.user.created"
+
+    def get_partition_key(self) -> str:
+        return str(self.username)
+
+
+@dataclass(frozen=True)
+class VerifiedUserEvent(BaseEvent):
+    user_id: int
+    username: str
+    email: str
+
+    __event_name__: str = "auth.user.verified"
+
+    def get_partition_key(self) -> str:
+        return str(self.user_id)
+
 
 
 class UserPermissions(BaseModel):
@@ -67,14 +83,17 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
     )
 
     @classmethod
-    def create(cls, email: str, username: str, password_hash: str, roles: set["Role"]) -> "User":
+    def create(
+        cls, email: str, username: str, password_hash: str | None,
+        roles: set["Role"], is_verified: bool=False
+    ) -> "User":
         user = User(
             email=email,
             username=username,
             password_hash=password_hash,
             roles=roles,
             is_active=True,
-            is_verified=False,
+            is_verified=is_verified,
             permissions=set()
         )
 
@@ -88,16 +107,10 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
 
     @classmethod
     def create_oauth(cls, email: str, username: str, roles: set["Role"]) -> "User":
-        user = User(
-            email=email,
-            username=username,
-            roles=roles,
-            is_active=True,
-            is_verified=True,
-            permissions=set()
+        return User.create(
+            email, username=username, password_hash=None,
+            roles=roles, is_verified=True
         )
-
-        return user
 
 
     def add_role(self, role: "Role") -> None:
@@ -117,6 +130,13 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
 
     def verify(self) -> None:
         self.is_verified = True
+        self.register_event(
+            VerifiedUserEvent(
+                user_id=self.id,
+                username=self.username,
+                email=self.email
+            )
+        )
 
     def get_highest_role(self) -> "Role":
         return max(self.roles, key=lambda r: r.security_level)

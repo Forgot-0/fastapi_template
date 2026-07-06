@@ -37,7 +37,8 @@ from app.auth.commands.users.send_verify import SendVerifyCommand, SendVerifyCom
 from app.auth.commands.users.verify import VerifyCommand, VerifyCommandHandler
 from app.auth.config import auth_config
 from app.auth.events.users.created import SendVerifyEventHandler
-from app.auth.models.user import CreatedUserEvent
+from app.auth.events.users.verified import PublishVerifiedUserEventHandler
+from app.auth.models.user import CreatedUserEvent, VerifiedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
 from app.auth.queries.auth.oauth import GetUserOAuthAccountsQuery, GetUserOAuthAccountsQueryHandler
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
@@ -112,15 +113,7 @@ class AuthModuleProvider(Provider):
             CryptContext(schemes=["argon2"], deprecated="auto")
         )
 
-    @provide(scope=Scope.APP)
-    def jwt_manager(self, token_blacklist: TokenBlacklistRepository) -> AuthJWTManager:
-        return AuthJWTManager(
-            jwt_secret=app_config.JWT_SECRET_KEY,
-            jwt_algorithm=app_config.JWT_ALGORITHM,
-            access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
-            refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
-            token_blacklist=token_blacklist
-        )
+    jwt_manager = provide(AuthJWTManager, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
     def oauth_factory(self) -> OAuthProviderFactory:
@@ -133,9 +126,9 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_GOOGLE_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GOOGLE_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GOOGLE_REDIRECT_URI,
-                    base_auth_url="https://accounts.google.com/o/oauth2/v2/auth",
-                    token_url="https://oauth2.googleapis.com/token",
-                    userinfo_url="https://openidconnect.googleapis.com/v1/userinfo"
+                    base_auth_url=auth_config.OAUTH_GOOGLE_BASE_AUTH_URL,
+                    token_url=auth_config.OAUTH_GOOGLE_TOKEN_URL,
+                    userinfo_url=auth_config.OAUTH_GOOGLE_USERINFO_URL
                 )
             )
 
@@ -146,9 +139,9 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_YANDEX_CLIENT_ID,
                     client_secret=auth_config.OAUTH_YANDEX_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_YANDEX_REDIRECT_URI,
-                    base_auth_url="https://oauth.yandex.ru/authorize",
-                    token_url="https://oauth.yandex.ru/token",
-                    userinfo_url="https://login.yandex.ru/info"
+                    base_auth_url=auth_config.OAUTH_YANDEX_BASE_AUTH_URL,
+                    token_url=auth_config.OAUTH_YANDEX_TOKEN_URL,
+                    userinfo_url=auth_config.OAUTH_YANDEX_USERINFO_URL
                 )
             )
 
@@ -159,9 +152,9 @@ class AuthModuleProvider(Provider):
                     client_id=auth_config.OAUTH_GITHUB_CLIENT_ID,
                     client_secret=auth_config.OAUTH_GITHUB_CLIENT_SECRET,
                     redirect_uri=auth_config.OAUTH_GITHUB_REDIRECT_URI,
-                    base_auth_url="https://github.com/login/oauth/authorize",
-                    token_url="https://github.com/login/oauth/access_token",
-                    userinfo_url="https://api.github.com/user"
+                    base_auth_url=auth_config.OAUTH_GITHUB_BASE_AUTH_URL,
+                    token_url=auth_config.OAUTH_GITHUB_TOKEN_URL,
+                    userinfo_url=auth_config.OAUTH_GITHUB_USERINFO_URL
                 )
             )
 
@@ -175,7 +168,6 @@ class AuthModuleProvider(Provider):
     session_manager = provide(SessionManager)
     oauth_manager = provide(OAuthManager)
 
-    #handelr command
     register_user_handler = provide(RegisterCommandHandler)
     reset_password_handler = provide(ResetPasswordCommandHandler)
     send_reset_password_handler = provide(SendResetPasswordCommandHandler)
@@ -204,23 +196,19 @@ class AuthModuleProvider(Provider):
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
-        # User commands
         command_registry.register_command(RegisterCommand, [RegisterCommandHandler])
         command_registry.register_command(VerifyCommand, [VerifyCommandHandler])
         command_registry.register_command(SendVerifyCommand, [SendVerifyCommandHandler])
         command_registry.register_command(ResetPasswordCommand, [ResetPasswordCommandHandler])
         command_registry.register_command(SendResetPasswordCommand, [SendResetPasswordCommandHandler])
 
-        # Auth commands
         command_registry.register_command(LoginCommand, [LoginCommandHandler])
         command_registry.register_command(LogoutCommand, [LogoutCommandHandler])
         command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
 
-        # OAuth commands
         command_registry.register_command(CreateOAuthAuthorizeUrlCommand, [CreateOAuthAuthorizeUrlCommandHandler])
         command_registry.register_command(ProcessOAuthCallbackCommand, [ProcessOAuthCallbackCommandHandler])
 
-        #Role
         command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])
         command_registry.register_command(AssignRoleCommand, [AssignRoleCommandHandler])
         command_registry.register_command(RemoveRoleCommand, [RemoveRoleCommandHandler])
@@ -228,25 +216,20 @@ class AuthModuleProvider(Provider):
         command_registry.register_command(DeletePermissionRoleCommand, [DeletePermissionRoleCommandHandler])
         command_registry.register_command(RoleUpdateCommand, [RoleUpdateCommandHandler])
 
-        #Permission
         command_registry.register_command(CreatePermissionCommand, [CreatePermissionCommandHandler])
         command_registry.register_command(DeletePermissionCommand, [DeletePermissionCommandHandler])
         command_registry.register_command(AddPermissionToUserCommand, [AddPermissionToUserCommandHandler])
         command_registry.register_command(DeletePermissionToUserCommand, [DeletePermissionToUserCommandHandler])
 
-        # Session
         command_registry.register_command(UserDeactivateSessionCommand, [UserDeactivateSessionCommandHandler])
         return command_registry
 
-    #event
     send_verify_email = provide(SendVerifyEventHandler)
 
     @decorate
     def register_auth_event_handlers(self, event_registry: EventRegisty) -> EventRegisty:
-        # User events
-        event_registry.subscribe(CreatedUserEvent, [
-            SendVerifyEventHandler
-        ])
+        event_registry.subscribe(CreatedUserEvent, [SendVerifyEventHandler])
+        event_registry.subscribe(VerifiedUserEvent, [PublishVerifiedUserEventHandler])
         return event_registry
 
     # query
@@ -261,23 +244,17 @@ class AuthModuleProvider(Provider):
 
     @decorate
     def register_auth_query_handlers(self, query_registry: QueryRegistry) -> QueryRegistry:
-        # Auth
         query_registry.register_query(GetByAccessTokenQuery, GetByAccessTokenQueryHandler)
         query_registry.register_query(VerifyTokenQuery, VerifyTokenQueryHandler)
 
-        # OAuth
         query_registry.register_query(GetUserOAuthAccountsQuery, GetUserOAuthAccountsQueryHandler)
 
-        # User
         query_registry.register_query(GetListUserQuery, GetListUserQueryHandler)
 
-        # Permissions
         query_registry.register_query(GetListPemissionsQuery, GetListPemissionsQueryHandler)
 
-        # Role
         query_registry.register_query(GetListRolesQuery, GetListRolesQueryHandler)
 
-        # Session
         query_registry.register_query(GetListSessionsUserQuery, GetListSessionsUserQueryHandler)
         query_registry.register_query(GetListSessionQuery, GetListSessionQueryHandler)
         return query_registry

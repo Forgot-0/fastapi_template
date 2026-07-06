@@ -16,6 +16,7 @@ class SessionManager:
         if existing_session := await self.get_user_session(
             user_id=user_id, device_id=device_data.device_id
         ):
+            existing_session.online()
             return existing_session
 
         session = Session.create(
@@ -24,6 +25,8 @@ class SessionManager:
             device_info=device_data.device_info,
             user_agent=device_data.user_agent,
         )
+        session.online()
+
         await self.session_repository.create(session=session)
 
         return session
@@ -37,7 +40,7 @@ class SessionManager:
         )
 
         if active_session:
-            active_session.last_activity = now_utc()
+            active_session.online()
             return active_session
 
         return active_session

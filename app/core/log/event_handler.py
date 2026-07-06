@@ -1,4 +1,3 @@
-
 import logging
 
 from app.core.events.event import BaseEvent, BaseEventHandler

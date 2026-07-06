@@ -11,7 +11,7 @@ from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.session import SessionManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.dto import JwtTokenType
-from app.core.services.auth.exceptions import InvalidTokenException
+from app.core.services.auth.exceptions import InvalidTokenError
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +30,11 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
 
     async def handle(self, command: LogoutCommand) -> None:
         if command.refresh_token is None:
-            raise InvalidTokenException(token=None)
+            raise InvalidTokenError(token=None)
 
-        refresh_data = await self.jwt_manager.validate_token(command.refresh_token, token_type=JwtTokenType.REFRESH)
-        await self.jwt_manager.revoke_token(refresh_data)
-        user = AuthUserJWTData.create_from_token(refresh_data)
+        refresh_token = await self.jwt_manager.validate_token(command.refresh_token, token_type=JwtTokenType.REFRESH)
+        await self.jwt_manager.revoke_token(refresh_token)
+        user = AuthUserJWTData.create_from_token(refresh_token)
 
         await self.session_repository.deactivate_user_session(
             user_id=int(user.id),
@@ -42,7 +42,7 @@ class LogoutCommandHandler(BaseCommandHandler[LogoutCommand, None]):
         )
 
         await self.token_blacklist.add_jwt_token(
-            refresh_data.jti, timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS + 1)
+            refresh_token.jti, timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS + 1)
         )
 
         await self.session.commit()

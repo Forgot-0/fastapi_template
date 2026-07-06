@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from redis.asyncio import Redis
-from sqlalchemy import Select, distinct, func, select
-from sqlalchemy.orm import selectinload, subqueryload
+from sqlalchemy import Select, select
+from sqlalchemy.orm import selectinload
 
 from app.auth.filters.roles import RoleFilter
 from app.auth.models.permission import Permission
@@ -58,7 +58,7 @@ class RoleInvalidateRepository:
     async def get_max_invalidation_time(self, role_names: list[str]) -> datetime:
         keys = [f"invalid_role:{permission_name}" for permission_name in role_names]
         values = await self.client.mget(*keys)
-        if not values:
+        if values is None:
             return fromtimestamp(0.00)
         max_date = max(values, key=lambda x: fromtimestamp(float(x)))
         return fromtimestamp(float(max_date))

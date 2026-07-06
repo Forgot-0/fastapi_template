@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Query, status
 
@@ -7,18 +9,18 @@ from app.auth.commands.roles.delete_permissions import DeletePermissionRoleComma
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.role import RoleDTO
 from app.auth.exceptions import (
-    DuplicateRoleException,
-    InvalidRoleNameException,
-    NotFoundPermissionsException,
-    NotFoundRoleException,
-    ProtectedPermissionException,
+    DuplicateRoleError,
+    InvalidRoleNameError,
+    NotFoundPermissionsError,
+    NotFoundRoleError,
+    ProtectedPermissionError,
 )
 from app.auth.queries.roles.get_list import GetListRolesQuery
 from app.auth.schemas.roles.requests import GetRolesRequest, RoleCreateRequest, RolePermissionRequest
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -31,11 +33,11 @@ router = APIRouter(route_class=DishkaRoute)
     response_model=None,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: create_response(InvalidRoleNameException(name="string")),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
-        404: create_response(NotFoundPermissionsException(missing={"string" })),
+        400: create_response(InvalidRoleNameError(name="string")),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
+        404: create_response(NotFoundPermissionsError(missing={"string" })),
         409: create_response([
-            DuplicateRoleException(name="string"), ProtectedPermissionException(name="string")
+            DuplicateRoleError(name="string"), ProtectedPermissionError(name="string")
         ])
     }
 )
@@ -59,13 +61,13 @@ async def create_role(
     summary="Get a list of roles",
     description="Get a list of roles",
     responses={
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
     }
 )
 async def get_list_news(
     user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
-    params: GetRolesRequest=Query(),
+    params: Annotated[GetRolesRequest, Query()],
 ) -> PageResult[RoleDTO]:
     list_role: PageResult[RoleDTO]
     list_role = await mediator.handle_query(
@@ -84,9 +86,9 @@ async def get_list_news(
     response_model=None,
     status_code=status.HTTP_200_OK,
     responses={
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response([
-            NotFoundRoleException(name="string"), NotFoundPermissionsException(missing={"string"})
+            NotFoundRoleError(name="string"), NotFoundPermissionsError(missing={"string"})
         ])
     }
 )
@@ -112,9 +114,9 @@ async def add_permission_role(
     response_model=None,
     status_code=status.HTTP_200_OK,
     responses={
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response([
-            NotFoundRoleException(name="string"), NotFoundPermissionsException(missing={"string"})
+            NotFoundRoleError(name="string"), NotFoundPermissionsError(missing={"string"})
         ])
     }
 )

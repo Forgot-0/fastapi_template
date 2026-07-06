@@ -1,19 +1,17 @@
 import asyncio
 
+from dishka import AsyncContainer
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.refresh_token import RefreshTokenCommand, RefreshTokenCommandHandler
-from app.auth.exceptions import NotFoundOrInactiveSessionException
+from app.auth.exceptions import NotFoundOrInactiveSessionError
 from app.auth.models.user import User
 from app.auth.repositories.session import SessionRepository
-from app.auth.repositories.user import UserRepository
-from app.auth.services.hash import HashService
 from app.auth.services.jwt import AuthJWTManager
-from app.auth.services.session import SessionManager
 from app.core.services.auth.dto import JwtTokenType
-from app.core.services.auth.exceptions import InvalidTokenException
+from app.core.services.auth.exceptions import InvalidTokenError
 from tests.auth.integration.factories import AuthCommandFactory
 
 
@@ -22,40 +20,21 @@ from tests.auth.integration.factories import AuthCommandFactory
 @pytest.mark.asyncio
 class TestRefreshTokenCommand:
     @pytest.fixture
-    def login_handler(
+    async def login_handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        auth_jwt_manager: AuthJWTManager,
-        hash_service: HashService,
+        request_container: AsyncContainer,
     ) -> LoginCommandHandler:
-        return LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=auth_jwt_manager,
-            hash_service=hash_service,
-        )
+        return await request_container.get(LoginCommandHandler)
 
     @pytest.fixture
-    def refresh_handler(
+    async def refresh_handler(
         self,
-        db_session: AsyncSession,
-        auth_jwt_manager: AuthJWTManager,
-        session_repository: SessionRepository,
-        user_repository: UserRepository,
+        request_container: AsyncContainer,
     ) -> RefreshTokenCommandHandler:
-        return RefreshTokenCommandHandler(
-            session=db_session,
-            jwt_manager=auth_jwt_manager,
-            session_repository=session_repository,
-            user_repository=user_repository,
-        )
+        return await request_container.get(RefreshTokenCommandHandler)
 
     async def test_refresh_token_success(
         self,
-        db_session: AsyncSession,
         auth_jwt_manager: AuthJWTManager,
         login_handler: LoginCommandHandler,
         refresh_handler: RefreshTokenCommandHandler,
@@ -67,7 +46,6 @@ class TestRefreshTokenCommand:
         )
         login_command = LoginCommand(**cmd_data)
         old_tokens = await login_handler.handle(login_command)
-        await db_session.commit()
 
         refresh_command = RefreshTokenCommand(
             refresh_token=old_tokens.refresh_token,
@@ -88,7 +66,7 @@ class TestRefreshTokenCommand:
             refresh_token="invalid_token",
         )
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await refresh_handler.handle(refresh_command)
 
     async def test_refresh_token_inactive_session(
@@ -106,7 +84,6 @@ class TestRefreshTokenCommand:
         )
         login_command = LoginCommand(**cmd_data)
         tokens = await login_handler.handle(login_command)
-        await db_session.commit()
 
         token_data = await auth_jwt_manager.validate_token(tokens.refresh_token, token_type=JwtTokenType.REFRESH)
         await session_repository.deactivate_user_session(
@@ -119,12 +96,11 @@ class TestRefreshTokenCommand:
             refresh_token=tokens.refresh_token,
         )
 
-        with pytest.raises(NotFoundOrInactiveSessionException):
+        with pytest.raises(NotFoundOrInactiveSessionError):
             await refresh_handler.handle(refresh_command)
 
     async def test_refresh_token_updates_session_activity(
         self,
-        db_session: AsyncSession,
         auth_jwt_manager: AuthJWTManager,
         session_repository: SessionRepository,
         login_handler: LoginCommandHandler,
@@ -137,7 +113,6 @@ class TestRefreshTokenCommand:
         )
         login_command = LoginCommand(**cmd_data)
         tokens = await login_handler.handle(login_command)
-        await db_session.commit()
 
         token_data = await auth_jwt_manager.validate_token(tokens.refresh_token, token_type=JwtTokenType.REFRESH)
         old_session = await session_repository.get_active_by_device(
@@ -154,7 +129,6 @@ class TestRefreshTokenCommand:
             refresh_token=tokens.refresh_token,
         )
         await refresh_handler.handle(refresh_command)
-        await db_session.commit()
 
         new_session = await session_repository.get_active_by_device(
             user_id=int(token_data.sub),

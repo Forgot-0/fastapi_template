@@ -7,7 +7,7 @@ from app.auth.repositories.user import UserRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 
 @dataclass(frozen=True)
@@ -23,8 +23,14 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
 
     async def handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view" }):
-            raise AccessDeniedException(need_permissions={"user:view"} - set(query.user_jwt_data.permissions))
+            raise AccessDeniedError(need_permissions={"user:view"} - set(query.user_jwt_data.permissions))
 
+        return await self.user_repository.cache_paginated(
+            UserDTO, self._handle, ttl=200,
+            query=query
+        )
+
+    async def _handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
         pagination_users = await self.user_repository.find_by_filter(
             User,
             filters=query.user_filter

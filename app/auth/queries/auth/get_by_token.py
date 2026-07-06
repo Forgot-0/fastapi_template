@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 
-from app.auth.exceptions import NotFoundUserException
+from app.auth.exceptions import NotFoundUserError
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
 from app.auth.services.jwt import AuthJWTManager
@@ -25,7 +25,7 @@ class GetByAccessTokenQueryHandler(BaseQueryHandler[GetByAccessTokenQuery, User]
 
         user = await self.user_repository.get_user_with_permission_by_id(int(user_id))
         if not user:
-            raise NotFoundUserException(user_by=user_id, user_field="id")
+            raise NotFoundUserError(user_by=user_id, user_field="id")
 
         logger.debug("Get user by access token", extra={"user_id": user.id})
         return user

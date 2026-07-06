@@ -8,7 +8,7 @@ from app.auth.repositories.permission import PermissionRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, Pag
 
     async def handle(self, query: GetListPemissionsQuery) -> PageResult[PermissionDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"permission:view" }):
-            raise AccessDeniedException(need_permissions={"permission:view"} - set(query.user_jwt_data.permissions))
+            raise AccessDeniedError(need_permissions={"permission:view"} - set(query.user_jwt_data.permissions))
 
         pagination_permissions = await self.permission_repository.find_by_filter(
             model=Permission, filters=query.permission_filter

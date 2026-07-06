@@ -60,11 +60,6 @@ class BaseModel(DeclarativeBase):
     def from_dict(cls, data: dict[str, Any]) -> Self:
         return cls(**{k: v for k, v in data.items() if k in cls._get_field_names()})
 
-    def update(self, data: dict[str, Any]) -> None:
-        for key, value in data.items():
-            if key in self._get_field_names():
-                setattr(self, key, value)
-
     @classmethod
     def _get_field_names(cls) -> list[str]:
         return [column.name for column in cls.__table__.columns]

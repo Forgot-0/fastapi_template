@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter, Query, status
@@ -11,11 +13,11 @@ from app.auth.deps import ActiveUserModel, AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO
 from app.auth.dtos.user import UserDTO
 from app.auth.exceptions import (
-    DuplicateUserException,
-    NotFoundPermissionsException,
-    NotFoundRoleException,
-    NotFoundUserException,
-    PasswordMismatchException,
+    DuplicateUserError,
+    NotFoundPermissionsError,
+    NotFoundRoleError,
+    NotFoundUserError,
+    PasswordMismatchError,
 )
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery
 from app.auth.queries.users.get_list import GetListUserQuery
@@ -25,7 +27,7 @@ from app.auth.schemas.users.responses import UserResponse
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.exceptions import AccessDeniedException, InvalidTokenException
+from app.core.services.auth.exceptions import AccessDeniedError, InvalidTokenError
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -36,8 +38,8 @@ router = APIRouter(route_class=DishkaRoute)
     description="",
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: create_response(PasswordMismatchException()),
-        409: create_response(DuplicateUserException(field="string", value="string"))
+        400: create_response(PasswordMismatchError()),
+        409: create_response(DuplicateUserError(field="string", value="string"))
     }
 )
 async def register_user(
@@ -65,9 +67,9 @@ async def register_user(
     description="",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"user:active" })),
-        404: create_response(NotFoundUserException(user_by=1, user_field="id"))
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"user:active" })),
+        404: create_response(NotFoundUserError(user_by=1, user_field="id"))
     }
 )
 async def me(user: ActiveUserModel) -> UserResponse:
@@ -83,10 +85,10 @@ async def me(user: ActiveUserModel) -> UserResponse:
     description="Adding a role to a user",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
-            [NotFoundRoleException(name="strig"), NotFoundUserException(user_by=1, user_field="id")]
+            [NotFoundRoleError(name="strig"), NotFoundUserError(user_by=1, user_field="id")]
         )
     }
 )
@@ -110,10 +112,10 @@ async def assign_role(
     description="Removing a role from a user",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
-            [NotFoundRoleException(name="strig"), NotFoundUserException(user_by=1, user_field="id")]
+            [NotFoundRoleError(name="strig"), NotFoundUserError(user_by=1, user_field="id")]
         )
     }
 )
@@ -137,12 +139,12 @@ async def remove_role(
     description="Adding permissions to a user",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
             [
-                NotFoundPermissionsException(missing={"string" }),
-                NotFoundUserException(user_by=1, user_field="id")
+                NotFoundPermissionsError(missing={"string" }),
+                NotFoundUserError(user_by=1, user_field="id")
             ]
         )
     }
@@ -167,12 +169,12 @@ async def add_permissions_to_user(
     description="Removing user permissions",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
             [
-                NotFoundPermissionsException(missing={"string" }),
-                NotFoundUserException(user_by=1, user_field="id")
+                NotFoundPermissionsError(missing={"string" }),
+                NotFoundUserError(user_by=1, user_field="id")
             ]
         )
     }
@@ -198,14 +200,14 @@ async def delete_permissions_to_user(
     description="Get a list of users",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(InvalidTokenException()),
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
+        400: create_response(InvalidTokenError()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
     }
 )
 async def get_list_user(
     user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
-    params: GetUsersRequest = Query(),
+    params: Annotated[GetUsersRequest, Query()],
 ) -> PageResult[UserDTO]:
     list_user: PageResult[UserDTO]
     list_user = await mediator.handle_query(
@@ -223,7 +225,7 @@ async def get_list_user(
     description="Get active user sessions",
     status_code=status.HTTP_200_OK,
     responses={
-        400: create_response(InvalidTokenException()),
+        400: create_response(InvalidTokenError()),
     }
 )
 async def get_list_user_session(

@@ -1,16 +1,15 @@
+from dishka import AsyncContainer
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
-from app.auth.exceptions import WrongLoginDataException
+from app.auth.exceptions import WrongLoginDataError
 from app.auth.models.user import User
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import SessionRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.device import generate_device_info
-from app.auth.services.hash import HashService
 from app.auth.services.jwt import AuthJWTManager
-from app.auth.services.session import SessionManager
 from tests.auth.integration.factories import AuthCommandFactory, UserFactory
 
 
@@ -19,21 +18,11 @@ from tests.auth.integration.factories import AuthCommandFactory, UserFactory
 @pytest.mark.asyncio
 class TestLoginCommand:
     @pytest.fixture
-    def handler(
+    async def handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        auth_jwt_manager: AuthJWTManager,
-        hash_service: HashService,
+        request_container: AsyncContainer,
     ) -> LoginCommandHandler:
-        return LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=auth_jwt_manager,
-            hash_service=hash_service,
-        )
+        return await request_container.get(LoginCommandHandler)
 
     async def test_login_with_username_success(
         self,
@@ -78,7 +67,7 @@ class TestLoginCommand:
             user_agent="Mozilla/5.0",
         )
 
-        with pytest.raises(WrongLoginDataException) as exc_info:
+        with pytest.raises(WrongLoginDataError) as exc_info:
             await handler.handle(command)
 
         assert exc_info.value.username == standard_user.username
@@ -93,12 +82,11 @@ class TestLoginCommand:
             user_agent="Mozilla/5.0",
         )
 
-        with pytest.raises(WrongLoginDataException):
+        with pytest.raises(WrongLoginDataError):
             await handler.handle(command)
 
     async def test_login_creates_session(
         self,
-        db_session: AsyncSession,
         session_repository: SessionRepository,
         handler: LoginCommandHandler,
         standard_user: User,
@@ -111,7 +99,6 @@ class TestLoginCommand:
         command = LoginCommand(**cmd_data)
 
         await handler.handle(command)
-        await db_session.commit()
 
         sessions = await session_repository.get_active_by_user(standard_user.id)
 
@@ -120,7 +107,6 @@ class TestLoginCommand:
 
     async def test_login_multiple_times_same_device(
         self,
-        db_session: AsyncSession,
         session_repository: SessionRepository,
         handler: LoginCommandHandler,
         standard_user: User,
@@ -133,10 +119,8 @@ class TestLoginCommand:
         command = LoginCommand(**cmd_data)
 
         token1 = await handler.handle(command)
-        await db_session.commit()
 
         token2 = await handler.handle(command)
-        await db_session.commit()
 
         assert token1.access_token != token2.access_token
         assert token1.refresh_token != token2.refresh_token
@@ -171,7 +155,7 @@ class TestLoginCommand:
             user_agent="Mozilla/5.0",
         )
 
-        with pytest.raises(WrongLoginDataException):
+        with pytest.raises(WrongLoginDataError):
             await handler.handle(command)
 
     async def test_login_tokens_contain_user_data(

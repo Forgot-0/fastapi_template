@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from app.core.filters.exceptions import ValueMustNotNoneException
+from app.core.filters.exceptions import ValueMustNotNoneError
 
 
 class FilterOperator(str, Enum):
@@ -38,6 +38,6 @@ class FilterCondition:
     operator: FilterOperator
     value: Any
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.value is None and self.operator not in null_set:
-            raise ValueMustNotNoneException(field=self.field)
+            raise ValueMustNotNoneError(field=self.field)

@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 class TokenType(str, Enum):
     ACCESS = "access"
     REFRESH = "refresh"
-    PASSWORD_RESET = "reset_password_token"
+    PASSWORD_RESET = "reset_token"
     EMAIL_CHANGE = "email_change_token"
     OAUTH_CONNECT = "oauth_connect_state"
 

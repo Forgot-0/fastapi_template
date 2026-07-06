@@ -163,13 +163,38 @@ class MinioStorageService(StorageService):
         )
         return result
 
+    async def download_range(self, bucket_name: str, file_key: str, offset: int, length: int) -> bytes:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            self.thread_executor,
+            lambda: self._download_range_sync(
+                bucket_name=bucket_name,
+                file_key=file_key,
+                offset=offset,
+                length=length,
+            ),
+        )
+
     def _download_file_sync(self, bucket_name: str, file_key: str) -> bytes:
         response=None
         try:
             response = self.client.get_object(bucket_name=bucket_name, object_name=file_key)
             return response.read()
-        except Exception as e:
-            raise e
+        finally:
+            if response:
+                response.close()
+                response.release_conn()
+
+    def _download_range_sync(self, bucket_name: str, file_key: str, offset: int, length: int) -> bytes:
+        response = None
+        try:
+            response = self.client.get_object(
+                bucket_name=bucket_name,
+                object_name=file_key,
+                offset=offset,
+                length=length,
+            )
+            return response.read()
         finally:
             if response:
                 response.close()

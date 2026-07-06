@@ -1,27 +1,26 @@
 from dataclasses import dataclass
 from typing import Any
 
-from jose import ExpiredSignatureError, JWTError, jwt
+import jwt
 
+from app.core.configs.app import app_config
 from app.core.services.auth.dto import JwtTokenType, Token
-from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.core.services.auth.exceptions import ExpiredTokenError, InvalidTokenError
 
 
 @dataclass
 class JWTManager:
-    jwt_secret: str
-    jwt_algorithm: str
 
     def encode(self, payload: dict[str, Any]) -> str:
-        return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+        return jwt.encode(payload, app_config.JWT_SECRET_KEY, algorithm=app_config.JWT_ALGORITHM)
 
     def decode(self, token: str) -> dict[str, Any]:
         try:
-            data = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
-        except ExpiredSignatureError as err:
-            raise ExpiredTokenException(token=token) from err
-        except JWTError as err:
-            raise InvalidTokenException(token=token) from err
+            data = jwt.decode(token, app_config.JWT_SECRET_KEY, algorithms=[app_config.JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError as err:
+            raise ExpiredTokenError(token=token) from err
+        except jwt.PyJWTError as err:
+            raise InvalidTokenError(token=token) from err
         return data
 
     async def validate_token(self, token: str, token_type: JwtTokenType=JwtTokenType.ACCESS) -> Token:
@@ -29,7 +28,7 @@ class JWTManager:
         token_data = Token(**payload)
 
         if token_data.type != token_type:
-            raise InvalidTokenException(token=token)
+            raise InvalidTokenError(token=token)
 
         return token_data
 

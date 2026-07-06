@@ -3,7 +3,7 @@ from typing import Any
 
 
 @dataclass
-class ApplicationException(Exception):
+class ApplicationError(Exception):
     code: str
     status: int
 
@@ -17,7 +17,7 @@ class ApplicationException(Exception):
 
 
 @dataclass(kw_only=True)
-class NotHandlerRegisterException(ApplicationException):
+class NotHandlerRegisterError(ApplicationError):
     classes: list[str]
     code: str = "INTERNAL_EXCEPTION"
     status: int = 503
@@ -32,7 +32,7 @@ class NotHandlerRegisterException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class FieldRequiredException(ApplicationException):
+class FieldRequiredError(ApplicationError):
     code: str = "INTERNAL_EXCEPTION"
     status: int = 500
 
@@ -46,7 +46,7 @@ class FieldRequiredException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class ValidationException(ApplicationException):
+class ValidationError(ApplicationError):
     code: str = "VALIDATION_EXCEPTION"
     status: int = 422
 

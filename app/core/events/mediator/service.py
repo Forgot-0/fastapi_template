@@ -5,11 +5,13 @@ from dishka import AsyncContainer
 
 from app.core.events.event import BaseEvent
 from app.core.events.service import BaseEventBus
+from app.core.message_brokers.base import BaseMessageBroker
 
 
 @dataclass(eq=False)
 class MediatorEventBus(BaseEventBus):
     container: AsyncContainer
+    message_broker: BaseMessageBroker
 
     async def publish(self, events: Iterable[BaseEvent]) -> None:
         for event in events:
@@ -19,5 +21,6 @@ class MediatorEventBus(BaseEventBus):
 
             async with self.container() as requests_container:
                 for type_handler in type_handlers:
-                        handler = await requests_container.get(type_handler)
-                        await handler(event)
+                    handler = await requests_container.get(type_handler)
+                    await handler(event)
+

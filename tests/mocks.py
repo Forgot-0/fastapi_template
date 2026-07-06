@@ -1,5 +1,10 @@
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Iterable
 
+from app.core.events.event import BaseEvent
+from app.core.events.service import BaseEventBus
+from app.core.services.mail.service import BaseMailService, EmailData
+from app.core.services.mail.template import BaseTemplate
 from app.core.services.queues.service import QueueResult, QueueResultStatus, QueueService
 from app.core.services.queues.task import BaseTask
 from app.core.services.storage.dtos import UploadFile, UploadFilePost, UploadFilePostResponse
@@ -58,4 +63,32 @@ class FakeStorageService(StorageService):
 
     def get_public_url_object(self, bucket: str, file_key: str) -> str:
         return f"https://storage.test/public/{bucket}/{file_key}"
+
+
+
+@dataclass
+class MockMailService(BaseMailService):
+    sent_emails: list = field(default_factory=list)
+
+    async def send(self, template: BaseTemplate, email_data: EmailData) -> None:
+        self.sent_emails.append({"template": template, "data": email_data})
+
+    async def queue(self, template: BaseTemplate, email_data: EmailData) -> str:
+        self.sent_emails.append({"template": template, "data": email_data})
+        return "task_id"
+
+    async def send_plain(self, subject: str, recipient: str, body: str) -> None:
+        ...
+
+    async def queue_plain(self, subject: str, recipient: str, body: str) -> str:
+        return "task_id"
+
+
+
+@dataclass
+class MockEventBus(BaseEventBus):
+    published_events: list[BaseEvent] = field(default_factory=list)
+
+    async def publish(self, events: Iterable[BaseEvent]) -> None:
+        self.published_events.extend(events)
 

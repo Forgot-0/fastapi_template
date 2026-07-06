@@ -8,7 +8,7 @@ from app.auth.repositories.role import RoleRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class GetListRolesQueryHandler(BaseQueryHandler[GetListRolesQuery, PageResult[Ro
 
     async def handle(self, query: GetListRolesQuery) -> PageResult[RoleDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"role:view" }):
-            raise AccessDeniedException(need_permissions={"role:view"} - set(query.user_jwt_data.permissions))
+            raise AccessDeniedError(need_permissions={"role:view"} - set(query.user_jwt_data.permissions))
 
         pagination_roles = await self.role_repository.find_by_filter(
             model=Role, filters=query.role_filter

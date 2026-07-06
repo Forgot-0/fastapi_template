@@ -18,9 +18,8 @@ class AioCacheService(CacheServiceInterface):
     async def delete(self, key: str) -> None:
         await self._cache.delete(key)
 
-    async def invadate(self, key_list: str, *keys: str) -> None:
+    async def invadate(self, *keys: str) -> None:
         await self._cache.delete(*keys)
-        await self._cache.increment(key_list)
 
     async def get_list_version(self, key_list: str) -> int:
         return await self._cache.get(key_list) or 0

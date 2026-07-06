@@ -37,6 +37,7 @@ class AuthUserJWTData(UserJWTData):
 
         return cls(
             id=str(user.id),
+            username=user.username,
             security_level=security_lvl,
             roles=list(roles),
             permissions=list(permissions),

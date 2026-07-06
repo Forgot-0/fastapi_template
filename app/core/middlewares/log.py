@@ -1,7 +1,7 @@
 import logging
 import time
 
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class LoggingMiddleware:
 
         start_time = time.time()
 
-        async def send_wrapper(message):
+        async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
                 processing_time = time.time() - start_time
                 logger.info("request", extra={

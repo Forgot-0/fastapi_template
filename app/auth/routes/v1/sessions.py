@@ -1,16 +1,18 @@
+from typing import Annotated
+
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Query, status
 
 from app.auth.commands.sessions.deactivate_session import UserDeactivateSessionCommand
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.sessions import SessionDTO
-from app.auth.exceptions import NotFoundOrInactiveSessionException
+from app.auth.exceptions import NotFoundOrInactiveSessionError
 from app.auth.queries.sessions.get_list import GetListSessionQuery
 from app.auth.schemas.sessions.requests import GetSessionsRequest
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 router = APIRouter(route_class=DishkaRoute)
 
@@ -22,8 +24,8 @@ router = APIRouter(route_class=DishkaRoute)
     description="Log out of session",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        403: create_response(AccessDeniedException(need_permissions={"string" })),
-        404: create_response(NotFoundOrInactiveSessionException()),
+        403: create_response(AccessDeniedError(need_permissions={"string" })),
+        404: create_response(NotFoundOrInactiveSessionError()),
     }
 )
 async def user_session_delete(
@@ -44,13 +46,13 @@ async def user_session_delete(
     description="Get a list of sessions",
     status_code=status.HTTP_200_OK,
     responses={
-        403: create_response(AccessDeniedException(need_permissions={"string" }))
+        403: create_response(AccessDeniedError(need_permissions={"string" }))
     }
 )
 async def get_list_sessions(
     user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
-    params: GetSessionsRequest=Query(),
+    params: Annotated[GetSessionsRequest, Query()],
 ) -> PageResult[SessionDTO]:
     result: PageResult[SessionDTO]
     result = await mediator.handle_query(

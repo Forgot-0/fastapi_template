@@ -35,7 +35,6 @@ class AioSmtpLibMailService(BaseMailService):
         )
 
     async def send_plain(self, subject: str, recipient: str, body: str) -> None:
-        """Просто отправляем письмо без шаблона, сразу."""
         message = EmailMessage()
         sender_name = app_config.EMAIL_SENDER_NAME
         sender_address = app_config.EMAIL_SENDER_ADDRESS
@@ -48,7 +47,6 @@ class AioSmtpLibMailService(BaseMailService):
         await aiosmtplib.send(message, **self.smtp_config)
 
     async def queue_plain(self, subject: str, recipient: str, body: str) -> str:
-        """Ставим задачу в очередь на отправку письма без шаблона."""
         email_data = {
             "subject": subject,
             "recipient": recipient,

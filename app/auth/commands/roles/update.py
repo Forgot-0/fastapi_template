@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundRoleException
+from app.auth.exceptions import NotFoundRoleError
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
 
     async def handle(self, command: RoleUpdateCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:update" }):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"role:update" } - set(command.user_jwt_data.permissions)
             )
         if command.security_level is not None:
@@ -39,12 +39,17 @@ class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
 
         role = await self.role_repository.get_by_id(command.id)
         if role is None:
-            raise NotFoundRoleException(name=str(command.id))
+            raise NotFoundRoleError(name=str(command.id))
 
         self.rbac_manager.check_security_level(command.user_jwt_data.security_level, role.security_level)
-        role.update({
-            "name": command.name, "description": command.description, "security_level": command.security_level
-        })
+        if command.name:
+            role.name = command.name
+
+        if command.description:
+            role.description = command.description
+
+        if command.security_level:
+            role.security_level = command.security_level
 
         await self.role_invalidation.invalidate_role(role.name)
         await self.session.commit()

@@ -8,8 +8,7 @@ class FilterMapper:
             return []
 
         sort_fields = []
-        for part in sort_string.split(","):
-            part = part.strip()
+        for part in map(str.strip, sort_string.split(",")):
             if not part:
                 continue
 

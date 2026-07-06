@@ -1,8 +1,10 @@
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
 import redis.asyncio as redis
+from aiojobs import Scheduler
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -19,7 +21,7 @@ from app.core.api.builder import create_response
 from app.core.api.schemas import ErrorDetail, ErrorResponse, ORJSONResponse
 from app.core.configs.app import app_config
 from app.core.di.container import create_container
-from app.core.exceptions import ApplicationException, ValidationException
+from app.core.exceptions import ApplicationError, ValidationError
 from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 from app.core.middlewares.context import ContextMiddleware
@@ -33,17 +35,18 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) :
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting FastAPI")
     async with app.state.dishka_container() as request_container:
         session = await request_container.get(AsyncSession)
         await pre_start(session)
         await init_data(session)
 
-    redis_client = redis.from_url(app_config.redis_url)
+    redis_client = await app.state.dishka_container.get(redis.Redis)
     await FastAPILimiter.init(redis_client)
     message_broker: BaseMessageBroker = await app.state.dishka_container.get(BaseMessageBroker)
     await message_broker.start()
+
     yield
     await redis_client.aclose()
     await message_broker.close()
@@ -63,6 +66,7 @@ def setup_middleware(app: FastAPI) -> None:
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
     app.add_middleware(ContextMiddleware)
 
 
@@ -71,7 +75,8 @@ def setup_router(app: FastAPI) -> None:
 
     app.include_router(auth_router_v1, prefix=app_config.API_V1_STR)
 
-def handle_application_exception(request: Request, exc: ApplicationException) -> ORJSONResponse:
+
+def handle_application_exception(request: Request, exc: ApplicationError) -> ORJSONResponse:
     logger.error(
         "Application exception",
         exc_info=exc,
@@ -151,7 +156,7 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
         routes=app.routes,
     )
 
-    response_def = create_response(ValidationException(), description="Validation error")
+    response_def = create_response(ValidationError(), description="Validation error")
 
     components = openapi_schema.setdefault("components", {})
     responses = components.setdefault("responses", {})
@@ -184,8 +189,8 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
             app_json = content.setdefault("application/json", {})
             app_json["schema"] = schema_ref
 
-    for path, path_item in openapi_schema.get("paths", {}).items():
-        for method, operation in path_item.items():
+    for path_item in openapi_schema.get("paths", {}).values():
+        for operation in path_item.values():
             if not isinstance(operation, dict):
                 continue
             responses_obj = operation.get("responses", {})
@@ -223,7 +228,7 @@ def init_app() -> FastAPI:
     setup_router(app)
 
     app.add_exception_handler(Exception, handle_unknown_exception)
-    app.add_exception_handler(ApplicationException, handle_application_exception) # type: ignore
+    app.add_exception_handler(ApplicationError, handle_application_exception) # type: ignore
     app.add_exception_handler(RequestValidationError, handle_validation_exception) # type: ignore
     app.openapi = lambda: custom_openapi(app)
     return app
@@ -245,7 +250,7 @@ def test_app() -> FastAPI:
     setup_router(app)
 
     app.add_exception_handler(Exception, handle_unknown_exception)
-    app.add_exception_handler(ApplicationException, handle_application_exception) # type: ignore
+    app.add_exception_handler(ApplicationError, handle_application_exception) # type: ignore
     app.add_exception_handler(RequestValidationError, handle_validation_exception) # type: ignore
     app.openapi = lambda: custom_openapi(app)
     return app

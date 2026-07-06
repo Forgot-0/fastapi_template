@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import ResetTokenTemplate
-from app.auth.exceptions import NotFoundUserException
+from app.auth.exceptions import NotFoundUserError
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -28,7 +28,7 @@ class SendResetPasswordCommandHandler(BaseCommandHandler[SendResetPasswordComman
     async def handle(self, command: SendResetPasswordCommand) -> None:
         user = await self.user_repository.get_by_email(email=command.email)
         if not user:
-            raise NotFoundUserException(user_by=command.email, user_field="email")
+            raise NotFoundUserError(user_by=command.email, user_field="email")
 
         reset_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(reset_token.encode()).hexdigest()

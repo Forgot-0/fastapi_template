@@ -1,10 +1,10 @@
+from dishka import AsyncContainer
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.users.register import RegisterCommand, RegisterCommandHandler
-from app.auth.exceptions import DuplicateUserException, PasswordMismatchException
+from app.auth.exceptions import DuplicateUserError, PasswordMismatchError
 from app.auth.models.user import User
-from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.user import UserRepository
 from app.auth.services.hash import HashService
 from tests.auth.integration.factories import AuthCommandFactory
@@ -16,21 +16,11 @@ from tests.conftest import MockEventBus
 @pytest.mark.asyncio
 class TestRegisterCommand:
     @pytest.fixture
-    def handler(
+    async def handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        role_repository: RoleRepository,
-        hash_service: HashService,
-        mock_event_bus: MockEventBus,
+        request_container: AsyncContainer
     ) -> RegisterCommandHandler:
-        return RegisterCommandHandler(
-            session=db_session,
-            event_bus=mock_event_bus,
-            user_repository=user_repository,
-            role_repository=role_repository,
-            hash_service=hash_service,
-        )
+        return await request_container.get(RegisterCommandHandler)
 
     async def test_register_new_user_success(
         self,
@@ -72,7 +62,7 @@ class TestRegisterCommand:
 
         command = RegisterCommand(**cmd_data)
 
-        with pytest.raises(DuplicateUserException) as exc_info:
+        with pytest.raises(DuplicateUserError) as exc_info:
             await handler.handle(command)
 
         assert exc_info.value.field == "username"
@@ -90,7 +80,7 @@ class TestRegisterCommand:
 
         command = RegisterCommand(**cmd_data)
 
-        with pytest.raises(DuplicateUserException) as exc_info:
+        with pytest.raises(DuplicateUserError) as exc_info:
             await handler.handle(command)
 
         assert exc_info.value.field == "email"
@@ -107,7 +97,7 @@ class TestRegisterCommand:
             password_repeat="DifferentPass123!",
         )
 
-        with pytest.raises(PasswordMismatchException):
+        with pytest.raises(PasswordMismatchError):
             await handler.handle(command)
 
     async def test_register_user_has_default_role(

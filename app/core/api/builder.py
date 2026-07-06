@@ -6,16 +6,16 @@ from app.core.api.schemas import (
     ErrorDetail,
     ErrorResponse,
 )
-from app.core.exceptions import ApplicationException
+from app.core.exceptions import ApplicationError
 
 
 def create_response(
-    excs: ApplicationException | list[ApplicationException],
+    excs: ApplicationError | list[ApplicationError],
     description: str = "",
 ) -> dict[str, Any]:
 
-    if isinstance(excs, ApplicationException):
-        exc_list: list[ApplicationException] = [excs]
+    if isinstance(excs, ApplicationError):
+        exc_list: list[ApplicationError] = [excs]
     else:
         exc_list = list(excs)
 

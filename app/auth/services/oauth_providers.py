@@ -174,7 +174,7 @@ class OAuthGithub(OAuthProvider):
 
     async def _get_email(self, headers: dict[str, Any]) -> str:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
+            response = await client.get(
                 "https://api.github.com/user/emails",
                 headers=headers
             )

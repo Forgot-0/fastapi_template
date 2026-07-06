@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, LargeBinary, String, func
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, LargeBinary, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import INET
 
 from app.core.db.base_model import BaseModel
 from app.core.events.event import BaseEvent
@@ -14,11 +15,28 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class NewSessionCreatedEvent(BaseEvent):
+class NewSessionEvent(BaseEvent):
     user_id: int
-    user_agent: str
+    device_id: str
 
-    __event_name__ = "auth.sessions.created"
+    __event_name__: str = "auth.session.created"
+
+    def get_partition_key(self) -> str:
+        return str(self.user_id)
+
+
+@dataclass(frozen=True)
+class SuspiciousSessionEvent(BaseEvent):
+    user_id: int
+    session_id: int
+    reason: str
+    old_value: str | None
+    new_value: str | None
+
+    __event_name__: str = "auth.session.suspicious"
+
+    def get_partition_key(self) -> str:
+        return str(self.user_id)
 
 
 class Session(BaseModel):
@@ -43,24 +61,30 @@ class Session(BaseModel):
 
     user: Mapped["User"] = relationship("User", back_populates="sessions")
 
+
     @classmethod
-    def create(cls, user_id: int, device_id: str, device_info: bytes, user_agent:  str) -> "Session":
+    def create(
+        cls,
+        user_id: int,
+        device_id: str,
+        device_info: bytes,
+        user_agent: str
+    ) -> Self:
         instance = cls(
             user_id=user_id,
             device_id=device_id,
             device_info=device_info,
             user_agent=user_agent,
-            last_activity = now_utc(),
-            is_active=True,
+            is_active=True
         )
+
         instance.register_event(
-            NewSessionCreatedEvent(
+            NewSessionEvent(
                 user_id=user_id,
-                user_agent=user_agent,
+                device_id=device_id
             )
         )
         return instance
-
 
     def deactivate(self) -> None:
         self.is_active = False

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-from app.core.exceptions import ApplicationException
+from app.core.exceptions import ApplicationError
 
 
 @dataclass(kw_only=True)
-class NotFoundUserException(ApplicationException):
+class NotFoundUserError(ApplicationError):
     user_by: str | int
     user_field: str
 
@@ -22,7 +22,7 @@ class NotFoundUserException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class WrongLoginDataException(ApplicationException):
+class WrongLoginDataError(ApplicationError):
     username: str
 
     code: str = "WRONG_LOGIN_DATA"
@@ -38,7 +38,7 @@ class WrongLoginDataException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class OAuthStateNotFoundException(ApplicationException):
+class OAuthStateNotFoundError(ApplicationError):
     state: str
 
     code: str = "OAUTH_STATE_NOT_FOUND"
@@ -54,7 +54,7 @@ class OAuthStateNotFoundException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class LinkedAnotherUserOAuthException(ApplicationException):
+class LinkedAnotherUserOAuthError(ApplicationError):
     provider: str
 
     code: str = "LINKED_ANOTHER_USER_OAUTH"
@@ -70,7 +70,7 @@ class LinkedAnotherUserOAuthException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class NotFoundRoleException(ApplicationException):
+class NotFoundRoleError(ApplicationError):
     name: str
 
     code: str = "NOT_FOUND_ROLE"
@@ -86,7 +86,7 @@ class NotFoundRoleException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class InvalidRoleNameException(ApplicationException):
+class InvalidRoleNameError(ApplicationError):
     name: str
 
     code: str = "INVALID_ROLE_NAME"
@@ -102,7 +102,7 @@ class InvalidRoleNameException(ApplicationException):
 
 
 @dataclass
-class NotFoundOrInactiveSessionException(ApplicationException):
+class NotFoundOrInactiveSessionError(ApplicationError):
     code: str = "NOT_FOUND_OR_INACTIVE_SESSION"
     status: int = 400
 
@@ -114,23 +114,9 @@ class NotFoundOrInactiveSessionException(ApplicationException):
     def detail(self) -> dict[str, Any]:
         return {}
 
-@dataclass(kw_only=True)
-class DuplicatePermissionException(ApplicationException):
-    name: str
-
-    code: str = "DUPLICATE_PERMISSION"
-    status: int = 409
-
-    @property
-    def message(self) -> str:
-        return "Permission already exists"
-
-    @property
-    def detail(self) -> dict[str, Any]:
-        return {"name": self.name}
 
 @dataclass(kw_only=True)
-class NotFoundPermissionsException(ApplicationException):
+class NotFoundPermissionsError(ApplicationError):
     missing: set[str]
 
     code: str = "NOT_FOUND_PERMISSIONS"
@@ -146,7 +132,7 @@ class NotFoundPermissionsException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class ProtectedPermissionException(ApplicationException):
+class ProtectedPermissionError(ApplicationError):
     name: str
 
     code: str = "PROTECTED_PERMISSION"
@@ -162,7 +148,7 @@ class ProtectedPermissionException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class DuplicateUserException(ApplicationException):
+class DuplicateUserError(ApplicationError):
     field: str
     value: str
 
@@ -179,7 +165,7 @@ class DuplicateUserException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class DuplicateRoleException(ApplicationException):
+class DuplicateRoleError(ApplicationError):
     name: str
 
     code: str = "DUPLICATE_ROLE"
@@ -193,9 +179,24 @@ class DuplicateRoleException(ApplicationException):
     def detail(self) -> dict[str, Any]:
         return {"name": self.name}
 
+@dataclass(kw_only=True)
+class DuplicatePermissionError(ApplicationError):
+    name: str
+
+    code: str = "DUPLICATE_PERMISSION"
+    status: int = 409
+
+    @property
+    def message(self) -> str:
+        return "Permission already exists"
+
+    @property
+    def detail(self) -> dict[str, Any]:
+        return {"name": self.name}
+
 
 @dataclass(kw_only=True)
-class PasswordMismatchException(ApplicationException):
+class PasswordMismatchError(ApplicationError):
     code: str = "PASSWORD_MISMATCH"
     status: int = 400
 
@@ -209,7 +210,7 @@ class PasswordMismatchException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class EmailNotConfirmedException(ApplicationException):
+class EmailNotConfirmedError(ApplicationError):
     email: str
 
     code: str = "EMAIL_NOT_CONFIRMED"
@@ -225,7 +226,7 @@ class EmailNotConfirmedException(ApplicationException):
 
 
 @dataclass(kw_only=True)
-class NotExistProviderOAuthException(ApplicationException):
+class NotExistProviderOAuthError(ApplicationError):
     provider: str
 
     code: str = "NOT_EXIST_PROVIDER_OAUTH"
@@ -239,3 +240,12 @@ class NotExistProviderOAuthException(ApplicationException):
     def detail(self) -> dict[str, Any]:
         return {"provider": self.provider}
 
+
+@dataclass
+class TokenInBlacklistError(ApplicationError):
+    code: str = "TOKEN_IN_BLACKLIST"
+    status: int = 409
+
+    @property
+    def message(self) -> str:
+        return ""

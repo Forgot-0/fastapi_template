@@ -4,11 +4,10 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundOrInactiveSessionException
+from app.auth.exceptions import NotFoundOrInactiveSessionError
 from app.auth.repositories.session import SessionRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +27,13 @@ class UserDeactivateSessionCommandHandler(BaseCommandHandler[UserDeactivateSessi
     async def handle(self, command: UserDeactivateSessionCommand) -> None:
         session = await self.session_repository.get_by_id(command.session_id)
         if not session:
-            raise NotFoundOrInactiveSessionException
+            raise NotFoundOrInactiveSessionError
 
         if (
             session.user_id != int(command.user_jwt_data.id) and
             not self.rbac_manager.check_permission(command.user_jwt_data, {"user:update" })
         ):
-            raise AccessDeniedException(
-                need_permissions={"user:update", "user:owner"} - set(command.user_jwt_data.permissions)
-            )
+            raise NotFoundOrInactiveSessionError
 
         session.deactivate()
         await self.session.commit()

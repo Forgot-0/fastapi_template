@@ -13,7 +13,7 @@ class SessionFilter(BaseFilter):
     last_activity_before: datetime | None = None
     is_active: bool | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._build_conditions()
 
     def _build_conditions(self) -> None:

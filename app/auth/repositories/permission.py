@@ -50,7 +50,7 @@ class PermissionInvalidateRepository:
     async def get_max_invalidation_time(self, permission_names: list[str]) -> datetime:
         keys = [f"invalid_permission:{permission_name}" for permission_name in permission_names]
         values = await self.client.mget(*keys)
-        if not values:
+        if values is None:
             return fromtimestamp(0.00)
         max_date = max(values, key=lambda x: fromtimestamp(float(x)))
         return fromtimestamp(float(max_date))

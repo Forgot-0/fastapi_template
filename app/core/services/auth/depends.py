@@ -5,7 +5,7 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.services.auth.dto import UserJWTData
-from app.core.services.auth.exceptions import InvalidTokenException
+from app.core.services.auth.exceptions import InvalidTokenError
 from app.core.services.auth.jwt_manager import JWTManager
 
 security = HTTPBearer(auto_error=False)
@@ -19,7 +19,7 @@ class UserJWTDataGetter:
         credentials: HTTPAuthorizationCredentials | None = Depends(security),
     ) -> UserJWTData:
         if credentials is None:
-            raise InvalidTokenException(token=None)
+            raise InvalidTokenError(token=None)
 
         user_jwt_data = UserJWTData.create_from_token(
             await jwt_manager.validate_token(credentials.credentials)

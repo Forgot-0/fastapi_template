@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundPermissionsException, NotFoundRoleException
+from app.auth.exceptions import NotFoundPermissionsError, NotFoundRoleError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +31,13 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
 
     async def handle(self, command: DeletePermissionRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:update" }):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"role:update" } - set(command.user_jwt_data.permissions)
             )
 
         role = await self.role_repository.get_with_permission_by_name(command.role_name)
         if role is None:
-            raise NotFoundRoleException(name=command.role_name)
+            raise NotFoundRoleError(name=command.role_name)
 
         permissions = await self.permission_repository.get_permissions_by_names(
             command.permissions
@@ -46,14 +46,14 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
         if len(permissions) != len(command.permissions):
             found_names = {p.name for p in permissions}
             missing = command.permissions - found_names
-            raise NotFoundPermissionsException(missing=missing)
+            raise NotFoundPermissionsError(missing=missing)
 
         for permission in permissions:
             role.delete_permission(permission)
 
         await self.role_invalidation.invalidate_role(role.name)
         await self.session.commit()
-        logging.info("Delete permission to user", extra={
+        logger.info("Delete permission to user", extra={
             "role_name": command.role_name,
             "permission": role.permissions,
             "delete_permission_by": command.user_jwt_data.id

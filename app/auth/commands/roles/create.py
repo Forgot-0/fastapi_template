@@ -4,13 +4,13 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import DuplicateRoleException, NotFoundPermissionsException
+from app.auth.exceptions import DuplicateRoleError, NotFoundPermissionsError
 from app.auth.models.role import Role
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
 
     async def handle(self, command: CreateRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create" }):
-            raise AccessDeniedException(
+            raise AccessDeniedError(
                 need_permissions={"role:create" } - set(command.user_jwt_data.permissions)
             )
 
@@ -42,7 +42,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
 
         role = await self.role_repository.get_by_name(command.role_name)
         if role is not None:
-            raise DuplicateRoleException(name=command.role_name)
+            raise DuplicateRoleError(name=command.role_name)
 
         role = Role(
             name=command.role_name,
@@ -54,7 +54,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
             permission = await self.permission_repository.get_permission_by_name(name)
 
             if permission is None:
-                raise NotFoundPermissionsException(missing={name})
+                raise NotFoundPermissionsError(missing={name})
 
             self.rbac_manager.validate_permissions(command.user_jwt_data, name)
             role.add_permission(permission)

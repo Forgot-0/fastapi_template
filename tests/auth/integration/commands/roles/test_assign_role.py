@@ -1,16 +1,13 @@
+from dishka import AsyncContainer
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.roles.assign_role_to_user import AssignRoleCommand, AssignRoleCommandHandler
 from app.auth.commands.roles.remove_role_user import RemoveRoleCommand, RemoveRoleCommandHandler
-from app.auth.exceptions import NotFoundRoleException, NotFoundUserException
+from app.auth.exceptions import NotFoundRoleError, NotFoundUserError
 from app.auth.models.user import User
-from app.auth.repositories.permission import PermissionRepository
-from app.auth.repositories.role import RoleRepository
-from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.rbac import AuthRBACManager
-from app.core.services.auth.exceptions import AccessDeniedException
+from app.core.services.auth.exceptions import AccessDeniedError
 from tests.auth.integration.factories import RoleFactory, UserFactory
 from tests.support.jwt import jwt_from_user
 
@@ -19,43 +16,20 @@ from tests.support.jwt import jwt_from_user
 @pytest.mark.auth
 @pytest.mark.asyncio
 class TestAssignRoleCommand:
-    @pytest.fixture
-    def assign_role_handler(
-        self,
-        db_session: AsyncSession,
-        role_repository: RoleRepository,
-        user_repository: UserRepository,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
-        token_blacklist_repository: TokenBlacklistRepository,
-    ) -> AssignRoleCommandHandler:
-        return AssignRoleCommandHandler(
-            session=db_session,
-            role_repository=role_repository,
-            user_repository=user_repository,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-            token_blacklist=token_blacklist_repository,
-        )
 
     @pytest.fixture
-    def remove_role_handler(
+    async def assign_role_handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        role_repository: RoleRepository,
-        permission_repository: PermissionRepository,
-        rbac_manager: AuthRBACManager,
-        token_blacklist_repository: TokenBlacklistRepository,
+        request_container: AsyncContainer,
+    ) -> AssignRoleCommandHandler:
+        return await request_container.get(AssignRoleCommandHandler)
+
+    @pytest.fixture
+    async def remove_role_handler(
+        self,
+        request_container: AsyncContainer,
     ) -> RemoveRoleCommandHandler:
-        return RemoveRoleCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            role_repository=role_repository,
-            permission_repository=permission_repository,
-            rbac_manager=rbac_manager,
-            token_blacklist=token_blacklist_repository,
-        )
+        return await request_container.get(RemoveRoleCommandHandler)
 
     async def test_assign_role_success(
         self,
@@ -78,7 +52,6 @@ class TestAssignRoleCommand:
         )
 
         await assign_role_handler.handle(command)
-        await db_session.commit()
 
         updated_user = await user_repository.get_user_with_permission_by_id(standard_user.id)
         assert updated_user is not None
@@ -103,7 +76,7 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(NotFoundUserException):
+        with pytest.raises(NotFoundUserError):
             await assign_role_handler.handle(command)
 
     async def test_assign_nonexistent_role(
@@ -120,7 +93,7 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(NotFoundRoleException):
+        with pytest.raises(NotFoundRoleError):
             await assign_role_handler.handle(command)
 
     async def test_assign_role_insufficient_permissions(
@@ -149,7 +122,7 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             await assign_role_handler.handle(command)
 
     async def test_remove_role_success(
@@ -180,7 +153,6 @@ class TestAssignRoleCommand:
         )
 
         await remove_role_handler.handle(command)
-        await db_session.commit()
 
         updated_user = await user_repository.get_user_with_permission_by_id(test_user.id)
         assert updated_user is not None
@@ -217,7 +189,6 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
         await assign_role_handler.handle(command2)
-        await db_session.commit()
 
         updated_user = await user_repository.get_user_with_permission_by_id(standard_user.id)
         assert updated_user is not None
@@ -268,10 +239,8 @@ class TestAssignRoleCommand:
         )
 
         await assign_role_handler.handle(command)
-        await db_session.commit()
 
         await assign_role_handler.handle(command)
-        await db_session.commit()
 
         updated_user = await user_repository.get_user_with_permission_by_id(standard_user.id)
         assert updated_user is not None
@@ -305,5 +274,5 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(AccessDeniedException):
+        with pytest.raises(AccessDeniedError):
             await remove_role_handler.handle(command)

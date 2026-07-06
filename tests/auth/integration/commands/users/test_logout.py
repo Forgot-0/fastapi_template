@@ -1,16 +1,13 @@
+from dishka import AsyncContainer
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
 from app.auth.models.user import User
-from app.auth.repositories.session import SessionRepository, TokenBlacklistRepository
-from app.auth.repositories.user import UserRepository
-from app.auth.services.hash import HashService
+from app.auth.repositories.session import SessionRepository
 from app.auth.services.jwt import AuthJWTManager
-from app.auth.services.session import SessionManager
 from app.core.services.auth.dto import JwtTokenType
-from app.core.services.auth.exceptions import InvalidTokenException
+from app.core.services.auth.exceptions import InvalidTokenError
 from tests.auth.integration.factories import AuthCommandFactory
 
 
@@ -19,42 +16,21 @@ from tests.auth.integration.factories import AuthCommandFactory
 @pytest.mark.asyncio
 class TestLogoutCommand:
     @pytest.fixture
-    def login_handler(
+    async def login_handler(
         self,
-        db_session: AsyncSession,
-        user_repository: UserRepository,
-        session_manager: SessionManager,
-        auth_jwt_manager: AuthJWTManager,
-        hash_service: HashService,
+        request_container: AsyncContainer,
     ) -> LoginCommandHandler:
-        return LoginCommandHandler(
-            session=db_session,
-            user_repository=user_repository,
-            session_manager=session_manager,
-            jwt_manager=auth_jwt_manager,
-            hash_service=hash_service,
-        )
+        return await request_container.get(LoginCommandHandler)
 
     @pytest.fixture
-    def logout_handler(
+    async def logout_handler(
         self,
-        db_session: AsyncSession,
-        session_manager: SessionManager,
-        auth_jwt_manager: AuthJWTManager,
-        session_repository: SessionRepository,
-        token_blacklist_repository: TokenBlacklistRepository,
+        request_container: AsyncContainer,
     ) -> LogoutCommandHandler:
-        return LogoutCommandHandler(
-            session=db_session,
-            session_manager=session_manager,
-            jwt_manager=auth_jwt_manager,
-            session_repository=session_repository,
-            token_blacklist=token_blacklist_repository,
-        )
+        return await request_container.get(LogoutCommandHandler)
 
     async def test_logout_success(
         self,
-        db_session: AsyncSession,
         session_repository: SessionRepository,
         auth_jwt_manager: AuthJWTManager,
         login_handler: LoginCommandHandler,
@@ -67,11 +43,9 @@ class TestLogoutCommand:
         )
         login_command = LoginCommand(**cmd_data)
         token_group = await login_handler.handle(login_command)
-        await db_session.commit()
 
         logout_command = LogoutCommand(refresh_token=token_group.refresh_token)
         await logout_handler.handle(logout_command)
-        await db_session.commit()
 
         await auth_jwt_manager.validate_token(token_group.refresh_token, token_type=JwtTokenType.REFRESH)
         sessions = await session_repository.get_active_by_user(standard_user.id)
@@ -85,7 +59,7 @@ class TestLogoutCommand:
     ) -> None:
         logout_command = LogoutCommand(refresh_token="invalid_token")
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await logout_handler.handle(logout_command)
 
     async def test_logout_none_token(
@@ -94,5 +68,5 @@ class TestLogoutCommand:
     ) -> None:
         logout_command = LogoutCommand(refresh_token=None)
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await logout_handler.handle(logout_command)

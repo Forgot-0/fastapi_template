@@ -1,10 +1,7 @@
+from dishka import AsyncContainer
 import pytest
-from passlib.context import CryptContext
 import pytest_asyncio
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.config import auth_config
 from app.auth.repositories.oauth import OAuthCodeRepository
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
@@ -14,70 +11,56 @@ from app.auth.services.hash import HashService
 from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.rbac import AuthRBACManager
 from app.auth.services.session import SessionManager
-from app.core.configs.app import app_config
 
 
 @pytest_asyncio.fixture
-async def user_repository(db_session: AsyncSession) -> UserRepository:
-    return UserRepository(session=db_session)
+async def user_repository(request_container: AsyncContainer) -> UserRepository:
+    return await request_container.get(UserRepository)
 
 @pytest_asyncio.fixture
-async def role_repository(db_session: AsyncSession) -> RoleRepository:
-    return RoleRepository(session=db_session)
+async def role_repository(request_container: AsyncContainer) -> RoleRepository:
+    return await request_container.get(RoleRepository)
 
 @pytest_asyncio.fixture
-async def permission_repository(db_session: AsyncSession) -> PermissionRepository:
-    return PermissionRepository(session=db_session)
+async def permission_repository(request_container: AsyncContainer) -> PermissionRepository:
+    return await request_container.get(PermissionRepository)
 
 @pytest_asyncio.fixture
-async def session_repository(db_session: AsyncSession) -> SessionRepository:
-    return SessionRepository(db_session)
-
-@pytest.fixture
-def token_blacklist_repository(redis_client: Redis) -> TokenBlacklistRepository:
-    return TokenBlacklistRepository(
-        client=redis_client
-    )
-
-@pytest.fixture
-def role_blacklist(redis_client: Redis) -> RoleInvalidateRepository:
-    return RoleInvalidateRepository(
-        client=redis_client
-    )
-
-@pytest.fixture
-def permission_blacklist(redis_client: Redis) -> PermissionInvalidateRepository:
-    return PermissionInvalidateRepository(
-        client=redis_client
-    )
-
-@pytest.fixture
-def oauth_code_repository(redis_client: Redis) -> OAuthCodeRepository:
-    return OAuthCodeRepository(
-        client=redis_client
-    )
+async def session_repository(request_container: AsyncContainer) -> SessionRepository:
+    return await request_container.get(SessionRepository)
 
 
 @pytest.fixture
-def hash_service() -> HashService:
-    pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-    return HashService(pwd_context=pwd_context)
+async def token_blacklist_repository(di_container: AsyncContainer) -> TokenBlacklistRepository:
+    return await di_container.get(TokenBlacklistRepository)
 
 
 @pytest.fixture
-def auth_jwt_manager(token_blacklist_repository: TokenBlacklistRepository) -> AuthJWTManager:
-    return AuthJWTManager(
-        jwt_secret=app_config.JWT_SECRET_KEY,
-        jwt_algorithm=app_config.JWT_ALGORITHM,
-        access_token_expire_minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES,
-        refresh_token_expire_days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS,
-        token_blacklist=token_blacklist_repository
-    )
+async def role_blacklist(di_container: AsyncContainer) -> RoleInvalidateRepository:
+    return await di_container.get(RoleInvalidateRepository)
+
 
 @pytest.fixture
-def rbac_manager() -> AuthRBACManager:
-    return AuthRBACManager()
+async def permission_blacklist(di_container: AsyncContainer) -> PermissionInvalidateRepository:
+    return await di_container.get(PermissionInvalidateRepository)
 
 @pytest.fixture
-def session_manager(session_repository: SessionRepository) -> SessionManager:
-    return SessionManager(session_repository)
+async def oauth_code_repository(di_container: AsyncContainer) -> OAuthCodeRepository:
+    return await di_container.get(OAuthCodeRepository)
+
+
+@pytest.fixture
+async def hash_service(di_container: AsyncContainer) -> HashService:
+    return await di_container.get(HashService)
+
+@pytest.fixture
+async def auth_jwt_manager(request_container: AsyncContainer) -> AuthJWTManager:
+    return await request_container.get(AuthJWTManager)
+
+@pytest.fixture
+async def rbac_manager(di_container: AsyncContainer) -> AuthRBACManager:
+    return await di_container.get(AuthRBACManager)
+
+@pytest.fixture
+async def session_manager(request_container: AsyncContainer) -> SessionManager:
+    return await request_container.get(SessionManager)

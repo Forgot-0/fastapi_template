@@ -1,11 +1,10 @@
 import pytest
-from jose import jwt
 
 from app.auth.dtos.tokens import TokenType
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.services.jwt import AuthJWTManager
 from app.core.services.auth.dto import JwtTokenType
-from app.core.services.auth.exceptions import ExpiredTokenException, InvalidTokenException
+from app.core.services.auth.exceptions import ExpiredTokenError, InvalidTokenError
 from tests.auth.integration.factories import TokenFactory
 
 
@@ -44,14 +43,14 @@ class TestJWTManager:
     async def test_validate_wrong_token_type(self, auth_jwt_manager: AuthJWTManager, regular_auth_user_jwt: AuthUserJWTData):
         token_group = auth_jwt_manager.create_token_pair(regular_auth_user_jwt)
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await auth_jwt_manager.validate_token(token_group.refresh_token, JwtTokenType.ACCESS)
 
     @pytest.mark.asyncio
     async def test_validate_invalid_token(self, auth_jwt_manager: AuthJWTManager):
         invalid_token = "invalid.token.here"
 
-        with pytest.raises(InvalidTokenException):
+        with pytest.raises(InvalidTokenError):
             await auth_jwt_manager.validate_token(invalid_token, JwtTokenType.ACCESS)
 
     @pytest.mark.asyncio
@@ -60,9 +59,9 @@ class TestJWTManager:
             user_id=123,
             exp_minutes=-1,
         )
-        expired_token = jwt.encode(payload, auth_jwt_manager.jwt_secret, algorithm=auth_jwt_manager.jwt_algorithm)
+        expired_token = auth_jwt_manager.encode(payload)
 
-        with pytest.raises(ExpiredTokenException):
+        with pytest.raises(ExpiredTokenError):
             await auth_jwt_manager.validate_token(expired_token, JwtTokenType.ACCESS)
 
     def test_generate_payload_access_token(self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData):

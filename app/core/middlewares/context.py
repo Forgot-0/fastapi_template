@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 import structlog
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 class ContextMiddleware:
@@ -18,7 +18,7 @@ class ContextMiddleware:
         scope.setdefault("state", {})
         scope["state"]["request_id"] = request_id
 
-        async def send_wrapper(message):
+        async def send_wrapper(message: Message) -> None:
             if message["type"] == "http.response.start":
                 headers = list(message.get("headers", []))
                 headers.append((b"x-request-id", str(request_id).encode()))

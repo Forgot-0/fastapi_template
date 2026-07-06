@@ -3,6 +3,7 @@ from dishka import AsyncContainer, Provider, Scope, provide
 from app.core.events.event import EventRegisty
 from app.core.events.mediator.service import MediatorEventBus
 from app.core.events.service import BaseEventBus
+from app.core.message_brokers.base import BaseMessageBroker
 
 
 class EventProvider(Provider):
@@ -15,10 +16,11 @@ class EventProvider(Provider):
 
     @provide
     def event_bus(
-        self, event_registy: EventRegisty, container: AsyncContainer
+        self, event_registy: EventRegisty, container: AsyncContainer, broker: BaseMessageBroker
     ) -> BaseEventBus:
         return MediatorEventBus(
             event_registy=event_registy,
             container=container,
+            message_broker=broker
         )
 

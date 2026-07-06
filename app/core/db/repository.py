@@ -139,23 +139,26 @@ class CacheRepository:
         key: str,
         type_model: type[B],
         func: Callable[P, Awaitable[B]],
-        ttl: int=60, *args, **kwargs
+        ttl: int = 60,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> B:
         data = await self.redis.get(key)
 
         if data is None:
             data = await func(*args, **kwargs)
-            cahed_data = data.model_dump_json()
-            await self.redis.setex(key, time=ttl, value=cahed_data)
+            cached_data = data.model_dump_json()
+            await self.redis.setex(key, time=ttl, value=cached_data)
             return data
         return type_model.model_validate_json(data)
-
 
     async def cache(
         self,
         type_model: type[B],
         func: Callable[P, Awaitable[B]],
-        ttl: int=60, *args, **kwargs
+        ttl: int = 60,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> B:
         key = await self._build_key(type_model, func, args, kwargs)
         return await self.cache_with_key(
@@ -164,9 +167,13 @@ class CacheRepository:
         )
 
     async def cache_with_key_paginated(
-        self, key: str, type_model: type[B],
+        self,
+        key: str,
+        type_model: type[B],
         func: Callable[P, Awaitable[PageResult[B]]],
-        ttl: int=60, *args, **kwargs
+        ttl: int = 60,
+        *args: P.args,
+        **kwargs: P.kwargs,
     ) -> PageResult[B]:
         data = await self.redis.get(key)
         if data is None:
@@ -191,7 +198,7 @@ class CacheRepository:
     async def cache_paginated(
         self, type_model: type[B],
         func: Callable[P, Awaitable[PageResult[B]]],
-        ttl: int=60, *args, **kwargs
+        ttl: int=60, *args: P.args, **kwargs: P.kwargs,
     ) -> PageResult[B]:
         key = await self._build_key(type_model, func, args, kwargs)
         return await self.cache_with_key_paginated(

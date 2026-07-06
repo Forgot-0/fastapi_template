@@ -8,7 +8,7 @@ from app.auth.dtos.user import AuthUserJWTData, UserDTO
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery
 from app.core.mediators.base import BaseMediator
 from app.core.services.auth.depends import UserJWTDataGetter
-from app.core.services.auth.exceptions import AccessDeniedException, NotAuthenticatedException
+from app.core.services.auth.exceptions import AccessDeniedError, NotAuthenticatedError
 
 if TYPE_CHECKING:
     from app.auth.models.user import User
@@ -30,7 +30,7 @@ class CurrentUserGetter:
         token: Annotated[str | None, Depends(oauth2_scheme)],
     ) -> UserDTO:
         if token is None:
-            raise NotAuthenticatedException
+            raise NotAuthenticatedError
 
         user: User = await mediator.handle_query(
             GetByAccessTokenQuery(token=token)
@@ -42,7 +42,7 @@ class CurrentUserGetter:
 class ActiveUserGetter:
     async def __call__(self, user: Annotated[UserDTO, Depends(CurrentUserGetter())]) -> UserDTO:
         if not user.is_active:
-            raise AccessDeniedException(need_permissions=set())
+            raise AccessDeniedError(need_permissions=set())
         return user
 
 

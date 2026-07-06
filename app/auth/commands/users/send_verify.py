@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from app.auth.config import auth_config
 from app.auth.emails.templates import VerifyTokenTemplate
-from app.auth.exceptions import NotFoundUserException
+from app.auth.exceptions import NotFoundUserError
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
 from app.core.commands import BaseCommand, BaseCommandHandler
@@ -30,7 +30,7 @@ class SendVerifyCommandHandler(BaseCommandHandler[SendVerifyCommand, None]):
         user = await self.user_repository.get_by_email(email=command.email)
 
         if not user:
-            raise NotFoundUserException(user_by=command.email, user_field="email")
+            raise NotFoundUserError(user_by=command.email, user_field="email")
 
         verify_token = secrets.token_urlsafe(32)
         hashed_token = hashlib.sha256(verify_token.encode()).hexdigest()

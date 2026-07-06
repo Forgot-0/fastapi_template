@@ -6,18 +6,15 @@ from uuid import uuid4
 from app.auth.config import auth_config
 from app.auth.dtos.tokens import TokenGroup, TokenType
 from app.auth.dtos.user import AuthUserJWTData
+from app.auth.exceptions import NotFoundOrInactiveSessionError, TokenInBlacklistError
 from app.auth.repositories.session import TokenBlacklistRepository
-from app.core.services.auth.dto import JwtTokenType, Token
-from app.core.services.auth.exceptions import ExpiredTokenException
+from app.core.services.auth.dto import Token
 from app.core.services.auth.jwt_manager import JWTManager
 from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
 class AuthJWTManager(JWTManager):
-    access_token_expire_minutes: int
-    refresh_token_expire_days: int
-
     token_blacklist: TokenBlacklistRepository
 
     def generate_payload(self, user_data: AuthUserJWTData, token_type: TokenType) -> dict[str, Any]:
@@ -25,13 +22,14 @@ class AuthJWTManager(JWTManager):
         payload = {
             "type": token_type,
             "sub": user_data.id,
+            "username": user_data.username,
             "lvl": user_data.security_level,
             "did": user_data.device_id,
             "jti": str(uuid4()),
             "exp": (
-                now + timedelta(minutes=self.access_token_expire_minutes)
+                now + timedelta(minutes=auth_config.ACCESS_TOKEN_EXPIRE_MINUTES)
                 if token_type == TokenType.ACCESS
-                else now + timedelta(days=self.refresh_token_expire_days)
+                else now + timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS)
             ).timestamp(),
             "iat": now.timestamp(),
         }
@@ -57,30 +55,26 @@ class AuthJWTManager(JWTManager):
 
         return TokenGroup(access_token=access_token, refresh_token=refresh_token)
 
-    async def refresh_tokens(self, token: Token, security_user: AuthUserJWTData) -> TokenGroup:
-        token_date = fromtimestamp(token.iat)
+    async def refresh_tokens(self, refresh_token: Token, security_user: AuthUserJWTData) -> TokenGroup:
+        token_iat_dt = fromtimestamp(refresh_token.iat)
 
-        date = await self.token_blacklist.get_token_backlist(token.jti)
-        if date > token_date:
-            await self.token_blacklist.add_user(
-                user_id=int(token.sub),
-                expiration=timedelta(days=auth_config.REFRESH_TOKEN_EXPIRE_DAYS)
-            )
-            raise ExpiredTokenException
+        blacklisted_token_date = await self.token_blacklist.get_token_backlist(refresh_token.jti)
+        if blacklisted_token_date and blacklisted_token_date > token_iat_dt:
+            raise TokenInBlacklistError
 
-        date = await self.token_blacklist.get_user_backlist(int(token.sub))
-        if date > token_date:
-            raise ExpiredTokenException
+        blacklisted_user_date = await self.token_blacklist.get_user_backlist(int(refresh_token.sub))
+        if blacklisted_user_date and blacklisted_user_date > token_iat_dt:
+            raise TokenInBlacklistError
 
-        await self.revoke_token(token)
-        token_pair = self.create_token_pair(security_user=security_user)
+        await self.revoke_token(refresh_token)
 
-        return token_pair
+        return self.create_token_pair(security_user=security_user)
 
     async def revoke_token(self, token: Token) -> None:
+
         current_time = now_utc()
         token_exp_dt = fromtimestamp(token.exp)
 
-        seconds_until_expiry = token_exp_dt - (current_time + timedelta(days=1))
+        seconds_until_expiry = token_exp_dt - current_time
         await self.token_blacklist.add_jwt_token(token.jti, seconds_until_expiry)
 

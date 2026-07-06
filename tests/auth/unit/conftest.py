@@ -9,6 +9,7 @@ def make_auth_user_jwt() -> Callable[..., AuthUserJWTData]:
     def _make_user_jwt(
         *,
         id: str = "1",
+        username: str = "test",
         role: str = "user",
         permissions: list[str] | None = None,
         security_level: int = 1,
@@ -16,6 +17,7 @@ def make_auth_user_jwt() -> Callable[..., AuthUserJWTData]:
     ) -> AuthUserJWTData:
         return AuthUserJWTData(
             id=id,
+            username=username,
             roles=[role],
             permissions=permissions or [],
             security_level=security_level,

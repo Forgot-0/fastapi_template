@@ -26,7 +26,7 @@ class TaskiqQueueService(QueueService):
     async def get_result(self, task_id: str) -> QueueResult:
         result = await self.broker.result_backend.get_result(task_id)
 
-        return self.__class__._convert_result(result)
+        return self._convert_result(result)
 
     async def wait_result(
         self, task_id: str, check_interval: float | None = None, timeout: float | None = None
@@ -37,7 +37,7 @@ class TaskiqQueueService(QueueService):
         )
         result = await task_instance.wait_result(check_interval=check_interval or 0.2, timeout=timeout or -1.0)
 
-        return self.__class__._convert_result(result)
+        return self._convert_result(result)
 
     @staticmethod
     def _convert_result(result: TaskiqResult) -> QueueResult:
