@@ -8,10 +8,11 @@ from app.auth.exceptions import (
 )
 from app.auth.models.role_permission import PermissionEnum, RolesEnum
 from app.core.services.auth.exceptions import AccessDeniedError
+from app.core.services.auth.rbac import RBACManagerInterface
 
 
 @dataclass
-class AuthRBACManager:
+class AuthRBACManager(RBACManagerInterface):
     system_roles: set[str] = field(init=False)
     protected_permissions: set[str] = field(init=False)
 

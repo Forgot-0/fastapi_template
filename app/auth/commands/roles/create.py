@@ -8,7 +8,6 @@ from app.auth.exceptions import DuplicateRoleError, NotFoundPermissionsError
 from app.auth.models.role import Role
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
-from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -28,7 +27,7 @@ class CreateRoleCommandHandler(BaseCommandHandler[CreateRoleCommand, None]):
     session: AsyncSession
     role_repository: RoleRepository
     permission_repository: PermissionRepository
-    rbac_manager: AuthRBACManager
+    rbac_manager: RBACManagerInterface
 
     async def handle(self, command: CreateRoleCommand) -> None:
         if not self.rbac_manager.check_permission(command.user_jwt_data, {"role:create" }):

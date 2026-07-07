@@ -5,10 +5,10 @@ from app.auth.dtos.user import AuthUserJWTData
 from app.auth.filters.permissions import PermissionFilter
 from app.auth.models.permission import Permission
 from app.auth.repositories.permission import PermissionRepository
-from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
 from app.core.services.auth.exceptions import AccessDeniedError
+from app.core.services.auth.rbac import RBACManagerInterface
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ class GetListPemissionsQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, PageResult[PermissionDTO]]):
     permission_repository: PermissionRepository
-    rbac_manager: AuthRBACManager
+    rbac_manager: RBACManagerInterface
 
     async def handle(self, query: GetListPemissionsQuery) -> PageResult[PermissionDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"permission:view" }):

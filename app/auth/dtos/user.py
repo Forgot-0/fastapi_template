@@ -39,8 +39,8 @@ class AuthUserJWTData(UserJWTData):
             id=str(user.id),
             username=user.username,
             security_level=security_lvl,
-            roles=list(roles),
-            permissions=list(permissions),
+            roles=sorted(roles),
+            permissions=sorted(permissions),
             device_id=device_id
         )
 

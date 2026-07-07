@@ -385,18 +385,24 @@ async def update(post_id: int) -> None: ...
 
 `Policies` выше проверяют права ещё до входа в хендлер (на уровне FastAPI-зависимости). Но там, где решение о доступе зависит от данных самого запроса (например, `AuthUserJWTData` уже приехал внутрь `Query`/`Command`, а не отдельным параметром роута), проверку делают прямо в `handle()` через RBAC-менеджер — как в [`GetListUserQueryHandler`](#2-пошаговое-создание).
 
-В проекте два менеджера с разной зоной ответственности:
+**Порт и адаптер, а не два независимых менеджера.** Это модульный монолит: модуль `app/auth` может быть в будущем полностью удалён и заменён, например, клиентом к внешнему auth-микросервису. Чтобы core и другие модули не зависели от того, как именно `app/auth` считает роли/права, RBAC оформлен как классический port/adapter (инверсия зависимостей):
 
-| | `app.core.services.auth.rbac.RBACManager` | `app.auth.services.rbac.AuthRBACManager` |
+- **`app.core.services.auth.rbac.RBACManagerInterface`** (core) — абстрактный контракт (`ABC`), знает только про базовый `UserJWTData`. Core и любой другой модуль зависят **только** от этого интерфейса (`FromDishka[RBACManagerInterface]`) и никогда не импортируют `app.auth` напрямую.
+- **`app.auth.services.rbac.AuthRBACManager`** (модуль `app/auth`) — конкретная реализация (`AuthRBACManager(RBACManagerInterface)`), которая уже знает про `RolesEnum`/`PermissionEnum` и добавляет модуль-специфичные проверки.
+- Связывает их DI: `AuthModuleProvider` регистрирует `AuthRBACManager` как обычный сервис и дополнительно объявляет `alias(source=AuthRBACManager, provides=RBACManagerInterface)` — тот же singleton доступен под двумя типами. Замена auth-модуля на внешний сервис = замена одного `alias`/провайдера в одном месте, без единой правки в core или в других модулях.
+
+| | `RBACManagerInterface` (порт, `app/core`) | `AuthRBACManager` (адаптер, `app/auth`) |
 |---|---|---|
-| Где используется | Базовый, для core/других модулей | Модуль `app/auth` — управление ролями/правами |
-| `check_permission(jwt_data, perms)` | `True`, если пользователь — системная роль (`system_admin`/`super_admin`) либо обладает всеми `perms` | То же самое, плюс: пустой набор `perms` всегда разрешён |
-| `is_system_user(jwt_data)` | Проверка вхождения в `system_roles` | Аналогично, роли берутся из `RolesEnum` |
-| `validate_role_name(jwt_data, name)` | — | Проверяет длину имени роли (3–24 символа) и что системные префиксы (`system_`, `admin_`) создают только системные пользователи |
+| Роль | Контракт: что core вправе ожидать от RBAC, не зная деталей | Единственная реализация контракта сейчас |
+| `check_permission(jwt_data, perms)` | Абстрактный метод контракта | `True`, если пользователь — системная роль (`RolesEnum.SYSTEM_ADMIN`/`SUPER_ADMIN`) либо обладает всеми `perms`; пустой `perms` — всегда `True` |
+| `is_system_user(jwt_data)` | Абстрактный метод контракта | Роли берутся из `RolesEnum`, а не хардкодятся строками |
+| `validate_role_name(jwt_data, name)` | — (не часть общего контракта, модуль-специфично) | Проверяет длину имени роли (3–24 символа) и что системные префиксы (`system_`, `admin_`) создают только системные пользователи |
 | `validate_permissions(jwt_data, perm)` | — | Запрещает выдавать/редактировать `protected_permissions` (например, `MANAGE_SYSTEM_SETTINGS`, `ASSIGN_ROLE`) не-системным пользователям |
 | `check_security_level(user_level, role_level)` | — | Запрещает управлять ролью с уровнем ≥ уровня самого пользователя (иерархия ролей) |
 
-Оба менеджера при отказе выбрасывают `AccessDeniedError(need_permissions=...)` (`app.core.services.auth.exceptions`) — единый формат ошибки для всего проекта, конвертируется глобальным exception-хендлером в HTTP 403 с телом `{"code": "ACCESS_DENIED", "detail": {"permissions": [...]}}`.
+Модуль-специфичные методы (`validate_role_name`, `validate_permissions`, `check_security_level`) сознательно не вынесены в `RBACManagerInterface` — это детали конкретно ролевой модели `app/auth` (иерархия уровней, защищённые permissions), а не то, что обязано знать/предоставлять любое совместимое хранилище прав. В интерфейс попадает только тот минимум, которым реально пользуется код за пределами `app/auth`.
+
+`AccessDeniedError(need_permissions=...)` (`app.core.services.auth.exceptions`) — единый формат ошибки для всего проекта, конвертируется глобальным exception-хендлером в HTTP 403 с телом `{"code": "ACCESS_DENIED", "detail": {"permissions": [...]}}`.
 
 **Правило:** если хендлеру нужна и пагинация/кэш, и RBAC — проверка прав всегда идёт первой инструкцией в `handle()`, до вызова `cache_paginated`/`cache` (см. объяснение в разборе `GetListUserQueryHandler`).
 
@@ -992,7 +998,7 @@ class GetListUserQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[UserDTO]]):
     user_repository: UserRepository
-    rbac_manager: AuthRBACManager
+    rbac_manager: RBACManagerInterface
 
     async def handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view"}):
@@ -1000,17 +1006,17 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
 
         return await self.user_repository.cache_paginated(
             UserDTO, self._handle, ttl=200,
-            query=query
+            user_filter=query.user_filter,
         )
 
-    async def _handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
+    async def _handle(self, user_filter: UserFilter) -> PageResult[UserDTO]:
         pagination_users = await self.user_repository.find_by_filter(
             User,
-            filters=query.user_filter
+            filters=user_filter
         )
 
         return PageResult(
-            items=[UserDTO.model_validate(user) for user in pagination_users.items],
+            items=[UserDTO.model_validate(user.to_dict()) for user in pagination_users.items],
             total=pagination_users.total,
             page=pagination_users.page,
             page_size=pagination_users.page_size
@@ -1023,11 +1029,14 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
 - **`GetListUserQueryHandler`** наследует `BaseQueryHandler[GetListUserQuery, PageResult[UserDTO]]` — типизированный контракт «на входе `GetListUserQuery`, на выходе `PageResult[UserDTO]`». Зависимости (`UserRepository`, `AuthRBACManager`) объявлены как обычные поля dataclass и подставляются Dishka через `providers.py` — никакого ручного создания сервисов внутри хендлера.
 - **Проверка прав — первым делом в `handle`, до кэша.** `rbac_manager.check_permission(...)` вызывается в публичном `handle`, а не в закэшированном `_handle`. Это важно: если бы проверка была внутри `_handle`, при попадании в кэш (cache hit) она бы вообще не выполнилась, и второй пользователь без нужных прав получил бы чужой закэшированный ответ. При отсутствии прав выбрасывается `AccessDeniedError(need_permissions=...)` — глобальный exception-хендлер сам превратит её в HTTP 403 (см. `app/core/exceptions.py`).
 - **Разделение `handle` / `_handle`.** Публичный `handle` = «проверить права → вызвать `cache_paginated`». Приватный `_handle` = «чистая» функция без побочных проверок, которую `cache_paginated` вызывает только при промахе кэша (cache miss) и результат которой сериализуется в Redis. Такое разделение — стандартный паттерн для любого читающего хендлера, где нужен и RBAC, и кэш.
-- **`user_repository.cache_paginated(UserDTO, self._handle, ttl=200, query=query)`** — обёртка из `CacheRepository` (`app/core/db/repository.py`, подмешивается в каждый `IRepository`). Она сама строит ключ кэша на основе имени модели DTO, модуля/имени функции (`self._handle`) и хэша аргументов вызова (`query`), проверяет Redis, а при промахе вызывает `self._handle(query=query)`, сохраняет `PageResult` в Redis на `ttl` секунд и возвращает результат. При изменении данных кэш инвалидируется через `invalidate_cache()` (инкремент версии), что делает все ранее выданные ключи для этой модели «протухшими» без явного удаления каждого ключа.
-- **`find_by_filter(User, filters=query.user_filter)`** — общий метод `IRepository` (не специфичный для `User`): строит `SELECT` с учётом `loading_config` фильтра (жадная подгрузка связей), применяет условия из фильтра, считает `COUNT(*)` для `total`, применяет сортировку и `OFFSET/LIMIT` из `filters.pagination`, и возвращает уже готовый `PageResult[User]` — конвертация в DTO происходит уровнем выше, в `_handle`.
-- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user)`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
+- **В кэш и в `_handle` передаётся только `user_filter`, а не весь `query`.** Это специально: ключ кэша строится из тех же `*args/**kwargs`, что передаются в закэшированную функцию (см. ниже), поэтому в него нельзя передавать `query` целиком — внутри него лежит `user_jwt_data` (роли/права конкретного пользователя). Если бы ключ включал JWT-данные, кэш почти никогда бы не переиспользовался между пользователями (а с учётом того, что `roles`/`permissions` собираются в `set` — ещё и был бы нестабилен между запусками процесса из-за рандомизации хэшей). Правило: в кэшируемую функцию передаются только параметры, которые действительно влияют на *содержимое* ответа; авторизационный контекст туда не попадает — он уже проверен строкой выше.
+- **`user_repository.cache_paginated(UserDTO, self._handle, ttl=200, user_filter=query.user_filter)`** — обёртка из `CacheRepository` (`app/core/db/repository.py`, подмешивается в каждый `IRepository`). Она сама строит ключ кэша на основе имени модели DTO, модуля/имени функции (`self._handle`) и хэша переданных аргументов (`user_filter`), проверяет Redis, а при промахе вызывает `self._handle(user_filter=user_filter)`, сохраняет `PageResult` в Redis на `ttl` секунд и возвращает результат. При изменении данных кэш инвалидируется через `invalidate_cache()` (инкремент версии), что делает все ранее выданные ключи для этой модели «протухшими» без явного удаления каждого ключа.
+- **`find_by_filter(User, filters=user_filter)`** — общий метод `IRepository` (не специфичный для `User`): строит `SELECT` с учётом `loading_config` фильтра (жадная подгрузка связей), применяет условия из фильтра, считает `COUNT(*)` для `total`, применяет сортировку и `OFFSET/LIMIT` из `filters.pagination`, и возвращает уже готовый `PageResult[User]` — конвертация в DTO происходит уровнем выше, в `_handle`.
+- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user.to_dict())`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
 
-Используйте этот файл (`app/auth/queries/users.py`) как образец для любого нового «списочного» query-хендлера с пагинацией: `GetListArticlesQuery` / `GetListArticlesQueryHandler` в новом модуле строятся ровно по этой же схеме.
+**Правило для любого нового кэширующего query-хендлера:** в `cache`/`cache_paginated` передавайте явными kwargs только то подмножество параметров запроса, которое влияет на данные (фильтр, id и т.п.). Никогда не передавайте туда весь `Query`/`Command` целиком, если внутри есть JWT-данные, объект пользователя или что-то ещё, что делает ключ кэша шире, чем реально нужно.
+
+Используйте этот файл (`app/auth/queries/users/get_list.py`) как образец для любого нового «списочного» query-хендлера с пагинацией: `GetListArticlesQuery` / `GetListArticlesQueryHandler` в новом модуле строятся ровно по этой же схеме.
 
 **5. DI-провайдер:**
 

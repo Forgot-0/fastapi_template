@@ -9,7 +9,6 @@ from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
-from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -29,7 +28,7 @@ class AssignRoleCommandHandler(BaseCommandHandler[AssignRoleCommand, None]):
     role_repository: RoleRepository
     user_repository: UserRepository
     permission_repository: PermissionRepository
-    rbac_manager: AuthRBACManager
+    rbac_manager: RBACManagerInterface
     token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: AssignRoleCommand) -> None:

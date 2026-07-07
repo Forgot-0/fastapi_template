@@ -32,7 +32,7 @@ from app.core.events.event import EventRegisty
 from app.core.events.service import BaseEventBus
 from app.core.services.auth.dto import JwtTokenType, UserJWTData
 from app.core.services.auth.jwt_manager import JWTManager
-from app.core.services.auth.rbac import RBACManager
+from app.core.services.auth.rbac import RBACManagerInterface
 from app.core.services.mail.service import BaseMailService
 from app.core.services.queues.service import QueueService
 from app.core.services.storage.service import StorageService
@@ -262,8 +262,8 @@ async def jwt_manager(di_container: AsyncContainer) -> JWTManager:
 
 
 @pytest.fixture
-async def rbac_manager(di_container: AsyncContainer) -> RBACManager:
-    return await di_container.get(RBACManager)
+async def rbac_manager(di_container: AsyncContainer) -> RBACManagerInterface:
+    return await di_container.get(RBACManagerInterface)
 
 
 @pytest_asyncio.fixture

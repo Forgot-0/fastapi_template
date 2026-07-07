@@ -5,10 +5,10 @@ from app.auth.dtos.user import AuthUserJWTData
 from app.auth.filters.sessions import SessionFilter
 from app.auth.models.session import Session
 from app.auth.repositories.session import SessionRepository
-from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
 from app.core.services.auth.exceptions import AccessDeniedError
+from app.core.services.auth.rbac import RBACManagerInterface
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ class GetListSessionQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListSessionQueryHandler(BaseQueryHandler[GetListSessionQuery, PageResult[SessionDTO]]):
     session_repository: SessionRepository
-    rbac_manager: AuthRBACManager
+    rbac_manager: RBACManagerInterface
 
     async def handle(self, query: GetListSessionQuery) -> PageResult[SessionDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view" }):

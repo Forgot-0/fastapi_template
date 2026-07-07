@@ -1,4 +1,4 @@
-from dishka import Provider, Scope, decorate, provide
+from dishka import Provider, Scope, alias, decorate, provide
 from passlib.context import CryptContext
 from redis.asyncio import Redis
 
@@ -58,6 +58,7 @@ from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
 from app.auth.services.oauth_providers import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.services.rbac import AuthRBACManager
+from app.core.services.auth.rbac import RBACManagerInterface
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
 from app.core.events.event import EventRegisty
@@ -164,6 +165,8 @@ class AuthModuleProvider(Provider):
     @provide(scope=Scope.APP)
     def rbac_manager(self) -> AuthRBACManager:
         return AuthRBACManager()
+
+    rbac_manager_port = alias(source=AuthRBACManager, provides=RBACManagerInterface)
 
     session_manager = provide(SessionManager)
     oauth_manager = provide(OAuthManager)
