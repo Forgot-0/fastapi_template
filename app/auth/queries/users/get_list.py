@@ -37,7 +37,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
         )
 
         return PageResult(
-            items=[UserDTO.model_validate(user.to_dict()) for user in pagination_users.items],
+            items=[UserDTO.model_validate(user) for user in pagination_users.items],
             total=pagination_users.total,
             page=pagination_users.page,
             page_size=pagination_users.page_size

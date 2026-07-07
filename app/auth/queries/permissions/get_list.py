@@ -32,7 +32,7 @@ class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, Pag
 
         return PageResult(
             items=[
-                PermissionDTO.model_validate(permission.to_dict())
+                PermissionDTO.model_validate(permission)
                 for permission in pagination_permissions.items
             ],
             total=pagination_permissions.total,

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth.dtos.permissions import PermissionDTO
 
@@ -8,6 +8,8 @@ class BaseRole(BaseModel):
     description: str
     security_level: int
     permissions: list[PermissionDTO] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoleDTO(BaseRole):

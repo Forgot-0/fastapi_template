@@ -1,6 +1,8 @@
 from enum import Enum
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.auth.models.oauth import OAuthProviderEnum
 
 
 class TokenType(str, Enum):
@@ -40,3 +42,17 @@ class OAuthData(BaseModel):
     provider_user_id: str
     email: EmailStr
     username: str | None = Field(None)
+
+
+class OAuthAccountDTO(BaseModel):
+    id: int
+    user_id: int
+
+    provider: OAuthProviderEnum
+    provider_user_id: int
+    provider_email: str
+    
+    is_active: bool
+    
+
+    model_config = ConfigDict(from_attributes=True)

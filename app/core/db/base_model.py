@@ -28,34 +28,6 @@ class BaseModel(DeclarativeBase):
         self.events.clear()
         return registered_events
 
-    def to_dict(self) -> dict[str, Any]:
-        data: dict[str, Any] = {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
-
-        state: InstanceState = inspect(self)
-        mapper = state.mapper
-
-        for rel in mapper.relationships:
-            key = rel.key
-
-            if key in state.dict:
-                value = getattr(self, key)
-
-                if value is None:
-                    data[key] = None
-                elif rel.uselist:
-                    data[key] = [
-                        item.to_dict() if hasattr(item, "to_dict") else repr(item) for item in value
-                        ]
-                else:
-                    data[key] = (value.to_dict()
-                                 if hasattr(value, "to_dict")
-                                 else repr(value))
-
-        return data
-
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         return cls(**{k: v for k, v in data.items() if k in cls._get_field_names()})

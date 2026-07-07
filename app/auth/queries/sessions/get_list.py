@@ -30,7 +30,7 @@ class GetListSessionQueryHandler(BaseQueryHandler[GetListSessionQuery, PageResul
             model=Session, filters=query.session_filter
         )
         return PageResult(
-            items=[SessionDTO.model_validate(session.to_dict()) for session in pagination_session.items],
+            items=[SessionDTO.model_validate(session) for session in pagination_session.items],
             total=pagination_session.total,
             page=pagination_session.page,
             page_size=pagination_session.page_size

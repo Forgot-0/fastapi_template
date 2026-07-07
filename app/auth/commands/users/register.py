@@ -62,6 +62,6 @@ class RegisterCommandHandler(BaseCommandHandler[RegisterCommand, UserDTO]):
         await self.event_bus.publish(user.pull_events())
         await self.user_repository.invalidate_cache()
 
-        user_dto = UserDTO.model_validate(user.to_dict())
+        user_dto = UserDTO.model_validate(user)
         logger.info("Register user", extra={"user": user_dto.model_dump()})
         return user_dto

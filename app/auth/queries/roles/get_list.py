@@ -31,7 +31,7 @@ class GetListRolesQueryHandler(BaseQueryHandler[GetListRolesQuery, PageResult[Ro
         )
 
         return PageResult(
-            items=[RoleDTO.model_validate(role.to_dict()) for role in pagination_roles.items],
+            items=[RoleDTO.model_validate(role) for role in pagination_roles.items],
             total=pagination_roles.total,
             page=pagination_roles.page,
             page_size=pagination_roles.page_size

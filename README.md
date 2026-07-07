@@ -963,7 +963,7 @@ class CreateArticleCommandHandler(BaseCommandHandler[CreateArticleCommand, Artic
         article = Article(title=command.title)
         await self.article_repository.create(article)
         await self.session.commit()
-        return ArticleDTO.model_validate(article.to_dict())
+        return ArticleDTO.model_validate(article)
 ```
 
 **4.1. Query + Handler (пагинация + кэш + RBAC):**
@@ -1010,7 +1010,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
         )
 
         return PageResult(
-            items=[UserDTO.model_validate(user.to_dict()) for user in pagination_users.items],
+            items=[UserDTO.model_validate(user) for user in pagination_users.items],
             total=pagination_users.total,
             page=pagination_users.page,
             page_size=pagination_users.page_size
@@ -1025,7 +1025,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
 - **Разделение `handle` / `_handle`.** Публичный `handle` = «проверить права → вызвать `cache_paginated`». Приватный `_handle` = «чистая» функция без побочных проверок, которую `cache_paginated` вызывает только при промахе кэша (cache miss) и результат которой сериализуется в Redis. Такое разделение — стандартный паттерн для любого читающего хендлера, где нужен и RBAC, и кэш.
 - **`user_repository.cache_paginated(UserDTO, self._handle, ttl=200, query=query)`** — обёртка из `CacheRepository` (`app/core/db/repository.py`, подмешивается в каждый `IRepository`). Она сама строит ключ кэша на основе имени модели DTO, модуля/имени функции (`self._handle`) и хэша аргументов вызова (`query`), проверяет Redis, а при промахе вызывает `self._handle(query=query)`, сохраняет `PageResult` в Redis на `ttl` секунд и возвращает результат. При изменении данных кэш инвалидируется через `invalidate_cache()` (инкремент версии), что делает все ранее выданные ключи для этой модели «протухшими» без явного удаления каждого ключа.
 - **`find_by_filter(User, filters=query.user_filter)`** — общий метод `IRepository` (не специфичный для `User`): строит `SELECT` с учётом `loading_config` фильтра (жадная подгрузка связей), применяет условия из фильтра, считает `COUNT(*)` для `total`, применяет сортировку и `OFFSET/LIMIT` из `filters.pagination`, и возвращает уже готовый `PageResult[User]` — конвертация в DTO происходит уровнем выше, в `_handle`.
-- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user.to_dict())`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
+- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user)`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
 
 Используйте этот файл (`app/auth/queries/users.py`) как образец для любого нового «списочного» query-хендлера с пагинацией: `GetListArticlesQuery` / `GetListArticlesQueryHandler` в новом модуле строятся ровно по этой же схеме.
 

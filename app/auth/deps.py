@@ -35,7 +35,7 @@ class CurrentUserGetter:
         user: User = await mediator.handle_query(
             GetByAccessTokenQuery(token=token)
         )
-        user_dto = UserDTO.model_validate(user.to_dict())
+        user_dto = UserDTO.model_validate(user)
         return user_dto
 
 

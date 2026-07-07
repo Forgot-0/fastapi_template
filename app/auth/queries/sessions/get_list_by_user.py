@@ -17,4 +17,4 @@ class GetListSessionsUserQueryHandler(BaseQueryHandler[GetListSessionsUserQuery,
 
     async def handle(self, query: GetListSessionsUserQuery) -> list[SessionDTO]:
         result = await self.session_repository.get_active_by_user(user_id=int(query.user_jwt_data.id))
-        return [SessionDTO.model_validate(session.to_dict()) for session in result]
+        return [SessionDTO.model_validate(session) for session in result]
