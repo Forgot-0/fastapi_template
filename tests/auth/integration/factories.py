@@ -116,6 +116,7 @@ class SessionFactory:
         user_id: int,
         device_id: str | None = None,
         user_agent: str | None = None,
+        ip_adress: str = "127.0.0.1",
         is_active: bool = True,
         last_activity: datetime | None = None,
         **kwargs: Any
@@ -125,6 +126,7 @@ class SessionFactory:
             device_id=device_id or uuid4().hex,
             device_info=b'{"browser": "Chrome", "os": "Windows"}',
             user_agent=user_agent or "Mozilla/5.0",
+            ip_adress=ip_adress,
             is_active=is_active,
             last_activity=last_activity or now_utc(),
             **kwargs
@@ -204,9 +206,11 @@ class AuthCommandFactory:
         username: str,
         password: str = "TestPass123!",
         user_agent: str = "Mozilla/5.0",
+        ip_adress: str = "127.0.0.1"
     ) -> dict[str, Any]:
         return {
             "username": username,
             "password": password,
             "user_agent": user_agent,
+            "ip_adress": ip_adress
         }

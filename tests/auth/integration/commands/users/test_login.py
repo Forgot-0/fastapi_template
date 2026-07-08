@@ -32,6 +32,7 @@ class TestLoginCommand:
         cmd_data = AuthCommandFactory.create_login_command(
             username=standard_user.username,
             password="TestPass123!",
+            ip_adress="127.0.0.1"
         )
         command = LoginCommand(**cmd_data)
 
@@ -48,6 +49,7 @@ class TestLoginCommand:
         cmd_data = AuthCommandFactory.create_login_command(
             username=standard_user.email,
             password="TestPass123!",
+            ip_adress="127.0.0.1"
         )
         command = LoginCommand(**cmd_data)
 
@@ -65,6 +67,7 @@ class TestLoginCommand:
             username=standard_user.username,
             password="WrongPassword123!",
             user_agent="Mozilla/5.0",
+            ip_adress="1277.0.0.1"
         )
 
         with pytest.raises(WrongLoginDataError) as exc_info:
@@ -80,6 +83,7 @@ class TestLoginCommand:
             username="nonexistent@example.com",
             password="TestPass123!",
             user_agent="Mozilla/5.0",
+            ip_adress="1277.0.0.1"
         )
 
         with pytest.raises(WrongLoginDataError):
@@ -95,6 +99,7 @@ class TestLoginCommand:
             username=standard_user.username,
             password="TestPass123!",
             user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1",
         )
         command = LoginCommand(**cmd_data)
 
@@ -115,6 +120,7 @@ class TestLoginCommand:
             username=standard_user.username,
             password="TestPass123!",
             user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
         command = LoginCommand(**cmd_data)
 
@@ -153,6 +159,7 @@ class TestLoginCommand:
             username="oauthuser",
             password="AnyPassword123!",
             user_agent="Mozilla/5.0",
+            ip_adress="1277.0.0.1"
         )
 
         with pytest.raises(WrongLoginDataError):
@@ -167,6 +174,7 @@ class TestLoginCommand:
         cmd_data = AuthCommandFactory.create_login_command(
             username=standard_user.username,
             password="TestPass123!",
+            ip_adress="127.0.0.1",
         )
         command = LoginCommand(**cmd_data)
 

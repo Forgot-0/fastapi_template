@@ -18,7 +18,8 @@ class TestSessionManager:
     ) -> None:
         new_session = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
 
         assert new_session.user_id == standard_user.id
@@ -34,13 +35,15 @@ class TestSessionManager:
     ) -> None:
         session1 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
         await db_session.commit()
 
         session2 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
 
         assert session1.device_id == session2.device_id
@@ -55,12 +58,14 @@ class TestSessionManager:
 
         session1 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
 
         session2 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Firefox/90.0"
+            user_agent="Firefox/90.0",
+            ip_adress="127.0.0.1"
         )
 
         assert session1.device_id != session2.device_id
@@ -74,7 +79,8 @@ class TestSessionManager:
 
         session = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0 on Windows"
+            user_agent="Chrome/100.0 on Windows",
+            ip_adress="127.0.0.1"
         )
 
         assert session.device_id is not None
@@ -91,7 +97,8 @@ class TestSessionManager:
 
         session1 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
         await db_session.commit()
 
@@ -101,7 +108,8 @@ class TestSessionManager:
 
         session2 = await session_manager.get_or_create_session(
             user_id=standard_user.id,
-            user_agent="Chrome/100.0"
+            user_agent="Chrome/100.0",
+            ip_adress="127.0.0.1"
         )
 
         assert session2.last_activity > old_activity

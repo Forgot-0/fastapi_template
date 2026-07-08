@@ -41,9 +41,6 @@ class SuspiciousSessionEvent(BaseEvent):
 
 class Session(BaseModel):
     __tablename__ = "sessions"
-    __table_args__ = (
-        Index("idx_sessions_user_device", "user_id", "device_id"),
-    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
@@ -53,13 +50,18 @@ class Session(BaseModel):
     )
 
     device_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    device_info: Mapped[bytes] = mapped_column(LargeBinary)
-    user_agent: Mapped[str] = mapped_column(String)
+    device_info: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    user_agent: Mapped[str] = mapped_column(String, nullable=False)
+    ip_adress: Mapped[str] = mapped_column(String, nullable=False)
 
     last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     user: Mapped["User"] = relationship("User", back_populates="sessions")
+
+    __table_args__ = (
+        Index("idx_sessions_user_device", "user_id", "device_id"),
+    )
 
 
     @classmethod
@@ -67,14 +69,16 @@ class Session(BaseModel):
         cls,
         user_id: int,
         device_id: str,
+        ip_adress: str,
         device_info: bytes,
-        user_agent: str
+        user_agent: str,
     ) -> Self:
         instance = cls(
             user_id=user_id,
             device_id=device_id,
             device_info=device_info,
             user_agent=user_agent,
+            ip_adress=ip_adress,
             is_active=True
         )
 

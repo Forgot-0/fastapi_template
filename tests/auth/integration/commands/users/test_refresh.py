@@ -49,6 +49,7 @@ class TestRefreshTokenCommand:
 
         refresh_command = RefreshTokenCommand(
             refresh_token=old_tokens.refresh_token,
+            ip_adress="1277.0.0.1"
         )
         new_tokens = await refresh_handler.handle(refresh_command)
 
@@ -64,6 +65,7 @@ class TestRefreshTokenCommand:
     ) -> None:
         refresh_command = RefreshTokenCommand(
             refresh_token="invalid_token",
+            ip_adress="1277.0.0.1"
         )
 
         with pytest.raises(InvalidTokenError):
@@ -94,6 +96,7 @@ class TestRefreshTokenCommand:
 
         refresh_command = RefreshTokenCommand(
             refresh_token=tokens.refresh_token,
+            ip_adress="1277.0.0.1"
         )
 
         with pytest.raises(NotFoundOrInactiveSessionError):
@@ -127,6 +130,7 @@ class TestRefreshTokenCommand:
 
         refresh_command = RefreshTokenCommand(
             refresh_token=tokens.refresh_token,
+            ip_adress="1277.0.0.1"
         )
         await refresh_handler.handle(refresh_command)
 

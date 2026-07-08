@@ -3,14 +3,13 @@ from dataclasses import dataclass
 from app.auth.models.session import Session
 from app.auth.repositories.session import SessionRepository
 from app.auth.services.device import generate_device_info
-from app.core.utils import now_utc
 
 
 @dataclass
 class SessionManager:
     session_repository: SessionRepository
 
-    async def get_or_create_session(self, user_id: int, user_agent: str) -> Session:
+    async def get_or_create_session(self, user_id: int, user_agent: str, ip_adress: str) -> Session:
         device_data = generate_device_info(user_agent)
 
         if existing_session := await self.get_user_session(
@@ -24,6 +23,7 @@ class SessionManager:
             device_id=device_data.device_id,
             device_info=device_data.device_info,
             user_agent=device_data.user_agent,
+            ip_adress=ip_adress,
         )
         session.online()
 
