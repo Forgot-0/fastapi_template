@@ -8,9 +8,9 @@ from app.auth.exceptions import NotFoundPermissionsError, NotFoundUserError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
-from app.core.services.auth.rbac import RBACManagerInterface
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class AddPermissionToUserCommandHandler(BaseCommandHandler[AddPermissionToUserCo
     session: AsyncSession
     user_repository: UserRepository
     permission_repository: PermissionRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
     token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: AddPermissionToUserCommand) -> None:

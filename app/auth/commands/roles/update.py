@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import NotFoundRoleError
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -25,7 +26,7 @@ class RoleUpdateCommand(BaseCommand):
 class RoleUpdateCommandHandler(BaseCommandHandler[RoleUpdateCommand, None]):
     session: AsyncSession
     role_repository: RoleRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
     role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: RoleUpdateCommand) -> None:

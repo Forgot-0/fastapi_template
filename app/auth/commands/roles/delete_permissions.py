@@ -7,6 +7,7 @@ from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import NotFoundPermissionsError, NotFoundRoleError
 from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleInvalidateRepository, RoleRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -25,7 +26,7 @@ class DeletePermissionRoleCommandHandler(BaseCommandHandler[DeletePermissionRole
     session: AsyncSession
     role_repository: RoleRepository
     permission_repository: PermissionRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
     role_invalidation: RoleInvalidateRepository
 
     async def handle(self, command: DeletePermissionRoleCommand) -> None:

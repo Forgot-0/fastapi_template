@@ -9,6 +9,7 @@ from app.auth.repositories.permission import PermissionRepository
 from app.auth.repositories.role import RoleRepository
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.auth.repositories.user import UserRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -28,7 +29,7 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
     user_repository: UserRepository
     role_repository: RoleRepository
     permission_repository: PermissionRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
     token_blacklist: TokenBlacklistRepository
 
     async def handle(self, command: RemoveRoleCommand) -> None:

@@ -5,10 +5,10 @@ from app.auth.dtos.user import AuthUserJWTData
 from app.auth.filters.roles import RoleFilter
 from app.auth.models.role import Role
 from app.auth.repositories.role import RoleRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
 from app.core.services.auth.exceptions import AccessDeniedError
-from app.core.services.auth.rbac import RBACManagerInterface
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ class GetListRolesQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListRolesQueryHandler(BaseQueryHandler[GetListRolesQuery, PageResult[RoleDTO]]):
     role_repository: RoleRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
 
     async def handle(self, query: GetListRolesQuery) -> PageResult[RoleDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"role:view" }):

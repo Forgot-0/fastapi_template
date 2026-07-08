@@ -5,6 +5,7 @@ from app.auth.exceptions import (
     InvalidRoleNameError,
     ProtectedPermissionError,
 )
+from app.auth.services.rbac import AuthRBACManager
 from app.core.services.auth.exceptions import AccessDeniedError
 
 
@@ -24,7 +25,7 @@ class TestRBACManager:
     )
     def test_check_permission_various(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         make_auth_user_jwt,
         user_perms: list[str],
         required_perms: set[str],
@@ -44,7 +45,7 @@ class TestRBACManager:
     )
     def test_is_system_user_various_roles(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         make_auth_user_jwt,
         role_name: str,
         expected: bool,
@@ -54,7 +55,7 @@ class TestRBACManager:
 
     def test_is_system_user_specific_fixtures(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         admin_auth_user_jwt: AuthUserJWTData,
         system_auth_user_jwt: AuthUserJWTData,
         regular_auth_user_jwt: AuthUserJWTData,
@@ -65,7 +66,7 @@ class TestRBACManager:
 
     def test_system_user_bypasses_permission_check(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         admin_auth_user_jwt: AuthUserJWTData,
     ):
         assert rbac_manager.check_permission(admin_auth_user_jwt, {"any:permission"}) is True
@@ -81,7 +82,7 @@ class TestRBACManager:
     )
     def test_check_security_level_cases(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         user_level: int,
         role_level: int,
         should_raise: bool,
@@ -94,7 +95,7 @@ class TestRBACManager:
 
     def test_validate_role_name_valid_and_invalid(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         admin_auth_user_jwt: AuthUserJWTData,
         regular_auth_user_jwt: AuthUserJWTData,
     ):
@@ -116,7 +117,7 @@ class TestRBACManager:
 
     def test_validate_permissions_various(
         self,
-        rbac_manager: RBACManagerInterface,
+        rbac_manager: AuthRBACManager,
         make_auth_user_jwt,
         regular_auth_user_jwt: AuthUserJWTData,
         admin_auth_user_jwt: AuthUserJWTData,

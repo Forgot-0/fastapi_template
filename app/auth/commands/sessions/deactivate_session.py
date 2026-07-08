@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import NotFoundOrInactiveSessionError
 from app.auth.repositories.session import SessionRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class UserDeactivateSessionCommand(BaseCommand):
 class UserDeactivateSessionCommandHandler(BaseCommandHandler[UserDeactivateSessionCommand, None]):
     session: AsyncSession
     session_repository: SessionRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
 
     async def handle(self, command: UserDeactivateSessionCommand) -> None:
         session = await self.session_repository.get_by_id(command.session_id)

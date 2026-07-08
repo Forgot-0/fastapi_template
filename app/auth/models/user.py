@@ -65,7 +65,8 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
 
     sessions: Mapped[list["Session"]] = relationship(
         back_populates="user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        lazy="noload"
     )
     oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
         "OAuthAccount",
@@ -94,7 +95,8 @@ class User(BaseModel, DateMixin, SoftDeleteMixin):
             roles=roles,
             is_active=True,
             is_verified=is_verified,
-            permissions=set()
+            permissions=set(),
+            sessions=[],
         )
 
         user.register_event(

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dtos.user import AuthUserJWTData
 from app.auth.exceptions import NotFoundPermissionsError, ProtectedPermissionError
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.services.auth.exceptions import AccessDeniedError
 
@@ -22,7 +23,7 @@ class DeletePermissionCommand(BaseCommand):
 class DeletePermissionCommandHandler(BaseCommandHandler[DeletePermissionCommand, None]):
     session: AsyncSession
     permission_repository: PermissionRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
     permission_blacklist: PermissionInvalidateRepository
 
     async def handle(self, command: DeletePermissionCommand) -> None:

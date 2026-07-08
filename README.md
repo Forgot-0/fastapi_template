@@ -998,7 +998,7 @@ class GetListUserQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[UserDTO]]):
     user_repository: UserRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
 
     async def handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view"}):

@@ -4,10 +4,10 @@ from app.auth.dtos.user import AuthUserJWTData, UserDTO
 from app.auth.filters.users import UserFilter
 from app.auth.models.user import User
 from app.auth.repositories.user import UserRepository
+from app.auth.services.rbac import AuthRBACManager
 from app.core.db.repository import PageResult
 from app.core.queries import BaseQuery, BaseQueryHandler
 from app.core.services.auth.exceptions import AccessDeniedError
-from app.core.services.auth.rbac import RBACManagerInterface
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,7 @@ class GetListUserQuery(BaseQuery):
 @dataclass(frozen=True)
 class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[UserDTO]]):
     user_repository: UserRepository
-    rbac_manager: RBACManagerInterface
+    rbac_manager: AuthRBACManager
 
     async def handle(self, query: GetListUserQuery) -> PageResult[UserDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"user:view"}):
