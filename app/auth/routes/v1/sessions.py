@@ -54,8 +54,7 @@ async def get_list_sessions(
     mediator: FromDishka[BaseMediator],
     params: Annotated[GetSessionsRequest, Query()],
 ) -> PageResult[SessionDTO]:
-    result: PageResult[SessionDTO]
-    result = await mediator.handle_query(
+    result: PageResult[SessionDTO] = await mediator.handle_query(
         GetListSessionQuery(
             session_filter=params.to_session_filter(),
             user_jwt_data=user_jwt_data

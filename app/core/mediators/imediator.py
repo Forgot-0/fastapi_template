@@ -1,5 +1,3 @@
-
-from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
@@ -15,25 +13,22 @@ from app.core.queries import BaseQuery
 class DishkaMediator(BaseMediator):
     container: AsyncContainer
 
-    async def handle_command(self, command: BaseCommand) -> Iterable[Any]:
+    async def handle_command(self, command: BaseCommand) -> Any:
         result = []
 
-        handler_registy = self.command_registy.get_handler_types(command)
-        if not handler_registy:
+        handler_type = self.command_registy.get_handler_types(command)
+        if not handler_type:
             raise NotHandlerRegisterError(classes=[command.__class__.__name__])
 
-        for handler_type in handler_registy:
-            async with self.container() as requests_container:
-                handler = await requests_container.get(handler_type)
-                result.append(await handler.handle(command))
-
-        return result
+        async with self.container() as requests_container:
+            handler = await requests_container.get(handler_type)
+            return await handler.handle(command)
 
     async def handle_query(self, query: BaseQuery) -> Any:
-        handler_registy = self.query_registy.get_handler_types(query)
-        if handler_registy is None:
+        handler_type = self.query_registy.get_handler_types(query)
+        if handler_type is None:
             raise NotHandlerRegisterError(classes=[query.__class__.__name__])
 
         async with self.container() as requests_container:
-            handler = await requests_container.get(handler_registy)
+            handler = await requests_container.get(handler_type)
             return await handler.handle(query)

@@ -36,40 +36,18 @@ class TestCommandRegistry:
     def test_register_command(self):
         registry = CommandRegisty()
 
-        registry.register_command(MockMediatorCommand, [MockMediatorCommandHandler])
+        registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
 
         assert MockMediatorCommand in registry.commands_map
-        assert MockMediatorCommandHandler in registry.commands_map[MockMediatorCommand]
-
-    def test_register_multiple_handlers(self):
-        @dataclass(frozen=True)
-        class Handler2(BaseCommandHandler[MockMediatorCommand, str]):
-            async def handle(self, command: MockMediatorCommand) -> str:
-                return "handler2"
-
-        registry = CommandRegisty()
-        registry.register_command(MockMediatorCommand, [MockMediatorCommandHandler, Handler2])
-
-        handlers = registry.commands_map[MockMediatorCommand]
-        assert len(handlers) == 2
-
-    def test_get_handler_types(self):
-        registry = CommandRegisty()
-        registry.register_command(MockMediatorCommand, [MockMediatorCommandHandler])
-
-        command = MockMediatorCommand(value="test")
-        handler_types = list(registry.get_handler_types(command))
-
-        assert len(handler_types) == 1
-        assert MockMediatorCommandHandler in handler_types
+        assert registry.commands_map[MockMediatorCommand] == MockMediatorCommandHandler
 
     def test_get_handler_types_unregistered(self):
         registry = CommandRegisty()
 
         command = MockMediatorCommand(value="test")
-        handler_types = list(registry.get_handler_types(command))
+        handler_types = registry.get_handler_types(command)
 
-        assert len(handler_types) == 0
+        assert handler_types is None
 
 
 @pytest.mark.unit
@@ -120,12 +98,12 @@ class TestMediatorIntegration:
     async def test_mediator_executes_command(self):
 
         registry = CommandRegisty()
-        registry.register_command(MockMediatorCommand, [MockMediatorCommandHandler])
+        registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
 
         command = MockMediatorCommand(value="test")
-        handler_types = list(registry.get_handler_types(command))
+        handler_types = registry.get_handler_types(command)
 
-        assert len(handler_types) > 0
+        assert handler_types is not None
 
         handler = MockMediatorCommandHandler()
         result = await handler.handle(command)

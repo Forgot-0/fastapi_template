@@ -83,8 +83,7 @@ async def get_list_news(
     mediator: FromDishka[BaseMediator],
     params: Annotated[GetPermissionsRequest, Query()],
 ) -> PageResult[PermissionDTO]:
-    list_permission: PageResult[PermissionDTO]
-    list_permission = await mediator.handle_query(
+    list_permission: PageResult[PermissionDTO] = await mediator.handle_query(
         GetListPemissionsQuery(
             user_jwt_data=user_jwt_data,
             permission_filter=params.to_permission_filter()

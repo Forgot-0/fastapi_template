@@ -69,8 +69,7 @@ async def get_list_news(
     mediator: FromDishka[BaseMediator],
     params: Annotated[GetRolesRequest, Query()],
 ) -> PageResult[RoleDTO]:
-    list_role: PageResult[RoleDTO]
-    list_role = await mediator.handle_query(
+    list_role: PageResult[RoleDTO] = await mediator.handle_query(
         GetListRolesQuery(
             user_jwt_data=user_jwt_data,
             role_filter=params.to_role_filter()

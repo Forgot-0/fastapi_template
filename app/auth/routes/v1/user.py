@@ -46,8 +46,7 @@ async def register_user(
     mediator: FromDishka[BaseMediator],
     user_request: UserCreateRequest
 ) -> UserResponse:
-    user: UserDTO
-    user, *_ = await mediator.handle_command(
+    user: UserDTO = await mediator.handle_command(
         RegisterCommand(
             username=user_request.username,
             email=user_request.email,
@@ -209,8 +208,7 @@ async def get_list_user(
     mediator: FromDishka[BaseMediator],
     params: Annotated[GetUsersRequest, Query()],
 ) -> PageResult[UserDTO]:
-    list_user: PageResult[UserDTO]
-    list_user = await mediator.handle_query(
+    list_user: PageResult[UserDTO] = await mediator.handle_query(
         GetListUserQuery(
             user_jwt_data=user_jwt_data,
             user_filter=params.to_user_filter()

@@ -199,32 +199,32 @@ class AuthModuleProvider(Provider):
 
     @decorate
     def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
-        command_registry.register_command(RegisterCommand, [RegisterCommandHandler])
-        command_registry.register_command(VerifyCommand, [VerifyCommandHandler])
-        command_registry.register_command(SendVerifyCommand, [SendVerifyCommandHandler])
-        command_registry.register_command(ResetPasswordCommand, [ResetPasswordCommandHandler])
-        command_registry.register_command(SendResetPasswordCommand, [SendResetPasswordCommandHandler])
+        command_registry.register_command(RegisterCommand, RegisterCommandHandler)
+        command_registry.register_command(VerifyCommand, VerifyCommandHandler)
+        command_registry.register_command(SendVerifyCommand, SendVerifyCommandHandler)
+        command_registry.register_command(ResetPasswordCommand, ResetPasswordCommandHandler)
+        command_registry.register_command(SendResetPasswordCommand, SendResetPasswordCommandHandler)
 
-        command_registry.register_command(LoginCommand, [LoginCommandHandler])
-        command_registry.register_command(LogoutCommand, [LogoutCommandHandler])
-        command_registry.register_command(RefreshTokenCommand, [RefreshTokenCommandHandler])
+        command_registry.register_command(LoginCommand, LoginCommandHandler)
+        command_registry.register_command(LogoutCommand, LogoutCommandHandler)
+        command_registry.register_command(RefreshTokenCommand, RefreshTokenCommandHandler)
 
-        command_registry.register_command(CreateOAuthAuthorizeUrlCommand, [CreateOAuthAuthorizeUrlCommandHandler])
-        command_registry.register_command(ProcessOAuthCallbackCommand, [ProcessOAuthCallbackCommandHandler])
+        command_registry.register_command(CreateOAuthAuthorizeUrlCommand, CreateOAuthAuthorizeUrlCommandHandler)
+        command_registry.register_command(ProcessOAuthCallbackCommand, ProcessOAuthCallbackCommandHandler)
 
-        command_registry.register_command(CreateRoleCommand, [CreateRoleCommandHandler])
-        command_registry.register_command(AssignRoleCommand, [AssignRoleCommandHandler])
-        command_registry.register_command(RemoveRoleCommand, [RemoveRoleCommandHandler])
-        command_registry.register_command(AddPermissionRoleCommand, [AddPermissionRoleCommandHandler])
-        command_registry.register_command(DeletePermissionRoleCommand, [DeletePermissionRoleCommandHandler])
-        command_registry.register_command(RoleUpdateCommand, [RoleUpdateCommandHandler])
+        command_registry.register_command(CreateRoleCommand, CreateRoleCommandHandler)
+        command_registry.register_command(AssignRoleCommand, AssignRoleCommandHandler)
+        command_registry.register_command(RemoveRoleCommand, RemoveRoleCommandHandler)
+        command_registry.register_command(AddPermissionRoleCommand, AddPermissionRoleCommandHandler)
+        command_registry.register_command(DeletePermissionRoleCommand, DeletePermissionRoleCommandHandler)
+        command_registry.register_command(RoleUpdateCommand, RoleUpdateCommandHandler)
 
-        command_registry.register_command(CreatePermissionCommand, [CreatePermissionCommandHandler])
-        command_registry.register_command(DeletePermissionCommand, [DeletePermissionCommandHandler])
-        command_registry.register_command(AddPermissionToUserCommand, [AddPermissionToUserCommandHandler])
-        command_registry.register_command(DeletePermissionToUserCommand, [DeletePermissionToUserCommandHandler])
+        command_registry.register_command(CreatePermissionCommand, CreatePermissionCommandHandler)
+        command_registry.register_command(DeletePermissionCommand, DeletePermissionCommandHandler)
+        command_registry.register_command(AddPermissionToUserCommand, AddPermissionToUserCommandHandler)
+        command_registry.register_command(DeletePermissionToUserCommand, DeletePermissionToUserCommandHandler)
 
-        command_registry.register_command(UserDeactivateSessionCommand, [UserDeactivateSessionCommandHandler])
+        command_registry.register_command(UserDeactivateSessionCommand, UserDeactivateSessionCommandHandler)
         return command_registry
 
     send_verify_email = provide(SendVerifyEventHandler)
