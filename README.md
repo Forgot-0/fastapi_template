@@ -1050,7 +1050,7 @@ class ArticleModuleProvider(Provider):
 
     @decorate
     def register_commands(self, registry: CommandRegisty) -> CommandRegisty:
-        registry.register_command(CreateArticleCommand, [CreateArticleCommandHandler])
+        registry.register_command(CreateArticleCommand, CreateArticleCommandHandler)
         return registry
 
     @decorate
@@ -1069,7 +1069,7 @@ async def create_article(
     data: ArticleCreateRequest,
     mediator: FromDishka[BaseMediator],
 ) -> ArticleResponse:
-    dto, *_ = await mediator.handle_command(CreateArticleCommand(title=data.title, user_id=...))
+    dto = await mediator.handle_command(CreateArticleCommand(title=data.title, user_id=...))
     return ArticleResponse.model_validate(dto)
 ```
 

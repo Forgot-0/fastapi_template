@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bullseye AS python-base
+FROM python:3.14-rc-slim AS python-base
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip==25.1.1 \
  && pip install --no-cache-dir setuptools==69.5.1 wheel==0.43.0 \
  && pip install --no-cache-dir poetry==2.2.1
 
-RUN poetry install --without lint --no-root --no-ansi
+RUN poetry install --without dev --without test --no-root --no-ansi
 
 FROM python-base AS production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
@@ -36,3 +36,4 @@ WORKDIR /app
 COPY ./ /app
 COPY alembic.ini /app/
 COPY migrations/ /app/migrations/
+COPY gunicorn.conf.py gunicorn.conf.py

@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.30-alpine
     container_name: nginx
     ports:
       - "80:80"
@@ -11,11 +11,26 @@ services:
       - ./nginx/snippets:/etc/nginx/snippets:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - app
-      - grafana
-      - minio
-      - livekit
+      app:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      grafana:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 256M
 
+networks:
+  app-network:
+    external: true

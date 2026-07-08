@@ -1,9 +1,9 @@
 services:
   prometheus:
-    image: prom/prometheus:v2.48.0
+    image: prom/prometheus:v3.13.0
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus.data:/prometheus:rw
@@ -13,45 +13,79 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
 
   grafana:
-    image: grafana/grafana:9.5.2
+    image: grafana/grafana:12.3.7
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - grafana.data:/var/lib/grafana:rw
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:rw
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - app-network
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:?GRAFANA_USER is required}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
       - GF_USERS_ALLOW_SIGN_UP=false
       - VIRTUAL_HOST=grafana
       - NETWORK_ACCESS=internal
       - VIRTUAL_PORT=3000
     depends_on:
-      - prometheus
-      - loki
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 
   loki:
-    image: grafana/loki:2.8.2
+    image: grafana/loki:3.6.12
     container_name: loki
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3100:3100"
     volumes:
       - ./monitoring/loki/config.yaml:/etc/loki/config.yaml:ro
-      - loki.data:/tmp/:rw
+      - loki.data:/loki:rw
     command: -config.file=/etc/loki/config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 
   vector:
-    image: timberio/vector:0.29.1-alpine
+    image: timberio/vector:0.49.0-alpine
     container_name: vector
     restart: unless-stopped
     expose:
@@ -65,32 +99,40 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.55.0
+    image: oliver006/redis_exporter:v1.68.0
     container_name: redis-exporter
     ports:
-      - "9121:9121"
+      - "127.0.0.1:9121:9121"
     environment:
       - REDIS_ADDR=redis://redis:6379
     networks:
       - app-network
+    restart: unless-stopped
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
+    image: prometheuscommunity/postgres-exporter:v0.18.1
     container_name: postgres-exporter
     ports:
-      - "9187:9187"
+      - "127.0.0.1:9187:9187"
     environment:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
     networks:
       - app-network
+    restart: unless-stopped
 
   kafka-exporter:
-    image: danielqsj/kafka-exporter:v1.7.0
+    image: danielqsj/kafka-exporter:v1.9.0
     container_name: kafka-exporter
     ports:
-      - "9308:9308"
+      - "127.0.0.1:9308:9308"
     command:
       - '--kafka.server=kafka:9092'
     depends_on:
@@ -98,17 +140,22 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    restart: unless-stopped
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:v0.7.2
+    image: ghcr.io/kafbat/kafka-ui:v1.3.0
     container_name: kafka-ui
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
+    restart: unless-stopped
 
 volumes:
   grafana.data:

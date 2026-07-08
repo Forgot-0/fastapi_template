@@ -14,8 +14,6 @@ class DishkaMediator(BaseMediator):
     container: AsyncContainer
 
     async def handle_command(self, command: BaseCommand) -> Any:
-        result = []
-
         handler_type = self.command_registy.get_handler_types(command)
         if not handler_type:
             raise NotHandlerRegisterError(classes=[command.__class__.__name__])
