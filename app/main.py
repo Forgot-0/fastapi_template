@@ -5,7 +5,7 @@ from typing import Any
 
 import redis.asyncio as redis
 from aiojobs import Scheduler
-from dishka.integrations.fastapi import setup_dishka
+from dishka.integrations.fastapi import setup_dishka, FastapiProvider
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -221,7 +221,7 @@ def init_app() -> FastAPI:
     ).expose(app, should_gzip=True, tags=["core"])
 
     configure_logging()
-    container = create_container()
+    container = create_container(FastapiProvider())
     setup_dishka(container=container, app=app)
 
     setup_middleware(app)

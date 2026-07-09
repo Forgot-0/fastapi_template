@@ -11,6 +11,8 @@ def create_container(*app_providers: Provider) -> AsyncContainer:
 
         # Module providers
         AuthModuleProvider(),
+
+        *app_providers
     ]
 
     return make_async_container(*providers, *app_providers)

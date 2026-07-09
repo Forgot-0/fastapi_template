@@ -40,10 +40,6 @@ docker network create app-network
 
 # 3. Поднять инфраструктуру и приложение
 docker compose up --build
-
-# 4. Применить миграции (обычно выполняется отдельным сервисом `migrations` в docker-compose,
-#    но можно и вручную)
-docker compose exec app alembic upgrade head
 ```
 
 После запуска:
@@ -54,24 +50,6 @@ docker compose exec app alembic upgrade head
 - Health-check: `GET /health`
 - Метрики Prometheus: `GET /metrics`
 - MinIO Console: <http://localhost:9001>
-
-**Локальная разработка без полного Docker-стека** (нужен только Poetry и Python 3.14):
-
-```bash
-poetry install --with dev,test
-poetry run uvicorn app.main:init_app --factory --reload
-```
-
-### Тесты
-
-Тесты используют `testcontainers` и поднимают собственные контейнеры Postgres/Redis — для их запуска нужен работающий Docker.
-
-```bash
-poetry install --with test
-poetry run pytest              # все тесты
-poetry run pytest -m unit      # только unit
-poetry run pytest -m integration  # только integration
-```
 
 ### Линтинг и типы
 
@@ -108,7 +86,6 @@ pre-commit run --all-files
 - [FastAPI Template](#fastapi-template)
   - [Технологический стек](#технологический-стек)
   - [Быстрый старт](#быстрый-старт)
-    - [Тесты](#тесты)
     - [Линтинг и типы](#линтинг-и-типы)
   - [Правила для AI-ассистентов](#правила-для-ai-ассистентов)
   - [Содержание](#содержание)
@@ -207,7 +184,7 @@ fastapi_template/
 
 **Key Notes:**
 
-- `app.core.db.BaseModel` — базовый класс для всех моделей, наследует `sqlalchemy.orm.DeclarativeBase`. Реализует `to_dict()`, `from_dict()`, `update()`, а также систему событий (`register_event()` / `pull_events()`).
+- `app.core.db.BaseModel` — базовый класс для всех моделей, наследует `sqlalchemy.orm.DeclarativeBase`. Реализует `from_dict()`, `update()`, а также систему событий (`register_event()` / `pull_events()`).
 - `app.core.db.DateMixin` — добавляет поля `created_at` и `updated_at`.
 - `app.core.db.SoftDeleteMixin` — «мягкое» удаление через поле `deleted_at`. Предоставляет `select_not_deleted()` classmethod и `soft_delete()` / `is_deleted()`.
 - Все модели должны быть импортированы в `app/core/models.py`, чтобы Alembic их видел.
@@ -353,7 +330,7 @@ async def example(mediator: FromDishka[BaseMediator]):
     return result
 ```
 
-**Lifetime scopes:** `APP`, `REQUEST`.
+**Lifetime scopes:** `APP`, `REQUEST` and more.
 
 ---
 
@@ -531,7 +508,7 @@ from app.core.events.event import BaseEvent
 class PostPublishedEvent(BaseEvent):
     post_id: int
     author_email: str
-    __event_name__: str = "post_published"
+    __event_name__: str = "posts.post.published"
 ```
 
 **Создание обработчика:**
@@ -578,7 +555,7 @@ def register_events(self, registry: EventRegisty) -> EventRegisty:
 
 **Best Practices:**
 
-- Имена событий — прошедшее время (`post_published`, `user_created`)
+- Имена событий — прошедшее время (`posts.post.published`, `auth.user.created`, `module.model.action`)
 - События неизменяемы (`frozen=True`)
 - Один обработчик — один файл: `events/<entity>/<event_name>.py`
 
@@ -1010,7 +987,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
         )
 
         return PageResult(
-            items=[UserDTO.model_validate(user.to_dict()) for user in pagination_users.items],
+            items=[UserDTO.model_validate(user) for user in pagination_users.items],
             total=pagination_users.total,
             page=pagination_users.page,
             page_size=pagination_users.page_size
@@ -1026,7 +1003,7 @@ class GetListUserQueryHandler(BaseQueryHandler[GetListUserQuery, PageResult[User
 - **В кэш и в `_handle` передаётся только `user_filter`, а не весь `query`.** Это специально: ключ кэша строится из тех же `*args/**kwargs`, что передаются в закэшированную функцию (см. ниже), поэтому в него нельзя передавать `query` целиком — внутри него лежит `user_jwt_data` (роли/права конкретного пользователя). Если бы ключ включал JWT-данные, кэш почти никогда бы не переиспользовался между пользователями (а с учётом того, что `roles`/`permissions` собираются в `set` — ещё и был бы нестабилен между запусками процесса из-за рандомизации хэшей). Правило: в кэшируемую функцию передаются только параметры, которые действительно влияют на *содержимое* ответа; авторизационный контекст туда не попадает — он уже проверен строкой выше.
 - **`user_repository.cache_paginated(UserDTO, self._handle, ttl=200, user_filter=query.user_filter)`** — обёртка из `CacheRepository` (`app/core/db/repository.py`, подмешивается в каждый `IRepository`). Она сама строит ключ кэша на основе имени модели DTO, модуля/имени функции (`self._handle`) и хэша переданных аргументов (`user_filter`), проверяет Redis, а при промахе вызывает `self._handle(user_filter=user_filter)`, сохраняет `PageResult` в Redis на `ttl` секунд и возвращает результат. При изменении данных кэш инвалидируется через `invalidate_cache()` (инкремент версии), что делает все ранее выданные ключи для этой модели «протухшими» без явного удаления каждого ключа.
 - **`find_by_filter(User, filters=user_filter)`** — общий метод `IRepository` (не специфичный для `User`): строит `SELECT` с учётом `loading_config` фильтра (жадная подгрузка связей), применяет условия из фильтра, считает `COUNT(*)` для `total`, применяет сортировку и `OFFSET/LIMIT` из `filters.pagination`, и возвращает уже готовый `PageResult[User]` — конвертация в DTO происходит уровнем выше, в `_handle`.
-- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user.to_dict())`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
+- **Маппинг в DTO.** Каждая ORM-модель конвертируется явно: `UserDTO.model_validate(user)`. Хендлеры никогда не возвращают ORM-модели наружу — только DTO/Pydantic-схемы.
 
 **Правило для любого нового кэширующего query-хендлера:** в `cache`/`cache_paginated` передавайте явными kwargs только то подмножество параметров запроса, которое влияет на данные (фильтр, id и т.п.). Никогда не передавайте туда весь `Query`/`Command` целиком, если внутри есть JWT-данные, объект пользователя или что-то ещё, что делает ключ кэша шире, чем реально нужно.
 
