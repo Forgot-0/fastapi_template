@@ -8,8 +8,5 @@ from app.core.filters.condition import FilterOperator
 class PermissionFilter(BaseFilter):
     name: str | None = None
 
-    def __post_init__(self) -> None:
-        self._build_conditions()
-
-    def _build_conditions(self) -> None:
+    def buil_condition(self) -> None:
         self.add_condition("name", FilterOperator.CONTAINS, self.name)

@@ -460,10 +460,7 @@ class PostFilter(BaseFilter):
     title: str | None = None
     is_published: bool | None = None
 
-    def __post_init__(self):
-        self._build_conditions()
-
-    def _build_conditions(self) -> None:
+    def build_condition(self) -> None:
         self.add_condition("title", FilterOperator.CONTAINS, self.title)
         self.add_condition("is_published", FilterOperator.EQ, self.is_published)
         self.add_relation("author", LoadingStrategyType.SELECTIN)
@@ -933,10 +930,7 @@ class Article(BaseModel, DateMixin):
 class ArticleFilter(BaseFilter):
     title: str | None = None
 
-    def __post_init__(self):
-        self._build_conditions()
-
-    def _build_conditions(self) -> None:
+    def build_condition(self) -> None:
         self.add_condition("title", FilterOperator.CONTAINS, self.title)
 ```
 

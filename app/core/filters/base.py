@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -14,6 +14,13 @@ class BaseFilter(ABC):
     _sort_fields: list[SortField] = field(default_factory=list, init=False)
     _pagination: Pagination = field(default_factory=Pagination.default, init=False)
     _relation: dict[str, RelationshipLoading] = field(default_factory=dict, init=False)
+
+    def __post_init__(self) -> None:
+        self.buil_condition()
+
+    @abstractmethod
+    def buil_condition(self) -> None:
+        ...
 
     @property
     def conditions(self) -> tuple[FilterCondition, ...]:
