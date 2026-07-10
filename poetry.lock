@@ -1856,41 +1856,6 @@ files = [
 ]
 
 [[package]]
-name = "livekit-api"
-version = "1.1.1"
-description = "Python Server API for LiveKit"
-optional = false
-python-versions = ">=3.9.0"
-groups = ["main"]
-files = [
-    {file = "livekit_api-1.1.1-py3-none-any.whl", hash = "sha256:ce8c327676c366e66cf68782934368dd0ba92b9d48f578275227e255c890fe88"},
-    {file = "livekit_api-1.1.1.tar.gz", hash = "sha256:70c7b80eecbc297b40756ebd76e4f52d00b0348fb7d212a21c1f69cc57fd9c83"},
-]
-
-[package.dependencies]
-aiohttp = ">=3.9.0"
-livekit-protocol = ">=1.1.17,<2.0.0"
-protobuf = ">=4"
-pyjwt = ">=2.0.0"
-types-protobuf = ">=4"
-
-[[package]]
-name = "livekit-protocol"
-version = "1.1.19"
-description = "Python protocol stubs for LiveKit"
-optional = false
-python-versions = ">=3.9.0"
-groups = ["main"]
-files = [
-    {file = "livekit_protocol-1.1.19-py3-none-any.whl", hash = "sha256:fe5a8411c6cb886e55b2564d729f275af5d77ec191dd2ca95ffac3db16979a8a"},
-    {file = "livekit_protocol-1.1.19.tar.gz", hash = "sha256:81709e8bc47cdaf0cc5ba937bd9ec24a095e4978c58fb3d5e69b9888b9930be4"},
-]
-
-[package.dependencies]
-protobuf = ">=5"
-types-protobuf = ">=5"
-
-[[package]]
 name = "mako"
 version = "1.3.12"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
@@ -2666,24 +2631,6 @@ files = [
 ]
 
 [[package]]
-name = "protobuf"
-version = "7.35.1"
-description = ""
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "protobuf-7.35.1-cp310-abi3-macosx_10_9_universal2.whl", hash = "sha256:24f857477359a85c0c235261b8ba905fd51b2562f4a64ca1df5473f29850cbf6"},
-    {file = "protobuf-7.35.1-cp310-abi3-manylinux2014_aarch64.whl", hash = "sha256:11d6b0ec246892d85215b0a13ca6e0233cf5284b68f0ac02646427f4ff88a799"},
-    {file = "protobuf-7.35.1-cp310-abi3-manylinux2014_s390x.whl", hash = "sha256:b73f9489a4b8b1c9cb1f8ed951c736392592edb24b9d6819f36d2e10b171d5b4"},
-    {file = "protobuf-7.35.1-cp310-abi3-manylinux2014_x86_64.whl", hash = "sha256:74758715c53d7158fb76caf4f0cfdacc5329a4b1bb994f865d6cf302d413a1c4"},
-    {file = "protobuf-7.35.1-cp310-abi3-win32.whl", hash = "sha256:353652e4efd0bca5b5fc2656abf8307ef351f0cf938c9eba09f0e09c20a25c30"},
-    {file = "protobuf-7.35.1-cp310-abi3-win_amd64.whl", hash = "sha256:230a75ddfc2de4806e56696ce9640c1cdfdb6543b7cfce98d42a4c0a0e7bdb87"},
-    {file = "protobuf-7.35.1-py3-none-any.whl", hash = "sha256:4bc97768d8fe4ad6743c8a19403e314511ed9f6d13205b687e52421c023ac1b9"},
-    {file = "protobuf-7.35.1.tar.gz", hash = "sha256:ce115a26fe0c39a2c29973d914d327e516a6455464489fe3cd1e51a1b354f81a"},
-]
-
-[[package]]
 name = "pycparser"
 version = "3.0"
 description = "C parser in Python"
@@ -3139,18 +3086,6 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
-name = "python-magic"
-version = "0.4.27"
-description = "File type identification using libmagic"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-groups = ["main"]
-files = [
-    {file = "python-magic-0.4.27.tar.gz", hash = "sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b"},
-    {file = "python_magic-0.4.27-py2.py3-none-any.whl", hash = "sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3"},
-]
-
-[[package]]
 name = "python-multipart"
 version = "0.0.32"
 description = "A streaming multipart parser for Python"
@@ -3161,52 +3096,6 @@ files = [
     {file = "python_multipart-0.0.32-py3-none-any.whl", hash = "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23"},
     {file = "python_multipart-0.0.32.tar.gz", hash = "sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e"},
 ]
-
-[[package]]
-name = "pyvips"
-version = "3.1.1"
-description = "binding for the libvips image processing library"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "pyvips-3.1.1.tar.gz", hash = "sha256:84fe744d023b1084ac2516bb17064cacd41c7f8aabf8e524dd383534941b9301"},
-]
-
-[package.dependencies]
-cffi = ">=1.0.0"
-pyvips-binary = {version = "*", optional = true, markers = "extra == \"binary\""}
-
-[package.extras]
-binary = ["pyvips-binary"]
-doc = ["sphinx", "sphinx_rtd_theme"]
-sdist = ["build"]
-test = ["pyperf", "pytest"]
-tox = ["tox"]
-
-[[package]]
-name = "pyvips-binary"
-version = "8.18.4"
-description = "Binary distribution of libvips and dependencies for use with pyvips"
-optional = false
-python-versions = ">=3.7"
-groups = ["main"]
-files = [
-    {file = "pyvips_binary-8.18.4-cp37-abi3-macosx_10_15_x86_64.whl", hash = "sha256:0a353d804db997ab6e2f709af5885e5b5fbd36bfae3b83bce6419fdc0ec67a0b"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:06c1bca5c4e1d41f4305cfd02d53574bde102585b8135f90da8ea6fb54d8ef54"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:81ed9b4d281a7132c498f62564429a39b1953398597867cd576263aef9bef272"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-manylinux_2_28_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:b5fe5014555e38ff796eac3513a49b3d832999ba65c25999038c1fa861f7b88c"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:68a24313cd76c9213e1208887aa1dabaa502e2be3f180222628191478977e2d0"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:d2808f3395e52b5a289111d57f1dba0fcd2c81573eda4cef768e7633ce446037"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b30028e10d3feaf14067c8658b827d0471464ba838c0795d3bf201f151800a1a"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-win32.whl", hash = "sha256:5e49ab5164efca9cc6230f12237130f902bc2639b765342ee3c16eb1ed15b265"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-win_amd64.whl", hash = "sha256:8f89588e55c2824fb8cbdda94baffb81da6b87fce08b517ccfdd233aae0ee418"},
-    {file = "pyvips_binary-8.18.4-cp37-abi3-win_arm64.whl", hash = "sha256:c98a26842cd08c238405d3f83b04d3de11c35ca24d0e1a9d0f04f3f1fdf20d8c"},
-    {file = "pyvips_binary-8.18.4.tar.gz", hash = "sha256:fc4c10970da40b8c16e556f2022a9e4600f74d7ac6ea578a2c16efe03aa3fba1"},
-]
-
-[package.dependencies]
-cffi = ">=1.0.0"
 
 [[package]]
 name = "pywin32"
@@ -3956,18 +3845,6 @@ shellingham = ">=1.3.0"
 typing-extensions = ">=3.7.4.3"
 
 [[package]]
-name = "types-protobuf"
-version = "7.34.1.20260518"
-description = "Typing stubs for protobuf"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-files = [
-    {file = "types_protobuf-7.34.1.20260518-py3-none-any.whl", hash = "sha256:a0a5337413347166439c0e07cbc26c6164d091401c6f01b1dfd8cdb966c4dd8f"},
-    {file = "types_protobuf-7.34.1.20260518.tar.gz", hash = "sha256:28cfaded25889cb83ebfb63cfb0a43628f0b6f3785767bec17287dc6468795f2"},
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.16.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -4585,4 +4462,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<3.15"
-content-hash = "70523aec1a3e92310bdd8871360b8b6c3569112ef1f001277790661be611e8ad"
+content-hash = "8f161de45f29b89bbec4ae7d1fc23eca67cbfab573329f83da5ddabd0b99e070"

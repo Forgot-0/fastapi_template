@@ -52,7 +52,7 @@ class IRepository(ABC, Generic[T]):
     session: AsyncSession
 
     async def find_by_filter(self, model: type[T], filters: BaseFilter) -> PageResult[T]:
-        if isinstance(model, SoftDeleteMixin):
+        if issubclass(model, SoftDeleteMixin):
             stmt = model.select_not_deleted()
         else:
             stmt = select(model)
@@ -89,7 +89,10 @@ class IRepository(ABC, Generic[T]):
         )
 
     async def count_by_filter(self, model: type[T], filters: BaseFilter) -> int:
-        stmt = select(func.count()).select_from(model)
+        if issubclass(model, SoftDeleteMixin):
+            stmt =select(func.count()).select_from(model.select_not_deleted().subquery())
+        else:
+            stmt = select(func.count()).select_from(model)
 
         conditions = SQLAlchemyFilterConverter.filter_to_sqlalchemy_conditions(model, filters)
         stmt = self.apply_relationship_filters(stmt, filters)

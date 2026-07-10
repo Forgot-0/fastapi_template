@@ -754,7 +754,7 @@ async def ws_endpoint(
 
 ### Message Brokers
 
-**Используется:** Kafka ([aiokafka](https://github.com/aio-libs/aiokafka)) | Redis Pub/Sub ([redis.asyncio](https://redis.readthedocs.io/))
+**Используется:** Kafka ([aiokafka](https://github.com/aio-libs/aiokafka))
 
 Оба реализуют интерфейс `BaseMessageBroker`:
 
@@ -1055,7 +1055,6 @@ def create_container(...) -> AsyncContainer:
         *get_core_providers(),
         AuthModuleProvider(),
         ArticleModuleProvider(),   # ← добавить
-        *app_providers
     )
 
 # app/main.py

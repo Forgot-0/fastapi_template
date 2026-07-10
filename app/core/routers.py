@@ -7,7 +7,7 @@ router = APIRouter(tags=["core"], route_class=DishkaRoute)
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
-async def healcheck() -> ORJSONResponse:
+async def healthcheck() -> ORJSONResponse:
     return ORJSONResponse("Ok")
 
 
