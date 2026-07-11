@@ -1,5 +1,6 @@
 services:
   app:
+    profiles: ["api"]
     build:
       context: .
       target: production
@@ -50,6 +51,7 @@ services:
           memory: 256M
 
   consumers:
+    profiles: ["kafka"]
     build:
       context: .
       target: production
@@ -77,6 +79,7 @@ services:
           memory: 512M
 
   minio:
+    profiles: ["storage"]
     image: minio/minio:RELEASE.2025-07-23T15-54-02Z
     container_name: minio
     command: server --console-address ":9001" /data
@@ -113,6 +116,7 @@ services:
           memory: 1G
 
   db:
+    profiles: ["api", "migrations"]
     image: postgres:18.3
     container_name: db
     ports:
@@ -141,6 +145,7 @@ services:
           memory: 2G
 
   redis:
+    profiles: ["api"]
     image: valkey/valkey:8.1-alpine
     container_name: "redis"
     ports:
@@ -172,6 +177,7 @@ services:
           memory: 2200M
 
   queue_worker:
+    profiles: ["taskiq"]
     build:
       context: .
       target: production
@@ -194,6 +200,7 @@ services:
           memory: 512M
 
   scheduler:
+    profiles: ["taskiq"]
     build:
       context: .
       target: production
@@ -216,6 +223,7 @@ services:
           memory: 256M
 
   kafka:
+    profiles: ["kafka"]
     image: confluentinc/cp-kafka:8.2.0
     container_name: kafka
     environment:
@@ -254,6 +262,7 @@ services:
       - app-network
 
   migrations:
+    profiles: ["migrations"]
     build:
       context: .
       target: production

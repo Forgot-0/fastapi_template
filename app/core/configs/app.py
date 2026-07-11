@@ -1,12 +1,22 @@
 from typing import Annotated, ClassVar, Literal
 
-from pydantic import BeforeValidator, PostgresDsn, computed_field
+from pydantic import BeforeValidator, PostgresDsn, computed_field, model_validator
 from pydantic_core import MultiHostUrl
 
 from app.core.configs.base import BaseConfig
 
 
 class AppConfig(BaseConfig):
+    _PRODUCTION_REQUIRED_FIELDS: ClassVar[tuple[str, ...]] = (
+        "SECRET_KEY",
+        "JWT_SECRET_KEY",
+        "POSTGRES_SERVER",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+        "POSTGRES_DB",
+        "REDIS_HOST",
+        "BROKER_URL",
+    )
 
     ENVIRONMENT: Literal["local", "production", "testing"] = "local"
     PROJECT_NAME: str = "FastAPI Template"
@@ -92,6 +102,21 @@ class AppConfig(BaseConfig):
     JWT_SECRET_KEY: str = ""
     JWT_ALGORITHM: str = "HS256"
 
+    @model_validator(mode="after")
+    def validate_production_required_settings(self) -> "AppConfig":
+        if self.ENVIRONMENT != "production":
+            return self
+
+        missing_fields = [
+            field
+            for field in self._PRODUCTION_REQUIRED_FIELDS
+            if not str(getattr(self, field, "")).strip()
+        ]
+        if missing_fields:
+            fields = ", ".join(missing_fields)
+            raise ValueError(f"Missing required production settings: {fields}")
+
+        return self
 
 
 app_config = AppConfig()
