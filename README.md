@@ -40,6 +40,9 @@ docker network create app-network
 
 # 3. Поднять инфраструктуру и приложение
 docker compose up --build
+
+#Для прода
+docker compose -f docker-compose.yaml -f docker-compose.prod.yaml -f docker-compose.monitoring.yml up -d --build
 ```
 
 После запуска:
@@ -495,7 +498,7 @@ class PageResult(Generic[T]):
 
 - `BaseEvent` — базовый класс события (frozen dataclass, обязателен `__event_name__`)
 - `BaseEventHandler` — абстрактный обработчик события
-- `EventRegisty` — реестр подписок
+- `EventRegistry` — реестр подписок
 - `BaseEventBus` / `MediatorEventBus` — шина событий, работающая через Dishka-контейнер
 
 **Создание события:**
@@ -548,7 +551,7 @@ await self.event_bus.publish(post.pull_events())
 
 ```python
 @decorate
-def register_events(self, registry: EventRegisty) -> EventRegisty:
+def register_events(self, registry: EventRegistry) -> EventRegistry:
     registry.subscribe(PostPublishedEvent, [NotifyAuthorHandler])
     return registry
 ```
@@ -1020,7 +1023,7 @@ class ArticleModuleProvider(Provider):
     get_list_handler = provide(GetListArticlesQueryHandler)
 
     @decorate
-    def register_commands(self, registry: CommandRegisty) -> CommandRegisty:
+    def register_commands(self, registry: CommandRegistry) -> CommandRegistry:
         registry.register_command(CreateArticleCommand, CreateArticleCommandHandler)
         return registry
 

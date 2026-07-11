@@ -32,7 +32,7 @@ class ProcessOAuthCallbackCommand(BaseCommand):
     code: str
     state: str
     user_agent: str
-    ip_adress: str
+    ip_address: str
 
 
 @dataclass(frozen=True)
@@ -112,7 +112,7 @@ class ProcessOAuthCallbackCommandHandler(BaseCommandHandler[ProcessOAuthCallback
                 await self.oauth_repository.create(oauth_account)
 
             session = await self.session_manager.get_or_create_session(
-                user_id=user_id, user_agent=command.user_agent, ip_adress=command.ip_adress
+                user_id=user_id, user_agent=command.user_agent, ip_address=command.ip_address
             )
             await self.oauth_code_repository.delete(command.state)
             await self.session.commit()

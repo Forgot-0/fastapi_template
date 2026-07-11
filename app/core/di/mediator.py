@@ -1,6 +1,6 @@
 from dishka import AsyncContainer, Provider, Scope, provide
 
-from app.core.mediators.base import BaseMediator, CommandRegisty, QueryRegistry
+from app.core.mediators.base import BaseMediator, CommandRegistry, QueryRegistry
 from app.core.mediators.imediator import DishkaMediator
 
 
@@ -8,8 +8,8 @@ class MediatorProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def command_registry(self) -> CommandRegisty:
-        registry = CommandRegisty()
+    def command_registry(self) -> CommandRegistry:
+        registry = CommandRegistry()
         return registry
 
     @provide
@@ -21,7 +21,7 @@ class MediatorProvider(Provider):
     def mediator(
         self,
         container: AsyncContainer,
-        command_registry: CommandRegisty,
+        command_registry: CommandRegistry,
         query_registry: QueryRegistry,
     ) -> BaseMediator:
         mediator = DishkaMediator(

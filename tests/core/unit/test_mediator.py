@@ -2,7 +2,7 @@ import pytest
 from dataclasses import dataclass
 
 from app.core.commands import BaseCommand, BaseCommandHandler
-from app.core.mediators.base import CommandRegisty, QueryRegistry
+from app.core.mediators.base import CommandRegistry, QueryRegistry
 from app.core.queries import BaseQuery, BaseQueryHandler
 
 
@@ -34,7 +34,7 @@ class MockMediatorQueryHandler(BaseQueryHandler[MockMediatorQuery, dict]):
 class TestCommandRegistry:
 
     def test_register_command(self):
-        registry = CommandRegisty()
+        registry = CommandRegistry()
 
         registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
 
@@ -42,7 +42,7 @@ class TestCommandRegistry:
         assert registry.commands_map[MockMediatorCommand] == MockMediatorCommandHandler
 
     def test_get_handler_types_unregistered(self):
-        registry = CommandRegisty()
+        registry = CommandRegistry()
 
         command = MockMediatorCommand(value="test")
         handler_types = registry.get_handler_types(command)
@@ -97,7 +97,7 @@ class TestMediatorIntegration:
     @pytest.mark.asyncio
     async def test_mediator_executes_command(self):
 
-        registry = CommandRegisty()
+        registry = CommandRegistry()
         registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
 
         command = MockMediatorCommand(value="test")

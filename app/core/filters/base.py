@@ -16,10 +16,10 @@ class BaseFilter(ABC):
     _relation: dict[str, RelationshipLoading] = field(default_factory=dict, init=False)
 
     def __post_init__(self) -> None:
-        self.buil_condition()
+        self.build_condition()
 
     @abstractmethod
-    def buil_condition(self) -> None:
+    def build_condition(self) -> None:
         ...
 
     @property

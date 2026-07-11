@@ -42,7 +42,7 @@ from app.auth.models.user import CreatedUserEvent, VerifiedUserEvent
 from app.auth.queries.auth.get_by_token import GetByAccessTokenQuery, GetByAccessTokenQueryHandler
 from app.auth.queries.auth.oauth import GetUserOAuthAccountsQuery, GetUserOAuthAccountsQueryHandler
 from app.auth.queries.auth.verify import VerifyTokenQuery, VerifyTokenQueryHandler
-from app.auth.queries.permissions.get_list import GetListPemissionsQuery, GetListPemissionsQueryHandler
+from app.auth.queries.permissions.get_list import GetListPermissionsQuery, GetListPermissionsQueryHandler
 from app.auth.queries.roles.get_list import GetListRolesQuery, GetListRolesQueryHandler
 from app.auth.queries.sessions.get_list import GetListSessionQuery, GetListSessionQueryHandler
 from app.auth.queries.sessions.get_list_by_user import GetListSessionsUserQuery, GetListSessionsUserQueryHandler
@@ -61,8 +61,8 @@ from app.auth.services.rbac import AuthRBACManager
 from app.core.services.auth.rbac import RBACManagerInterface
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
-from app.core.events.event import EventRegisty
-from app.core.mediators.base import CommandRegisty, QueryRegistry
+from app.core.events.event import EventRegistry
+from app.core.mediators.base import CommandRegistry, QueryRegistry
 
 
 class AuthModuleProvider(Provider):
@@ -102,6 +102,13 @@ class AuthModuleProvider(Provider):
     #services
     @provide(scope=Scope.APP)
     def cookie_manager(self) -> RefreshTokenCookieManager:
+        if app_config.ENVIRONMENT != "production":
+            return IRefreshTokenCookieManager(
+                SAMESITE="none",
+                HTTPONLY=False,
+                SECURE=False
+            )
+
         return IRefreshTokenCookieManager(
             SAMESITE="strict",
             HTTPONLY=True,
@@ -198,7 +205,7 @@ class AuthModuleProvider(Provider):
     deactivate_session_handler = provide(UserDeactivateSessionCommandHandler)
 
     @decorate
-    def register_auth_command_handlers(self, command_registry: CommandRegisty) -> CommandRegisty:
+    def register_auth_command_handlers(self, command_registry: CommandRegistry) -> CommandRegistry:
         command_registry.register_command(RegisterCommand, RegisterCommandHandler)
         command_registry.register_command(VerifyCommand, VerifyCommandHandler)
         command_registry.register_command(SendVerifyCommand, SendVerifyCommandHandler)
@@ -230,7 +237,7 @@ class AuthModuleProvider(Provider):
     send_verify_email = provide(SendVerifyEventHandler)
 
     @decorate
-    def register_auth_event_handlers(self, event_registry: EventRegisty) -> EventRegisty:
+    def register_auth_event_handlers(self, event_registry: EventRegistry) -> EventRegistry:
         event_registry.subscribe(CreatedUserEvent, [SendVerifyEventHandler])
         event_registry.subscribe(VerifiedUserEvent, [PublishVerifiedUserEventHandler])
         return event_registry
@@ -239,7 +246,7 @@ class AuthModuleProvider(Provider):
     get_jwt_data = provide(VerifyTokenQueryHandler)
     get_list_user_query_handler = provide(GetListUserQueryHandler)
     get_user_by_access_token_query_handler = provide(GetByAccessTokenQueryHandler)
-    get_permissions_query_handler = provide(GetListPemissionsQueryHandler)
+    get_permissions_query_handler = provide(GetListPermissionsQueryHandler)
     get_roles_query_handler = provide(GetListRolesQueryHandler)
     get_list_user_sessions = provide(GetListSessionsUserQueryHandler)
     get_list_sessions = provide(GetListSessionQueryHandler)
@@ -254,7 +261,7 @@ class AuthModuleProvider(Provider):
 
         query_registry.register_query(GetListUserQuery, GetListUserQueryHandler)
 
-        query_registry.register_query(GetListPemissionsQuery, GetListPemissionsQueryHandler)
+        query_registry.register_query(GetListPermissionsQuery, GetListPermissionsQueryHandler)
 
         query_registry.register_query(GetListRolesQuery, GetListRolesQueryHandler)
 

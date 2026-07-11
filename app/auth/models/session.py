@@ -52,7 +52,7 @@ class Session(BaseModel):
     device_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
     device_info: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     user_agent: Mapped[str] = mapped_column(String, nullable=False)
-    ip_adress: Mapped[str] = mapped_column(String, nullable=False)
+    ip_address: Mapped[str] = mapped_column(String, nullable=False)
 
     last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -69,7 +69,7 @@ class Session(BaseModel):
         cls,
         user_id: int,
         device_id: str,
-        ip_adress: str,
+        ip_address: str,
         device_info: bytes,
         user_agent: str,
     ) -> Self:
@@ -78,7 +78,7 @@ class Session(BaseModel):
             device_id=device_id,
             device_info=device_info,
             user_agent=user_agent,
-            ip_adress=ip_adress,
+            ip_address=ip_address,
             is_active=True
         )
 

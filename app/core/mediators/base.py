@@ -8,7 +8,7 @@ from app.core.queries import BaseQuery, BaseQueryHandler
 
 
 @dataclass
-class CommandRegisty:
+class CommandRegistry:
     commands_map: dict[type[BaseCommand], type[BaseCommandHandler]] = field(
         default_factory=dict,
         kw_only=True,
@@ -38,7 +38,7 @@ class QueryRegistry:
 
 @dataclass(eq=False)
 class BaseMediator(ABC):
-    command_registy: CommandRegisty
+    command_registy: CommandRegistry
     query_registy: QueryRegistry
 
     @abstractmethod

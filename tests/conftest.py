@@ -28,7 +28,7 @@ from app.core.configs.app import app_config
 from app.core.db.base_model import BaseModel
 from app.core.db.base_model import BaseModel
 from app.core.di.container import create_container
-from app.core.events.event import EventRegisty
+from app.core.events.event import EventRegistry
 from app.core.events.service import BaseEventBus
 from app.core.services.auth.dto import JwtTokenType, UserJWTData
 from app.core.services.auth.jwt_manager import JWTManager
@@ -214,7 +214,7 @@ async def di_container(
             return MockMailService()
 
         @provide(scope=Scope.APP)
-        def get_mock_event_bus(self, event_registy: EventRegisty) -> BaseEventBus:
+        def get_mock_event_bus(self, event_registy: EventRegistry) -> BaseEventBus:
             return MockEventBus(event_registy=event_registy)
 
         @provide(scope=Scope.APP)

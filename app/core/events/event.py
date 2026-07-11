@@ -38,7 +38,7 @@ class BaseEventHandler(ABC, Generic[ET, ER]):
 
 
 @dataclass
-class EventRegisty:
+class EventRegistry:
     events_map: dict[type[BaseEvent], list[type[BaseEventHandler]]] = field(
         default_factory=lambda: defaultdict(list),
         kw_only=True,

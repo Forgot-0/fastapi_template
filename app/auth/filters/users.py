@@ -22,7 +22,7 @@ class UserFilter(BaseFilter):
     role_names: list[str] | None = None
     permission_names: list[str] | None = None
 
-    def buil_condition(self) -> None:
+    def build_condition(self) -> None:
         self.add_condition("is_active", FilterOperator.EQ, self.is_active)
         self.add_condition("is_verified", FilterOperator.EQ, self.is_verified)
         if self.is_deleted is not None:

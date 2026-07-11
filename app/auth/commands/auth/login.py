@@ -20,7 +20,7 @@ class LoginCommand(BaseCommand):
     username: str
     password: str
     user_agent: str
-    ip_adress: str
+    ip_address: str
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,7 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
             raise WrongLoginDataError(username=command.username)
 
         session = await self.session_manager.get_or_create_session(
-            user_id=user.id, user_agent=command.user_agent, ip_adress=command.ip_adress
+            user_id=user.id, user_agent=command.user_agent, ip_address=command.ip_address
         )
 
         await self.session.commit()

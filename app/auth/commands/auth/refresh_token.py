@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class RefreshTokenCommand(BaseCommand):
     refresh_token: str | None
-    ip_adress: str
+    ip_address: str
 
 
 @dataclass(frozen=True)

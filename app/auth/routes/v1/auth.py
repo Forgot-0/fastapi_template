@@ -70,7 +70,7 @@ async def login(
             username=login_request.username,
             password=login_request.password,
             user_agent=request.headers.get("user-agent", ""),
-            ip_adress=get_ip_from_request(request)
+            ip_address=get_ip_from_request(request)
         )
     )
     refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
@@ -99,7 +99,7 @@ async def refresh(
     token_group: TokenGroup = await mediator.handle_command(
         RefreshTokenCommand(
             refresh_token=refresh_token,
-            ip_adress=get_ip_from_request(request)
+            ip_address=get_ip_from_request(request)
         )
     )
     refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)
@@ -274,7 +274,7 @@ async def oauth_callback(
             code=oauth_callback_query.code,
             state=oauth_callback_query.state,
             user_agent=request.headers.get("user-agent", ""),
-            ip_adress=get_ip_from_request(request)
+            ip_address=get_ip_from_request(request)
         )
     )
     refresh_cookie_manager.set_refresh_token(response, token_group.refresh_token)

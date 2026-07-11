@@ -12,17 +12,17 @@ from app.core.services.auth.exceptions import AccessDeniedError
 
 
 @dataclass(frozen=True)
-class GetListPemissionsQuery(BaseQuery):
+class GetListPermissionsQuery(BaseQuery):
     permission_filter: PermissionFilter
     user_jwt_data: AuthUserJWTData
 
 
 @dataclass(frozen=True)
-class GetListPemissionsQueryHandler(BaseQueryHandler[GetListPemissionsQuery, PageResult[PermissionDTO]]):
+class GetListPermissionsQueryHandler(BaseQueryHandler[GetListPermissionsQuery, PageResult[PermissionDTO]]):
     permission_repository: PermissionRepository
     rbac_manager: AuthRBACManager
 
-    async def handle(self, query: GetListPemissionsQuery) -> PageResult[PermissionDTO]:
+    async def handle(self, query: GetListPermissionsQuery) -> PageResult[PermissionDTO]:
         if not self.rbac_manager.check_permission(query.user_jwt_data, {"permission:view" }):
             raise AccessDeniedError(need_permissions={"permission:view"} - set(query.user_jwt_data.permissions))
 

@@ -12,7 +12,7 @@ class RoleFilter(BaseFilter):
     max_security_level: int | None = None
     permission_names: list[str] | None = None
 
-    def buil_condition(self) -> None:
+    def build_condition(self) -> None:
         self.add_condition("name", FilterOperator.CONTAINS, self.name)
         self.add_condition("security_level", FilterOperator.EQ, self.security_level)
 

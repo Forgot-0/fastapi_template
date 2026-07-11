@@ -85,7 +85,7 @@ def upgrade() -> None:
     sa.Column('device_id', sa.String(), nullable=False),
     sa.Column('device_info', sa.LargeBinary(), nullable=False),
     sa.Column('user_agent', sa.String(), nullable=False),
-    sa.Column('ip_adress', sa.String(), nullable=False),
+    sa.Column('ip_address', sa.String(), nullable=False),
     sa.Column('last_activity', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),

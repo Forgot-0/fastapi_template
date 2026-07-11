@@ -8,7 +8,7 @@ from app.auth.commands.permissions.delete import DeletePermissionCommand
 from app.auth.deps import AuthCurrentUserJWTData
 from app.auth.dtos.permissions import PermissionDTO
 from app.auth.exceptions import NotFoundPermissionsError, ProtectedPermissionError
-from app.auth.queries.permissions.get_list import GetListPemissionsQuery
+from app.auth.queries.permissions.get_list import GetListPermissionsQuery
 from app.auth.schemas.permission.requests import GetPermissionsRequest, PermissionCreateRequest
 from app.core.api.builder import create_response
 from app.core.db.repository import PageResult
@@ -84,7 +84,7 @@ async def get_list_news(
     params: Annotated[GetPermissionsRequest, Query()],
 ) -> PageResult[PermissionDTO]:
     list_permission: PageResult[PermissionDTO] = await mediator.handle_query(
-        GetListPemissionsQuery(
+        GetListPermissionsQuery(
             user_jwt_data=user_jwt_data,
             permission_filter=params.to_permission_filter()
         )
