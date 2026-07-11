@@ -58,11 +58,11 @@ from app.auth.services.jwt import AuthJWTManager
 from app.auth.services.oauth_manager import OAuthManager, OAuthProviderFactory
 from app.auth.services.oauth_providers import OAuthGithub, OAuthGoogle, OAuthYandex
 from app.auth.services.rbac import AuthRBACManager
-from app.core.services.auth.rbac import RBACManagerInterface
 from app.auth.services.session import SessionManager
 from app.core.configs.app import app_config
 from app.core.events.event import EventRegistry
 from app.core.mediators.base import CommandRegistry, QueryRegistry
+from app.core.services.auth.rbac import RBACManagerInterface
 
 
 class AuthModuleProvider(Provider):

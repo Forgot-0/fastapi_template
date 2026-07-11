@@ -1,4 +1,5 @@
 from typing import Callable
+
 import pytest
 
 from app.auth.dtos.user import AuthUserJWTData

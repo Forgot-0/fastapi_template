@@ -6,7 +6,7 @@ from uuid import uuid4
 from app.auth.config import auth_config
 from app.auth.dtos.tokens import TokenGroup, TokenType
 from app.auth.dtos.user import AuthUserJWTData
-from app.auth.exceptions import NotFoundOrInactiveSessionError, TokenInBlacklistError
+from app.auth.exceptions import TokenInBlacklistError
 from app.auth.repositories.session import TokenBlacklistRepository
 from app.core.services.auth.dto import Token
 from app.core.services.auth.jwt_manager import JWTManager

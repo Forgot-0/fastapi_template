@@ -135,9 +135,7 @@ class ConnectionManager(BaseConnectionManager):
                 if message["type"] != "pmessage":
                     continue
 
-                asyncio.create_task(self._dispatch(message))
-        except:
-            raise
+                _ = asyncio.create_task(self._dispatch(message))
         finally:
             await pubsub.unsubscribe()
 

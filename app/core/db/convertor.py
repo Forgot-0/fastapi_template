@@ -30,11 +30,11 @@ operators_map = {
 }
 
 strategy_map = {
-    LoadingStrategyType.LAZY: lambda attr: lazyload(attr),
-    LoadingStrategyType.JOINED: lambda attr: joinedload(attr),
-    LoadingStrategyType.SELECTIN: lambda attr: selectinload(attr),
-    LoadingStrategyType.SUBQUERY: lambda attr: subqueryload(attr),
-    LoadingStrategyType.IMMEDIATE: lambda attr: selectinload(attr),
+    LoadingStrategyType.LAZY: lazyload,
+    LoadingStrategyType.JOINED: joinedload,
+    LoadingStrategyType.SELECTIN: selectinload,
+    LoadingStrategyType.SUBQUERY: subqueryload,
+    LoadingStrategyType.IMMEDIATE: selectinload,
 }
 
 

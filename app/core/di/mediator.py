@@ -26,8 +26,8 @@ class MediatorProvider(Provider):
     ) -> BaseMediator:
         mediator = DishkaMediator(
             container=container,
-            query_registy=query_registry,
-            command_registy=command_registry
+            query_registry=query_registry,
+            command_registry=command_registry
         )
 
         return mediator

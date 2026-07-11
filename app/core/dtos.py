@@ -1,12 +1,8 @@
-
 from dataclasses import dataclass
-from typing import Generic, TypeVar
-
-TDto = TypeVar("TDto")
 
 
 @dataclass(frozen=True)
-class PaginatedResponseDto(Generic[TDto]):
+class PaginatedResponseDto[TDto]:
     items: list[TDto]
     total: int
     page: int

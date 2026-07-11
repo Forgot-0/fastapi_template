@@ -1,5 +1,5 @@
-from httpx import AsyncClient
 import pytest
+from httpx import AsyncClient
 
 from app.auth.models.user import User
 from tests.support.http import api_path

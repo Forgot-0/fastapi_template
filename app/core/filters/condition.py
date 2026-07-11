@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from app.core.filters.exceptions import ValueMustNotNoneError
 
 
-class FilterOperator(str, Enum):
+class FilterOperator(StrEnum):
     EQ = "eq"
     NE = "ne"
     GT = "gt"

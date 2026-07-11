@@ -1,5 +1,5 @@
-from dishka import AsyncContainer
 import pytest
+from dishka import AsyncContainer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.roles.create import CreateRoleCommand, CreateRoleCommandHandler

@@ -1,6 +1,6 @@
-from dishka import AsyncContainer
 import pytest
 import pytest_asyncio
+from dishka import AsyncContainer
 
 from app.auth.repositories.oauth import OAuthCodeRepository
 from app.auth.repositories.permission import PermissionInvalidateRepository, PermissionRepository

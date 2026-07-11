@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 from uuid import UUID
 
 import orjson
@@ -19,10 +19,7 @@ class ErrorDetail(BaseModel):
     detail: dict[str, Any] | list | None = None
 
 
-ER = TypeVar("ER", bound=ErrorDetail)
-
-
-class ErrorResponse(BaseModel, Generic[ER]):
+class ErrorResponse[ER: ErrorDetail](BaseModel):
     error: ER
     status: int
     request_id: UUID

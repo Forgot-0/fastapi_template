@@ -22,7 +22,7 @@ class SessionRepository(IRepository[Session]):
         query = select(Session).where(
             Session.user_id == user_id,
             Session.device_id == device_id,
-            Session.is_active==True
+            Session.is_active
         )
         result = await self.session.execute(query)
         return result.scalar()

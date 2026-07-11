@@ -2,8 +2,8 @@ import hashlib
 import secrets
 from datetime import timedelta
 
-from dishka import AsyncContainer
 import pytest
+from dishka import AsyncContainer
 
 from app.auth.commands.users.reset_password import ResetPasswordCommand, ResetPasswordCommandHandler
 from app.auth.commands.users.send_reset_password import SendResetPasswordCommand, SendResetPasswordCommandHandler

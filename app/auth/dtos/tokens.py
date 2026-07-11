@@ -1,14 +1,14 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.auth.models.oauth import OAuthProviderEnum
 
 
-class TokenType(str, Enum):
+class TokenType(StrEnum):
     ACCESS = "access"
     REFRESH = "refresh"
-    PASSWORD_RESET = "reset_token"
+    PASSWORD_RESET = "password_reset"
     EMAIL_CHANGE = "email_change_token"
     OAUTH_CONNECT = "oauth_connect_state"
 
@@ -52,7 +52,6 @@ class OAuthAccountDTO(BaseModel):
     provider_user_id: int
     provider_email: str
     
-    is_active: bool
-    
+    is_active: bool    
 
     model_config = ConfigDict(from_attributes=True)

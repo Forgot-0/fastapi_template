@@ -44,7 +44,7 @@ class OAuthCodeRepository:
 
     async def add_oauth_state(self, state: str, user_id: int | None=None) -> None:
         await self.client.set(
-            f"state:{state}", user_id if user_id else 0, ex=timedelta(minutes=10)
+            f"state:{state}", user_id or 0, ex=timedelta(minutes=10)
         )
 
     async def get_state(self, state: str) -> int | None:

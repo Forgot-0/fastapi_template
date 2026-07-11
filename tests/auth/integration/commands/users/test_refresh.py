@@ -1,7 +1,7 @@
 import asyncio
 
-from dishka import AsyncContainer
 import pytest
+from dishka import AsyncContainer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler

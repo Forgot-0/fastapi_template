@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class LoadingStrategyType(str, Enum):
+class LoadingStrategyType(StrEnum):
     LAZY = "lazy"
     JOINED = "joined"
     SELECTIN = "selectin"

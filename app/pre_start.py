@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 async def init(db: AsyncSession) -> None:
     try:
         await db.execute(select(1))
-    except Exception as exc:
-        logger.error("database_init_error", extra={"error": exc}, exc_info=exc)
-        raise exc
+    except Exception:
+        logger.exception("database_init_error")
+        raise
 
 
 async def pre_start(db: AsyncSession) -> None:

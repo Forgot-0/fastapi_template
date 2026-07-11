@@ -24,8 +24,6 @@ from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import AsyncRedisContainer
 
-from app.core.configs.app import app_config
-from app.core.db.base_model import BaseModel
 from app.core.db.base_model import BaseModel
 from app.core.di.container import create_container
 from app.core.events.event import EventRegistry

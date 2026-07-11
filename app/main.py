@@ -4,8 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import redis.asyncio as redis
-from aiojobs import Scheduler
-from dishka.integrations.fastapi import setup_dishka, FastapiProvider
+from dishka.integrations.fastapi import FastapiProvider, setup_dishka
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError

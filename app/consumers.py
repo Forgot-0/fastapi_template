@@ -15,7 +15,6 @@ from app.core.di.container import create_container
 from app.core.log.init import configure_logging
 from app.core.message_brokers.base import BaseMessageBroker
 
-
 logger = logging.getLogger(__name__)
 
 

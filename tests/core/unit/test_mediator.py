@@ -1,5 +1,6 @@
-import pytest
 from dataclasses import dataclass
+
+import pytest
 
 from app.core.commands import BaseCommand, BaseCommandHandler
 from app.core.mediators.base import CommandRegistry, QueryRegistry

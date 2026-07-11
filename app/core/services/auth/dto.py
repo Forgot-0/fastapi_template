@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Self
 
 from pydantic import BaseModel, Field
 
 
-class JwtTokenType(str, Enum):
+class JwtTokenType(StrEnum):
     ACCESS = "access"
     REFRESH = "refresh"
 

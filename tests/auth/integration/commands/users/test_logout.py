@@ -1,5 +1,5 @@
-from dishka import AsyncContainer
 import pytest
+from dishka import AsyncContainer
 
 from app.auth.commands.auth.login import LoginCommand, LoginCommandHandler
 from app.auth.commands.auth.logout import LogoutCommand, LogoutCommandHandler
