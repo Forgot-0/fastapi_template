@@ -1,4 +1,4 @@
-target-version = "py312"
+target-version = "py314"
 line-length = 120
 
 [lint]
@@ -49,6 +49,7 @@ ignore = [
     "ARG002", # Unused method argument: `now`
     "ISC001", # Implicitly concatenated string literals on one line
     "COM812", # Explicitly concatenated string should be implicitly concatenated
+    "TC002", # Imports
 ]
 
 [lint.isort]
