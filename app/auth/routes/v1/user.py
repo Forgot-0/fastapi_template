@@ -2,7 +2,7 @@ from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.auth.commands.permissions.add_permission_user import AddPermissionToUserCommand
 from app.auth.commands.permissions.remove_permission_user import DeletePermissionToUserCommand
@@ -25,6 +25,7 @@ from app.auth.schemas.roles.requests import RoleAssignRequest
 from app.auth.schemas.users.requests import GetUsersRequest, UserCreateRequest, UserPermissionRequest
 from app.auth.schemas.users.responses import UserResponse
 from app.core.api.builder import create_response
+from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.db.repository import PageResult
 from app.core.mediators.base import BaseMediator
 from app.core.services.auth.exceptions import AccessDeniedError, InvalidTokenError
@@ -40,7 +41,8 @@ router = APIRouter(route_class=DishkaRoute)
     responses={
         400: create_response(PasswordMismatchError()),
         409: create_response(DuplicateUserError(field="string", value="string"))
-    }
+    },
+    dependencies=[Depends(ConfigurableRateLimiter(times=4, seconds=5*60))]
 )
 async def register_user(
     mediator: FromDishka[BaseMediator],
