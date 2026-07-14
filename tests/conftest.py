@@ -7,7 +7,6 @@ from uuid import uuid4
 
 from fastapi.exceptions import RequestValidationError
 import pytest
-import pytest_asyncio
 from dishka import AsyncContainer, Provider, Scope, provide
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
@@ -81,7 +80,7 @@ def redis_container() -> Generator[AsyncRedisContainer]:
         yield redis
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest.fixture(scope="session")
 async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[AsyncEngine]:
     database_url = postgres_container.get_connection_url(driver="asyncpg")
 
@@ -101,7 +100,7 @@ async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[Asy
     await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None]:
     session_maker = async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -111,7 +110,7 @@ async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None]:
     yield
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def db_connection(db_engine: AsyncEngine) -> AsyncGenerator[AsyncConnection]:
     connection = await db_engine.connect()
     transaction = await connection.begin()
@@ -123,12 +122,12 @@ async def db_connection(db_engine: AsyncEngine) -> AsyncGenerator[AsyncConnectio
         await connection.close()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def db_session(request_container):
     yield await request_container.get(AsyncSession)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def redis_client(redis_container: AsyncRedisContainer) -> AsyncGenerator[Redis]:
     client = await redis_container.get_async_client()
 
@@ -193,7 +192,7 @@ def create_auth_headers(create_access_token):
     return _headers
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def di_container(
     db_connection: AsyncConnection,
     redis_client: Redis,
@@ -242,7 +241,7 @@ async def di_container(
         await container.close()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def request_container(di_container: AsyncContainer) -> AsyncGenerator[AsyncContainer]:
     async with di_container() as request:
         yield request
@@ -276,7 +275,7 @@ async def rbac_manager(di_container: AsyncContainer) -> RBACManagerInterface:
     return await di_container.get(RBACManagerInterface)
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def app(di_container: AsyncContainer) -> FastAPI:
     if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
         del os.environ["PROMETHEUS_MULTIPROC_DIR"]
@@ -308,7 +307,7 @@ def test_app() -> FastAPI:
     return app
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def client(app: FastAPI, redis_client: Redis) -> AsyncGenerator[AsyncClient]:
     await FastAPILimiter.init(redis_client)
     transport = ASGITransport(app=app)

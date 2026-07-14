@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.role import Role
@@ -21,7 +20,7 @@ async def _require_role(role_repository: RoleRepository, name: str) -> Role:
     return role
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def standard_user(
     db_session: AsyncSession,
     user_repository: UserRepository,
@@ -41,7 +40,7 @@ async def standard_user(
     return user
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def admin_user(
     db_session: AsyncSession,
     user_repository: UserRepository,
@@ -62,7 +61,7 @@ async def admin_user(
     return user
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def unverified_user(
     db_session: AsyncSession,
     user_repository: UserRepository,

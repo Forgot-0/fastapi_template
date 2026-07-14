@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from dishka import AsyncContainer
 
 from app.auth.repositories.oauth import OAuthCodeRepository
@@ -13,19 +12,19 @@ from app.auth.services.rbac import AuthRBACManager
 from app.auth.services.session import SessionManager
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def user_repository(request_container: AsyncContainer) -> UserRepository:
     return await request_container.get(UserRepository)
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def role_repository(request_container: AsyncContainer) -> RoleRepository:
     return await request_container.get(RoleRepository)
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def permission_repository(request_container: AsyncContainer) -> PermissionRepository:
     return await request_container.get(PermissionRepository)
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def session_repository(request_container: AsyncContainer) -> SessionRepository:
     return await request_container.get(SessionRepository)
 
