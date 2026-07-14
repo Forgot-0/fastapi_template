@@ -48,6 +48,9 @@ class RemoveRoleCommandHandler(BaseCommandHandler[RemoveRoleCommand, None]):
         if user is None:
             raise NotFoundUserError(user_by=command.remove_from_user, user_field="id")
 
+        if role not in user.roles:
+            raise NotFoundRoleError(name=command.role_name)
+
         user.delete_role(role)
         await self.token_blacklist.add_user(user.id)
 

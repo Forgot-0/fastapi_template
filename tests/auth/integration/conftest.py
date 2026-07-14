@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -83,7 +85,7 @@ async def unverified_user(
     return user
 
 @pytest.fixture
-def create_access_token(auth_jwt_manager: AuthJWTManager):
+def create_access_token(auth_jwt_manager: AuthJWTManager) -> Callable[..., str]:
 
     def _create(user: User, device_id: str | None = None) -> str:
         user_jwt_data = jwt_from_user(user, device_id=device_id)
@@ -93,7 +95,7 @@ def create_access_token(auth_jwt_manager: AuthJWTManager):
     return _create
 
 @pytest.fixture
-def auth_headers(create_access_token):
+def auth_headers(create_access_token) -> Callable[..., dict[str, str]]:
     def _headers(user: User) -> dict[str, str]:
         token = create_access_token(user)
         return {"Authorization": f"Bearer {token}"}

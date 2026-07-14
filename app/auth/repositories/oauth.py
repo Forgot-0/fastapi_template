@@ -7,7 +7,6 @@ from sqlalchemy import Select, select
 from app.auth.filters.oauth import OauthFilter
 from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
 from app.core.db.repository import IRepository
-from app.core.filters.base import BaseFilter
 
 
 @dataclass

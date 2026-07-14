@@ -13,7 +13,7 @@ class TestAuthEndpoints:
     async def test_register_endpoint(
         self,
         client: AsyncClient,
-    ):
+    ) -> None:
         response = await client.post(
             api_path("users/register"),
             json={

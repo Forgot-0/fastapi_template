@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import FrozenInstanceError, dataclass
 
 import pytest
 
@@ -32,21 +32,21 @@ class MockCommandHandler(BaseCommandHandler[MockCommand, MockCommandResult]):
 class TestCommands:
 
     @pytest.mark.asyncio
-    async def test_command_creation(self):
+    async def test_command_creation(self) -> None:
         command = MockCommand(value="test", number=42)
 
         assert command.value == "test"
         assert command.number == 42
 
     @pytest.mark.asyncio
-    async def test_command_is_frozen(self):
+    async def test_command_is_frozen(self) -> None:
         command = MockCommand(value="test", number=42)
 
-        with pytest.raises(Exception):
+        with pytest.raises(FrozenInstanceError):
             command.value = "new_value"  # type: ignore
 
     @pytest.mark.asyncio
-    async def test_command_handler_execution(self):
+    async def test_command_handler_execution(self) -> None:
         handler = MockCommandHandler(prefix="custom_")
         command = MockCommand(value="test", number=10)
 
@@ -56,7 +56,7 @@ class TestCommands:
         assert result.doubled_number == 20
 
     @pytest.mark.asyncio
-    async def test_multiple_commands(self):
+    async def test_multiple_commands(self) -> None:
         handler = MockCommandHandler()
 
         commands = [
@@ -73,7 +73,7 @@ class TestCommands:
         assert results[2].processed_value == "processed_third"
 
     @pytest.mark.asyncio
-    async def test_command_with_defaults(self):
+    async def test_command_with_defaults(self) -> None:
         command = MockCommand(value="test")
 
         assert command.number == 0
@@ -101,7 +101,7 @@ class FailingCommandHandler(BaseCommandHandler[FailingCommand, None]):
 class TestCommandErrorHandling:
 
     @pytest.mark.asyncio
-    async def test_handler_raises_exception(self):
+    async def test_handler_raises_exception(self) -> None:
         handler = FailingCommandHandler()
         command = FailingCommand(should_fail=True)
 
@@ -109,7 +109,7 @@ class TestCommandErrorHandling:
             await handler.handle(command)
 
     @pytest.mark.asyncio
-    async def test_handler_success_case(self):
+    async def test_handler_success_case(self) -> None:
         handler = FailingCommandHandler()
         command = FailingCommand(should_fail=False)
 

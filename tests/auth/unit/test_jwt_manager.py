@@ -12,7 +12,7 @@ from tests.auth.integration.factories import TokenFactory
 @pytest.mark.auth
 class TestJWTManager:
 
-    def test_create_token_pair(self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData):
+    def test_create_token_pair(self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData) -> None:
         token_group = auth_jwt_manager.create_token_pair(admin_auth_user_jwt)
 
         assert token_group.access_token, "access token must be created"
@@ -29,7 +29,10 @@ class TestJWTManager:
         assert refresh_payload["sub"] == admin_auth_user_jwt.id
 
     @pytest.mark.asyncio
-    async def test_validate_valid_token(self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData):
+    async def test_validate_valid_token(
+        self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData
+    ) -> None:
+
         token_group = auth_jwt_manager.create_token_pair(admin_auth_user_jwt)
 
         token_data = await auth_jwt_manager.validate_token(token_group.access_token, JwtTokenType.ACCESS)
@@ -40,21 +43,24 @@ class TestJWTManager:
         assert token_data.permissions == admin_auth_user_jwt.permissions
 
     @pytest.mark.asyncio
-    async def test_validate_wrong_token_type(self, auth_jwt_manager: AuthJWTManager, regular_auth_user_jwt: AuthUserJWTData):
+    async def test_validate_wrong_token_type(
+        self, auth_jwt_manager: AuthJWTManager, regular_auth_user_jwt: AuthUserJWTData
+    ) -> None:
+
         token_group = auth_jwt_manager.create_token_pair(regular_auth_user_jwt)
 
         with pytest.raises(InvalidTokenError):
             await auth_jwt_manager.validate_token(token_group.refresh_token, JwtTokenType.ACCESS)
 
     @pytest.mark.asyncio
-    async def test_validate_invalid_token(self, auth_jwt_manager: AuthJWTManager):
+    async def test_validate_invalid_token(self, auth_jwt_manager: AuthJWTManager) -> None:
         invalid_token = "invalid.token.here"
 
         with pytest.raises(InvalidTokenError):
             await auth_jwt_manager.validate_token(invalid_token, JwtTokenType.ACCESS)
 
     @pytest.mark.asyncio
-    async def test_validate_expired_token(self, auth_jwt_manager: AuthJWTManager):
+    async def test_validate_expired_token(self, auth_jwt_manager: AuthJWTManager) -> None:
         payload = TokenFactory.create_access_token_payload(
             user_id=123,
             exp_minutes=-1,
@@ -64,7 +70,10 @@ class TestJWTManager:
         with pytest.raises(ExpiredTokenError):
             await auth_jwt_manager.validate_token(expired_token, JwtTokenType.ACCESS)
 
-    def test_generate_payload_access_token(self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData):
+    def test_generate_payload_access_token(
+        self, auth_jwt_manager: AuthJWTManager, admin_auth_user_jwt: AuthUserJWTData
+    ) -> None:
+
         payload = auth_jwt_manager.generate_payload(admin_auth_user_jwt, TokenType.ACCESS)
 
         assert payload["type"] == "access"
@@ -77,7 +86,9 @@ class TestJWTManager:
         assert payload["roles"] == admin_auth_user_jwt.roles
         assert payload["permissions"] == admin_auth_user_jwt.permissions
 
-    def test_generate_payload_refresh_token(self, auth_jwt_manager: AuthJWTManager, regular_auth_user_jwt: AuthUserJWTData):
+    def test_generate_payload_refresh_token(
+        self, auth_jwt_manager: AuthJWTManager, regular_auth_user_jwt: AuthUserJWTData
+    ) -> None:
         payload = auth_jwt_manager.generate_payload(regular_auth_user_jwt, TokenType.REFRESH)
 
         assert payload["type"] == "refresh"

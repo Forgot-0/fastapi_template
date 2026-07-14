@@ -56,5 +56,5 @@ class LoginCommandHandler(BaseCommandHandler[LoginCommand, TokenGroup]):
             AuthUserJWTData.create_from_user(user, device_id=session.device_id)
         )
 
-        logger.info("Logining user", extra={"user_id": user.id, "device_id": session.device_id})
+        logger.info("Logging user", extra={"user_id": user.id, "device_id": session.device_id})
         return token_group

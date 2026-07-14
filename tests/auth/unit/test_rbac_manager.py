@@ -30,7 +30,7 @@ class TestRBACManager:
         user_perms: list[str],
         required_perms: set[str],
         expected: bool,
-    ):
+    ) -> None:
         user = make_auth_user_jwt(role="user", permissions=user_perms)
         assert rbac_manager.check_permission(user, required_perms) is expected
 
@@ -49,7 +49,7 @@ class TestRBACManager:
         make_auth_user_jwt,
         role_name: str,
         expected: bool,
-    ):
+    ) -> None:
         user = make_auth_user_jwt(role=role_name, permissions=[])
         assert rbac_manager.is_system_user(user) == expected
 
@@ -59,7 +59,7 @@ class TestRBACManager:
         admin_auth_user_jwt: AuthUserJWTData,
         system_auth_user_jwt: AuthUserJWTData,
         regular_auth_user_jwt: AuthUserJWTData,
-    ):
+    ) -> None:
         assert rbac_manager.is_system_user(admin_auth_user_jwt) is True
         assert rbac_manager.is_system_user(system_auth_user_jwt) is True
         assert rbac_manager.is_system_user(regular_auth_user_jwt) is False
@@ -68,7 +68,7 @@ class TestRBACManager:
         self,
         rbac_manager: AuthRBACManager,
         admin_auth_user_jwt: AuthUserJWTData,
-    ):
+    ) -> None:
         assert rbac_manager.check_permission(admin_auth_user_jwt, {"any:permission"}) is True
 
     @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ class TestRBACManager:
         user_level: int,
         role_level: int,
         should_raise: bool,
-    ):
+    ) -> None:
         if should_raise:
             with pytest.raises(AccessDeniedError):
                 rbac_manager.check_security_level(user_level=user_level, role_level=role_level)
@@ -98,7 +98,7 @@ class TestRBACManager:
         rbac_manager: AuthRBACManager,
         admin_auth_user_jwt: AuthUserJWTData,
         regular_auth_user_jwt: AuthUserJWTData,
-    ):
+    ) -> None:
         rbac_manager.validate_role_name(admin_auth_user_jwt, "custom_role")
 
         with pytest.raises(InvalidRoleNameError):
@@ -121,7 +121,7 @@ class TestRBACManager:
         make_auth_user_jwt,
         regular_auth_user_jwt: AuthUserJWTData,
         admin_auth_user_jwt: AuthUserJWTData,
-    ):
+    ) -> None:
         with pytest.raises(ProtectedPermissionError):
             rbac_manager.validate_permissions(regular_auth_user_jwt, "role:create")
 

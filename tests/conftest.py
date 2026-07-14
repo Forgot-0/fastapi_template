@@ -5,11 +5,11 @@ from datetime import timedelta
 from typing import Any
 from uuid import uuid4
 
-from fastapi.exceptions import RequestValidationError
 import pytest
 from dishka import AsyncContainer, Provider, Scope, provide
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi_limiter import FastAPILimiter
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
@@ -44,9 +44,8 @@ from app.main import (
     handle_application_exception,
     handle_unknown_exception,
     handle_validation_exception,
-    lifespan,
     setup_middleware,
-    setup_router
+    setup_router,
 )
 from tests.mocks import FakeQueueService, FakeStorageService, MockEventBus, MockMailService
 
@@ -101,13 +100,12 @@ async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[Asy
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None]:
+async def load_initial_data(db_engine: AsyncEngine) -> None:
     session_maker = async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_maker() as session:
         await init_data(session)
 
-    yield
 
 
 @pytest.fixture
@@ -124,7 +122,7 @@ async def db_connection(db_engine: AsyncEngine) -> AsyncGenerator[AsyncConnectio
 
 @pytest.fixture
 async def db_session(request_container):
-    yield await request_container.get(AsyncSession)
+    return await request_container.get(AsyncSession)
 
 
 @pytest.fixture
@@ -171,7 +169,7 @@ def super_admin_user_jwt(make_user_jwt) -> UserJWTData:
 
 
 @pytest.fixture
-def create_access_token(jwt_manager: JWTManager):
+def create_access_token(jwt_manager: JWTManager) -> Callable[..., str]:
     def _create(user_jwt: UserJWTData) -> str:
         data = user_jwt.to_dict()
         data["type"] = JwtTokenType.ACCESS
@@ -184,7 +182,7 @@ def create_access_token(jwt_manager: JWTManager):
 
 
 @pytest.fixture
-def create_auth_headers(create_access_token):
+def create_auth_headers(create_access_token) -> Callable[..., dict[str, str]]:
     def _headers(user_jwt: UserJWTData) -> dict[str, str]:
         token = create_access_token(user_jwt)
         return {"Authorization": f"Bearer {token}"}
@@ -292,7 +290,6 @@ def test_app() -> FastAPI:
             if app_config.ENVIRONMENT in ["local", "testing"]
             else None
         ),
-        lifespan=lifespan,
         redirect_slashes=False
     )
 

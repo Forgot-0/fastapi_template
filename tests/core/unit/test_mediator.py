@@ -34,7 +34,7 @@ class MockMediatorQueryHandler(BaseQueryHandler[MockMediatorQuery, dict]):
 @pytest.mark.unit
 class TestCommandRegistry:
 
-    def test_register_command(self):
+    def test_register_command(self) -> None:
         registry = CommandRegistry()
 
         registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
@@ -42,7 +42,7 @@ class TestCommandRegistry:
         assert MockMediatorCommand in registry.commands_map
         assert registry.commands_map[MockMediatorCommand] == MockMediatorCommandHandler
 
-    def test_get_handler_types_unregistered(self):
+    def test_get_handler_types_unregistered(self) -> None:
         registry = CommandRegistry()
 
         command = MockMediatorCommand(value="test")
@@ -54,7 +54,7 @@ class TestCommandRegistry:
 @pytest.mark.unit
 class TestQueryRegistry:
 
-    def test_register_query(self):
+    def test_register_query(self) -> None:
         registry = QueryRegistry()
 
         registry.register_query(MockMediatorQuery, MockMediatorQueryHandler)
@@ -62,7 +62,7 @@ class TestQueryRegistry:
         assert MockMediatorQuery in registry.queries_map
         assert registry.queries_map[MockMediatorQuery] == MockMediatorQueryHandler
 
-    def test_get_handler_type(self):
+    def test_get_handler_type(self) -> None:
         registry = QueryRegistry()
         registry.register_query(MockMediatorQuery, MockMediatorQueryHandler)
 
@@ -71,7 +71,7 @@ class TestQueryRegistry:
 
         assert handler_type == MockMediatorQueryHandler
 
-    def test_get_handler_type_unregistered(self):
+    def test_get_handler_type_unregistered(self) -> None:
         registry = QueryRegistry()
 
         query = MockMediatorQuery(id=1)
@@ -79,7 +79,7 @@ class TestQueryRegistry:
 
         assert handler_type is None
 
-    def test_register_overwrite(self):
+    def test_register_overwrite(self) -> None:
         @dataclass(frozen=True)
         class Handler2(BaseQueryHandler[MockMediatorQuery, dict]):
             async def handle(self, query: MockMediatorQuery) -> dict:
@@ -96,7 +96,7 @@ class TestQueryRegistry:
 class TestMediatorIntegration:
 
     @pytest.mark.asyncio
-    async def test_mediator_executes_command(self):
+    async def test_mediator_executes_command(self) -> None:
 
         registry = CommandRegistry()
         registry.register_command(MockMediatorCommand, MockMediatorCommandHandler)
@@ -112,7 +112,7 @@ class TestMediatorIntegration:
         assert result == "handled: test"
 
     @pytest.mark.asyncio
-    async def test_mediator_executes_query(self):
+    async def test_mediator_executes_query(self) -> None:
         registry = QueryRegistry()
         registry.register_query(MockMediatorQuery, MockMediatorQueryHandler)
 

@@ -215,7 +215,7 @@ class TestAssignRoleCommand:
             user_jwt_data=user_jwt,
         )
 
-        with pytest.raises(Exception):
+        with pytest.raises(NotFoundRoleError):
             await remove_role_handler.handle(command)
 
     async def test_assign_role_same_role_twice(
