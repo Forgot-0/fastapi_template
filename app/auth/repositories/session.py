@@ -5,14 +5,14 @@ from redis.asyncio import Redis
 from sqlalchemy import Select, select, update
 
 from app.auth.config import auth_config
+from app.auth.filters.sessions import SessionFilter
 from app.auth.models.session import Session
 from app.core.db.repository import IRepository
-from app.core.filters.base import BaseFilter
 from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
-class SessionRepository(IRepository[Session]):
+class SessionRepository(IRepository[Session, SessionFilter]):
     async def get_by_id(self, session_id: int) -> Session | None:
         query = select(Session).where(Session.id == session_id)
         result = await self.session.execute(query)
@@ -39,7 +39,7 @@ class SessionRepository(IRepository[Session]):
     async def create(self, session: Session) -> None:
         self.session.add(session)
 
-    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+    def apply_relationship_filters(self, stmt: Select, filters: SessionFilter) -> Select:
         return stmt
 
 @dataclass

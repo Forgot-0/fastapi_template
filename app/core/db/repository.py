@@ -47,10 +47,10 @@ class PageResult[T]:
 
 
 @dataclass
-class IRepository[T](ABC):
+class IRepository[T, F: BaseFilter](ABC):
     session: AsyncSession
 
-    async def find_by_filter(self, model: type[T], filters: BaseFilter) -> PageResult[T]:
+    async def find_by_filter(self, model: type[T], filters: F) -> PageResult[T]:
         if issubclass(model, SoftDeleteMixin):
             stmt = model.select_not_deleted()
         else:
@@ -87,7 +87,7 @@ class IRepository[T](ABC):
             page_size=filters.pagination.page_size
         )
 
-    async def count_by_filter(self, model: type[T], filters: BaseFilter) -> int:
+    async def count_by_filter(self, model: type[T], filters: F) -> int:
         if issubclass(model, SoftDeleteMixin):
             stmt = select(func.count()).select_from(model.select_not_deleted().subquery())
         else:
@@ -103,7 +103,7 @@ class IRepository[T](ABC):
         return result.scalar_one()
 
     @abstractmethod
-    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+    def apply_relationship_filters(self, stmt: Select, filters: F) -> Select:
         ...
 
 B = TypeVar("B", bound=BaseModel)

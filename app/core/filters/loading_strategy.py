@@ -14,38 +14,38 @@ class LoadingStrategyType(StrEnum):
 class RelationshipLoading:
     relationship_name: str
     strategy: LoadingStrategyType = LoadingStrategyType.LAZY
-    nested: tuple["RelationshipLoading", ...] | None  = None
+    nested: tuple[RelationshipLoading, ...] | None  = None
 
     @property
     def has_nested(self) -> bool:
         return self.nested is not None and len(self.nested) > 0
 
     @classmethod
-    def lazy(cls, relationship_name: str) -> "RelationshipLoading":
+    def lazy(cls, relationship_name: str) -> RelationshipLoading:
         return cls(relationship_name=relationship_name, strategy=LoadingStrategyType.LAZY)
 
     @classmethod
     def joined(
         cls,
         relationship_name: str,
-        nested: tuple["RelationshipLoading", ...] | None = None
-    ) -> "RelationshipLoading":
+        nested: tuple[RelationshipLoading, ...] | None = None
+    ) -> RelationshipLoading:
         return cls(relationship_name=relationship_name, strategy=LoadingStrategyType.JOINED, nested=nested)
 
     @classmethod
     def selectin(
         cls,
         relationship_name: str,
-        nested: tuple["RelationshipLoading", ...] | None = None
-    ) -> "RelationshipLoading":
+        nested: tuple[RelationshipLoading, ...] | None = None
+    ) -> RelationshipLoading:
         return cls(relationship_name=relationship_name, strategy=LoadingStrategyType.SELECTIN, nested=nested)
 
     @classmethod
     def subquery(
         cls,
         relationship_name: str,
-        nested: tuple["RelationshipLoading", ...] | None = None
-    ) -> "RelationshipLoading":
+        nested: tuple[RelationshipLoading, ...] | None = None
+    ) -> RelationshipLoading:
         return cls(relationship_name=relationship_name, strategy=LoadingStrategyType.SUBQUERY, nested=nested)
 
 
@@ -54,7 +54,7 @@ class LoadingConfig:
     relationships: tuple[RelationshipLoading, ...]
 
     @classmethod
-    def default(cls) -> "LoadingConfig":
+    def default(cls) -> LoadingConfig:
         return cls(relationships=())
 
     @classmethod
@@ -62,7 +62,7 @@ class LoadingConfig:
         cls,
         *relationship_names: str,
         strategy: LoadingStrategyType = LoadingStrategyType.SELECTIN
-    ) -> "LoadingConfig":
+    ) -> LoadingConfig:
         return cls(
             relationships=tuple(
                 RelationshipLoading(name, strategy)

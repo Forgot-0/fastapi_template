@@ -38,7 +38,7 @@ from app.auth.schemas.auth.responses import (
     AccessTokenResponse,
     OAuthUrlResponse,
 )
-from app.auth.services.cookie_manager import RefreshTokenCookieManager
+from app.auth.services.cookie_manager import IRefreshTokenCookieManager
 from app.core.api.builder import create_response
 from app.core.api.rate_limiter import ConfigurableRateLimiter
 from app.core.api.utils import get_ip_from_request
@@ -60,7 +60,7 @@ router = APIRouter(route_class=DishkaRoute)
 )
 async def login(
     mediator: FromDishka[BaseMediator],
-    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
+    refresh_cookie_manager: FromDishka[IRefreshTokenCookieManager],
     login_request: Annotated[OAuth2PasswordRequestForm, Depends()],
     request: Request,
     response: Response
@@ -91,7 +91,7 @@ async def login(
 )
 async def refresh(
     mediator: FromDishka[BaseMediator],
-    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
+    refresh_cookie_manager: FromDishka[IRefreshTokenCookieManager],
     response: Response,
     request: Request,
     refresh_token: Annotated[str | None, Cookie()] = None,
@@ -119,7 +119,7 @@ async def refresh(
 )
 async def logout(
     mediator: FromDishka[BaseMediator],
-    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
+    refresh_cookie_manager: FromDishka[IRefreshTokenCookieManager],
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None
 ) -> None:
@@ -263,7 +263,7 @@ async def oauth_authorize_connect(
 async def oauth_callback(
     provider: str,
     mediator: FromDishka[BaseMediator],
-    refresh_cookie_manager: FromDishka[RefreshTokenCookieManager],
+    refresh_cookie_manager: FromDishka[IRefreshTokenCookieManager],
     request: Request,
     response: Response,
     oauth_callback_query: Annotated[OAuthCallbackQuery, Query()],

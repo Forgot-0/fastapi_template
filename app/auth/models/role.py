@@ -35,11 +35,11 @@ class Role(BaseModel, DateMixin):
         nullable=False, default=1
     )
 
-    users: Mapped[list["User"]] = relationship(
+    users: Mapped[list[User]] = relationship(
         argument="User", secondary="user_roles", back_populates="roles"
     )
 
-    permissions: Mapped[set["Permission"]] = relationship(
+    permissions: Mapped[set[Permission]] = relationship(
         "Permission", secondary="role_permissions", back_populates="roles"
     )
 
@@ -52,13 +52,13 @@ class Role(BaseModel, DateMixin):
 
         self.permissions.remove(permission)
 
-    def is_higher_than(self, other: "Role") -> bool:
+    def is_higher_than(self, other: Role) -> bool:
         return self.security_level > other.security_level
 
-    def is_lower_than(self, other: "Role") -> bool:
+    def is_lower_than(self, other: Role) -> bool:
         return self.security_level < other.security_level
 
-    def can_manage_role(self, other: "Role") -> bool:
+    def can_manage_role(self, other: Role) -> bool:
         return self.security_level > other.security_level
 
     def has_permission(self, permission: Permission) -> bool:

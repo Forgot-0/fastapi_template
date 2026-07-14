@@ -19,7 +19,7 @@ class BaseUser(BaseModel):
 
 class AuthUserJWTData(UserJWTData):
     @classmethod
-    def create_from_user(cls, user: User, device_id: str | None=None) -> "AuthUserJWTData":
+    def create_from_user(cls, user: User, device_id: str | None=None) -> AuthUserJWTData:
         security_lvl = 0
         permissions = set()
         roles = set()

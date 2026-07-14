@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(context: ContextRepo) -> AsyncGenerator[None, None]:
+async def lifespan(context: ContextRepo) -> AsyncGenerator[None]:
     logger.info("Starting FastStream")
     container = context.get("container__")
     message_broker = await container.get(BaseMessageBroker)

@@ -1,5 +1,5 @@
 from dishka.integrations.taskiq import TaskiqProvider, setup_dishka
-from taskiq import TaskiqEvents, TaskiqScheduler, TaskiqState
+from taskiq import ScheduleSource, TaskiqEvents, TaskiqScheduler, TaskiqState
 from taskiq.schedule_sources import LabelScheduleSource
 from taskiq_redis import RedisScheduleSource
 
@@ -24,6 +24,8 @@ async def shutdown(state: TaskiqState) -> None:
     await message_broker.close()
 
 
+sources: list[ScheduleSource]
+
 if app_config.ENVIRONMENT == "testing":
     sources = [LabelScheduleSource(broker=broker)]
 
@@ -37,5 +39,5 @@ else:
 
 scheduler = TaskiqScheduler(
     broker=broker,
-    sources=sources, # type: ignore
+    sources=sources,
 )

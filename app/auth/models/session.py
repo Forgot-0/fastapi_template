@@ -56,7 +56,7 @@ class Session(BaseModel):
     last_activity: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    user: Mapped["User"] = relationship("User", back_populates="sessions")
+    user: Mapped[User] = relationship("User", back_populates="sessions")
 
     __table_args__ = (
         Index("idx_sessions_user_device", "user_id", "device_id"),

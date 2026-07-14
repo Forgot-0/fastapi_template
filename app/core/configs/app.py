@@ -103,7 +103,7 @@ class AppConfig(BaseConfig):
     JWT_ALGORITHM: str = "HS256"
 
     @model_validator(mode="after")
-    def validate_production_required_settings(self) -> "AppConfig":
+    def validate_production_required_settings(self) -> AppConfig:
         if self.ENVIRONMENT != "production":
             return self
 

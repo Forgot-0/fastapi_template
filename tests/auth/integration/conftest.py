@@ -33,7 +33,7 @@ async def standard_user(
         email="standard@example.com",
         username="standarduser",
         password_hash=hash_service.hash_password("TestPass123!"),
-        roles={role, },
+        roles={role },
     )
 
     await user_repository.create(user)
@@ -53,7 +53,7 @@ async def admin_user(
         email="admin@example.com",
         username="adminuser",
         password_hash=hash_service.hash_password("AdminPass123!"),
-        roles={role, },
+        roles={role },
     )
 
     await user_repository.create(user)
@@ -75,7 +75,7 @@ async def unverified_user(
         username="unverifieduser",
         password_hash=hash_service.hash_password("TestPass123!"),
         is_verified=False,
-        roles={role, },
+        roles={role },
     )
 
     await user_repository.create(user)

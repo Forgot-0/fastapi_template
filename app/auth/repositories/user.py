@@ -11,7 +11,7 @@ from app.core.db.repository import CacheRepository, IRepository
 
 
 @dataclass
-class UserRepository(IRepository[User], CacheRepository):
+class UserRepository(IRepository[User, UserFilter], CacheRepository):
     _LIST_VERSION_KEY = "user:list"
 
     async def get_by_email(self, email: str) -> (User | None):
@@ -68,7 +68,7 @@ class UserRepository(IRepository[User], CacheRepository):
     def apply_relationship_filters(self, stmt: Select, filters: UserFilter) -> Select:
 
         if filters.role_names:
-            stmt = stmt.join(User.roles).where(User.roles.contains(filters.role_names))
+            stmt = stmt.join(User.roles).where(Role.name.in_(filters.role_names))
 
         if filters.permission_names:
             stmt = stmt.join(User.permissions).where(Permission.name.in_(filters.permission_names))

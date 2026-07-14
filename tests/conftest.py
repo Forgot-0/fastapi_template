@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from uuid import uuid4
 
+from fastapi.exceptions import RequestValidationError
 import pytest
 import pytest_asyncio
 from dishka import AsyncContainer, Provider, Scope, provide
@@ -24,10 +25,13 @@ from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import AsyncRedisContainer
 
+from app.core.configs.app import app_config
 from app.core.db.base_model import BaseModel
 from app.core.di.container import create_container
 from app.core.events.event import EventRegistry
 from app.core.events.service import BaseEventBus
+from app.core.exceptions import ApplicationError
+from app.core.log.init import configure_logging
 from app.core.services.auth.dto import JwtTokenType, UserJWTData
 from app.core.services.auth.jwt_manager import JWTManager
 from app.core.services.auth.rbac import RBACManagerInterface
@@ -36,7 +40,15 @@ from app.core.services.queues.service import QueueService
 from app.core.services.storage.service import StorageService
 from app.core.utils import now_utc
 from app.init_data import init_data
-from app.main import test_app
+from app.main import (
+    custom_openapi,
+    handle_application_exception,
+    handle_unknown_exception,
+    handle_validation_exception,
+    lifespan,
+    setup_middleware,
+    setup_router
+)
 from tests.mocks import FakeQueueService, FakeStorageService, MockEventBus, MockMailService
 
 
@@ -51,26 +63,26 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
+def event_loop() -> Generator[asyncio.AbstractEventLoop]:
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
 
 @pytest.fixture(scope="session")
-def postgres_container() -> Generator[PostgresContainer, None, None]:
+def postgres_container() -> Generator[PostgresContainer]:
     with PostgresContainer("postgres:18.3") as postgres:
         yield postgres
 
 
 @pytest.fixture(scope="session")
-def redis_container() -> Generator[AsyncRedisContainer, None, None]:
+def redis_container() -> Generator[AsyncRedisContainer]:
     with AsyncRedisContainer("redis:7.2-alpine") as redis:
         yield redis
 
 
 @pytest_asyncio.fixture(scope="session")
-async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[AsyncEngine, None]:
+async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[AsyncEngine]:
     database_url = postgres_container.get_connection_url(driver="asyncpg")
 
     engine = create_async_engine(
@@ -90,7 +102,7 @@ async def db_engine(postgres_container: PostgresContainer) -> AsyncGenerator[Asy
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
-async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None, None]:
+async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None]:
     session_maker = async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with session_maker() as session:
@@ -100,7 +112,7 @@ async def load_initial_data(db_engine: AsyncEngine) -> AsyncGenerator[None, None
 
 
 @pytest_asyncio.fixture
-async def db_connection(db_engine: AsyncEngine) -> AsyncGenerator[AsyncConnection, None]:
+async def db_connection(db_engine: AsyncEngine) -> AsyncGenerator[AsyncConnection]:
     connection = await db_engine.connect()
     transaction = await connection.begin()
 
@@ -117,7 +129,7 @@ async def db_session(request_container):
 
 
 @pytest_asyncio.fixture
-async def redis_client(redis_container: AsyncRedisContainer) -> AsyncGenerator[Redis, None]:
+async def redis_client(redis_container: AsyncRedisContainer) -> AsyncGenerator[Redis]:
     client = await redis_container.get_async_client()
 
     try:
@@ -185,11 +197,11 @@ def create_auth_headers(create_access_token):
 async def di_container(
     db_connection: AsyncConnection,
     redis_client: Redis,
-) -> AsyncGenerator[AsyncContainer, None]:
+) -> AsyncGenerator[AsyncContainer]:
 
     class TestProvider(Provider):
         @provide(scope=Scope.REQUEST)
-        async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
+        async def get_session(self) -> AsyncGenerator[AsyncSession]:
             session_maker = async_sessionmaker(
                 bind=db_connection,
                 class_=AsyncSession,
@@ -231,7 +243,7 @@ async def di_container(
 
 
 @pytest_asyncio.fixture
-async def request_container(di_container: AsyncContainer) -> AsyncGenerator[AsyncContainer, None]:
+async def request_container(di_container: AsyncContainer) -> AsyncGenerator[AsyncContainer]:
     async with di_container() as request:
         yield request
 
@@ -274,8 +286,30 @@ async def app(di_container: AsyncContainer) -> FastAPI:
     return application
 
 
+def test_app() -> FastAPI:
+    app = FastAPI(
+        openapi_url=(
+            f"{app_config.API_V1_STR}/openapi.json"
+            if app_config.ENVIRONMENT in ["local", "testing"]
+            else None
+        ),
+        lifespan=lifespan,
+        redirect_slashes=False
+    )
+
+    configure_logging()
+    setup_middleware(app)
+    setup_router(app)
+
+    app.add_exception_handler(Exception, handle_unknown_exception)
+    app.add_exception_handler(ApplicationError, handle_application_exception)  # type: ignore
+    app.add_exception_handler(RequestValidationError, handle_validation_exception) # type: ignore
+    app.openapi = lambda: custom_openapi(app)
+    return app
+
+
 @pytest_asyncio.fixture
-async def client(app: FastAPI, redis_client: Redis) -> AsyncGenerator[AsyncClient, None]:
+async def client(app: FastAPI, redis_client: Redis) -> AsyncGenerator[AsyncClient]:
     await FastAPILimiter.init(redis_client)
     transport = ASGITransport(app=app)
 

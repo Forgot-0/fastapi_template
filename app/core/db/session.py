@@ -16,7 +16,7 @@ def create_engine() -> AsyncEngine:
 
     return create_async_engine(
         str(app_config.postgres_url),
-        pool_pre_ping=False,
+        pool_pre_ping=True,
         pool_size=pool_size,
         poolclass=pool_class,
         max_overflow=max_overflow,
@@ -26,7 +26,7 @@ def create_engine() -> AsyncEngine:
         future=True,
     )
 
-def create_async_marker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+def create_async_maker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(
             bind=engine,
             class_=AsyncSession,

@@ -44,7 +44,7 @@ class BaseFilter(ABC):
         field: str,
         operator: FilterOperator,
         value: Any
-    ) -> "BaseFilter":
+    ) -> BaseFilter:
         if operator in (
             FilterOperator.IS_NULL, FilterOperator.IS_NOT_NULL,
             FilterOperator.IS_NULL_FROM, FilterOperator.IS_NOT_NULL_FROM
@@ -57,11 +57,11 @@ class BaseFilter(ABC):
 
         return self
 
-    def set_pagination(self, pagination: Pagination) -> "BaseFilter":
+    def set_pagination(self, pagination: Pagination) -> BaseFilter:
         self._pagination = pagination
         return self
 
-    def add_sort(self, field: str, direction: SortDirection = SortDirection.ASC) -> "BaseFilter":
+    def add_sort(self, field: str, direction: SortDirection = SortDirection.ASC) -> BaseFilter:
         sort_field = SortField(field=field, direction=direction)
         self._sort_fields.append(sort_field)
         return self

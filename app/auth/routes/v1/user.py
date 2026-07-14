@@ -89,7 +89,7 @@ async def me(user: ActiveUserModel) -> UserResponse:
         400: create_response(InvalidTokenError()),
         403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
-            [NotFoundRoleError(name="strig"), NotFoundUserError(user_by=1, user_field="id")]
+            [NotFoundRoleError(name="admin"), NotFoundUserError(user_by=1, user_field="id")]
         )
     }
 )
@@ -116,7 +116,7 @@ async def assign_role(
         400: create_response(InvalidTokenError()),
         403: create_response(AccessDeniedError(need_permissions={"string" })),
         404: create_response(
-            [NotFoundRoleError(name="strig"), NotFoundUserError(user_by=1, user_field="id")]
+            [NotFoundRoleError(name="admin"), NotFoundUserError(user_by=1, user_field="id")]
         )
     }
 )
@@ -232,9 +232,10 @@ async def get_list_user_session(
     user_jwt_data: AuthCurrentUserJWTData,
     mediator: FromDishka[BaseMediator],
 ) -> list[SessionDTO]:
-    return await mediator.handle_query(
+    sessions: list[SessionDTO] = await mediator.handle_query(
         GetListSessionsUserQuery(
             user_jwt_data=user_jwt_data
         )
     )
+    return sessions
 

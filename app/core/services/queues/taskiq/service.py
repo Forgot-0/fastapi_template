@@ -29,7 +29,7 @@ class TaskiqQueueService(QueueService):
         return self._convert_result(result)
 
     async def wait_result(
-        self, task_id: str, check_interval: float | None = None, timeout: float | None = None
+        self, task_id: str, check_interval: float | None = None, timeout: float | None = None # noqa: ASYNC109
     ) -> QueueResult:
         task_instance = AsyncTaskiqTask(
             task_id=task_id,

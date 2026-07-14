@@ -30,7 +30,7 @@ class MockCommandHandler(BaseCommandHandler[MockCommand, MockCommandResult]):
 
 @pytest.mark.unit
 class TestCommands:
-    
+
     @pytest.mark.asyncio
     async def test_command_creation(self):
         command = MockCommand(value="test", number=42)

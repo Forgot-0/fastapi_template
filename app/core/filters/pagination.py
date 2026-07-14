@@ -29,6 +29,6 @@ class Pagination:
         return self.page_size
 
     @classmethod
-    def default(cls) -> "Pagination":
+    def default(cls) -> Pagination:
         return cls(page=cls.DEFAULT_PAGE, page_size=cls.DEFAULT_PAGE_SIZE)
 

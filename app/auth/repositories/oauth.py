@@ -4,13 +4,14 @@ from datetime import timedelta
 from redis.asyncio import Redis
 from sqlalchemy import Select, select
 
+from app.auth.filters.oauth import OauthFilter
 from app.auth.models.oauth import OAuthAccount, OAuthProviderEnum
 from app.core.db.repository import IRepository
 from app.core.filters.base import BaseFilter
 
 
 @dataclass
-class OauthAccountRepository(IRepository[OAuthAccount]):
+class OauthAccountRepository(IRepository[OAuthAccount, OauthFilter]):
     async def create(self, oauth_account: OAuthAccount) -> None:
         self.session.add(oauth_account)
 
@@ -34,7 +35,7 @@ class OauthAccountRepository(IRepository[OAuthAccount]):
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    def apply_relationship_filters(self, stmt: Select, filters: BaseFilter) -> Select:
+    def apply_relationship_filters(self, stmt: Select, filters: OauthFilter) -> Select:
         return stmt
 
 
@@ -48,11 +49,11 @@ class OAuthCodeRepository:
         )
 
     async def get_state(self, state: str) -> int | None:
-        state = await self.client.get(f"state:{state}")
-        if state is None:
+        res = await self.client.get(f"state:{state}")
+        if res is None:
             return None
 
-        return int(state)
+        return int(res)
 
     async def delete(self, state: str) -> None:
         await self.client.delete(f"state:{state}")

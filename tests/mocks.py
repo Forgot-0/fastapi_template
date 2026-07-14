@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from app.core.events.event import BaseEvent
 from app.core.events.service import BaseEventBus

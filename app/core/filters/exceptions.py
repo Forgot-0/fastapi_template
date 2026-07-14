@@ -7,8 +7,8 @@ from app.core.exceptions import ApplicationError
 class PaginationParamsError(ApplicationError):
     field: str
     limit: int
-    code: int = 400
-    status: str = "PAGINATION_PARAMS"
+    code: str = "PAGINATION_PARAMS"
+    status: int = 400
 
     @property
     def message(self) -> str:
@@ -24,8 +24,8 @@ class PaginationParamsError(ApplicationError):
 @dataclass(eq=False, kw_only=True)
 class ValueMustNotNoneError(ApplicationError):
     field: str
-    code: int = 400
-    status: str = "VALUE_MUST_NOT_NONE"
+    code: str = "VALUE_MUST_NOT_NONE"
+    status: int = 400
 
     @property
     def message(self) -> str:

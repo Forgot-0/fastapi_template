@@ -85,7 +85,7 @@ class ConnectionManager(BaseConnectionManager):
         for websocket in self.connections_map[key]:
             try:
                 await websocket.send_bytes(bytes_)
-            except Exception:
+            except Exception: # noqa: BLE001
                 await self.remove_connection(websocket, key)
 
     async def send_json_all(self, key: str, data: dict[str, Any]) -> None:
@@ -135,7 +135,7 @@ class ConnectionManager(BaseConnectionManager):
                 if message["type"] != "pmessage":
                     continue
 
-                _ = asyncio.create_task(self._dispatch(message))
+                asyncio.create_task(self._dispatch(message))  # noqa: RUF006
         finally:
             await pubsub.unsubscribe()
 

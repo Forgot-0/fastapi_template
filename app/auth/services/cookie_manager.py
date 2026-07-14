@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import Response
 
 
-class RefreshTokenCookieManager(ABC):
+class IRefreshTokenCookieManager(ABC):
     @abstractmethod
     def set_refresh_token(self, response: Response, refresh_token: str) -> None:
         ...
@@ -16,7 +16,7 @@ class RefreshTokenCookieManager(ABC):
 
 
 @dataclass
-class IRefreshTokenCookieManager(RefreshTokenCookieManager):
+class RefreshTokenCookieManager(IRefreshTokenCookieManager):
     COOKIE_NAME: str = "refresh_token"
     PATH: str = "/"
     SAMESITE: Literal["lax", "strict", "none"] = "strict"

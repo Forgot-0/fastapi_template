@@ -29,7 +29,7 @@ class KafkaMessageBroker(BaseMessageBroker):
         value = convert_event_to_broker_message(event)
         await self.producer.send(topic=topic, key=key.encode(), value=value)
 
-    async def start_consuming(self, topic: list[str]) -> AsyncGenerator[dict[str, Any], None]:
+    async def start_consuming(self, topic: list[str]) -> AsyncGenerator[dict[str, Any]]:
         self.consumer.subscribe(topics=topic)
 
         async for message in self.consumer:

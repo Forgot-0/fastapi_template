@@ -150,7 +150,7 @@ class TestLoginCommand:
             email="oauth@example.com",
             username="oauthuser",
             password_hash=None,
-            roles={role, },
+            roles={role },
         )
         await user_repository.create(oauth_user)
         await db_session.commit()

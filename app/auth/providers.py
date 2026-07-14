@@ -101,15 +101,15 @@ class AuthModuleProvider(Provider):
 
     #services
     @provide(scope=Scope.APP)
-    def cookie_manager(self) -> RefreshTokenCookieManager:
+    def cookie_manager(self) -> IRefreshTokenCookieManager:
         if app_config.ENVIRONMENT != "production":
-            return IRefreshTokenCookieManager(
+            return RefreshTokenCookieManager(
                 SAMESITE="none",
                 HTTPONLY=False,
                 SECURE=False
             )
 
-        return IRefreshTokenCookieManager(
+        return RefreshTokenCookieManager(
             SAMESITE="strict",
             HTTPONLY=True,
             SECURE=True

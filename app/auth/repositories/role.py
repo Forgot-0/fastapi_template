@@ -13,7 +13,7 @@ from app.core.utils import fromtimestamp, now_utc
 
 
 @dataclass
-class RoleRepository(IRepository[Role]):
+class RoleRepository(IRepository[Role, RoleFilter]):
     async def get_with_permission_by_name(self, name: str) -> Role | None:
         query = select(Role).options(selectinload(Role.permissions)).where(Role.name == name)
         result = await self.session.execute(query)
@@ -58,7 +58,9 @@ class RoleInvalidateRepository:
     async def get_max_invalidation_time(self, role_names: list[str]) -> datetime:
         keys = [f"invalid_role:{permission_name}" for permission_name in role_names]
         values = await self.client.mget(*keys)
-        if values is None:
+
+        if len(values) == 0:
             return fromtimestamp(0.00)
+
         max_date = max(values, key=lambda x: fromtimestamp(float(x)))
         return fromtimestamp(float(max_date))
